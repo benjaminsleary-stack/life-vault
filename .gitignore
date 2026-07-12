@@ -1,0 +1,11 @@
+# Obsidian local state + workspace — do NOT sync via git (Obsidian Sync owns it).
+.obsidian/
+.trash/
+# obsidian-git's conflict marker file (we use our own conflict/ branches).
+conflict-files-obsidian-git.md
+# Transient script working dirs (mail bodies/attachments are never committed).
+scripts/.venv/
+scripts/_work/
+*.pyc
+__pycache__/
+.DS_Store
