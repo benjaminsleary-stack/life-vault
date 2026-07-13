@@ -12,11 +12,11 @@ updated: 2026-07-13
 
 ## Active projects
 
-<!-- [[project]] — one-line status -->
+- [[house-retrofit]] — Deep retrofit; Jasper's room complete, living rooms mostly done, Milo's room & kitchen pending
 
 ## Maintenance & standing facts
 
-<!-- boiler model, meter locations, warranty notes — link to notes/ -->
+- [[house-facts]] — systems, layout, retrofit specs
 
 ## Tradespeople & contacts
 

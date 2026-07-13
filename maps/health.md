@@ -12,7 +12,8 @@ updated: 2026-07-13
 
 ## Active
 
-<!-- current routines, goals, ongoing medical threads -->
+- [[running-fitness]] — Building habit; weight loss goal (target <80kg); half marathon planned
+- [[mental-health]] — Anxiety and depression in therapy; exercise helping
 
 ## Reference
 

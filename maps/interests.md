@@ -13,7 +13,10 @@ updated: 2026-07-13
 
 ## Taste profile
 
-<!-- genres, artists, directors actually enjoyed — the scout searches from this -->
+- [[music-taste]] — C418, Jeremy Soule, synthwave, ambient; afternoon listener (Tuesdays peak)
+- [[film-tv-anime]] — Sci-fi, fantasy; Attack on Titan, Jujutsu Kaisen, Cyberpunk Edgerunners
+- [[media-consumption]] — YouTube (Warhammer, Quinn's Ideas, MTG, tech); podcasts (The Rest Is History, Quinn's Ideas); audiobooks (sci-fi/fantasy + nonfiction, wide sampling)
+- [[outdoors-adventure]] — Camping, hiking, climbing, survival
 
 ## To watch / listen / read
 
@@ -21,4 +24,4 @@ updated: 2026-07-13
 
 ## Gigs & events
 
-<!-- upcoming, near Rochdale unless noted -->
+<!-- upcoming, near Cambridge unless noted -->

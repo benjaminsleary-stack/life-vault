@@ -6,7 +6,12 @@ updated: 2026-07-13
 ---
 
 ## What to know
-<!-- rolling 2–5 line summary; rewritten weekly by refresh-summaries or by hand -->
+Wife. Relationship is strained and in therapy. Birthday 19 November.
+
+## Dates & occasions
+- 2026-11-19 — Charlotte's birthday
+- 2026-08-21 — Civil wedding anniversary
+- 2026-09-17 — Wedding anniversary
 
 ## Log
-<!-- dated fragments, newest at the bottom; never edited, only appended -->
+- 2026-07-13 — Relationship in therapy; working through strain.

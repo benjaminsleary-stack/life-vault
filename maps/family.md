@@ -12,7 +12,11 @@ updated: 2026-07-13
 
 ## People
 
-- [[Charlotte]] — partner
+- [[Charlotte]] — wife
+- [[Jasper]] — son, age 5
+- [[Milo]] — son, age 2
+- [[Hugo]] — Charlotte's brother
+- [[Pixel]] — cat
 
 ## Active threads
 
@@ -20,4 +24,9 @@ updated: 2026-07-13
 
 ## Dates & occasions
 
-<!-- birthdays, anniversaries — link to the person, don't duplicate the fact -->
+- 2026-07-30 — [[Hugo]]'s birthday
+- 2026-08-11 — [[Jasper]]'s birthday
+- 2026-08-21 — Civil wedding anniversary
+- 2026-09-17 — Wedding anniversary
+- 2026-11-19 — [[Charlotte]]'s birthday
+- 2027-05-23 — [[Milo]]'s birthday

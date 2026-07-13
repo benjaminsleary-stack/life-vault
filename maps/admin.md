@@ -12,11 +12,11 @@ updated: 2026-07-13
 
 ## Renewals & deadlines
 
-<!-- insurance, MOT, subscriptions — the task carries the date; this links the detail note -->
+- [[subscriptions-renewals]] — Amex travel insurance (auto-renew), recurring subscriptions (Coffee, Car Club, Google One, Spotify)
 
 ## Accounts & providers
 
-<!-- who supplies what — link to notes/ for account details (never credentials) -->
+- [[service-providers]] — Chubb, C. King Electrical, Dog & Hat, Enterprise Car Club, Google Play, Sixt, Spotify
 
 ## Paperwork threads
 

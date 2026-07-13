@@ -14,11 +14,15 @@ direct to the target note. Refreshed by the morning routine and the weave skill.
 
 ## Active people
 
-- [[Charlotte]] — partner
+- [[Charlotte]] — wife
+- [[Jasper]] — son
+- [[Milo]] — son
 
 ## Active projects
 
-<!-- [[project]] — one-line status; keep to genuinely active only -->
+- [[house-retrofit]] — Deep retrofit, in-house work
+- [[jgc-director-path]] — Aiming for co-director at JGC
+- [[running-fitness]] — Habit building; sub-80kg + half marathon goals
 
 ## Open threads
 

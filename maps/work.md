@@ -13,11 +13,11 @@ updated: 2026-07-13
 
 ## Career & development
 
-<!-- CPD, chartership, longer-term direction -->
+- [[jgc-director-path]] — Aiming for co-director role at JGC
 
 ## Colleagues & contacts
 
-<!-- [[person]] — role/context -->
+- [[Joel]] — Founder
 
 ## Active threads
 
