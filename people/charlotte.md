@@ -1,8 +1,8 @@
 ---
 type: person
 name: Charlotte
-tags: [family, partner]
-updated: 2026-07-12
+tags: [family]
+updated: 2026-07-13
 ---
 
 ## What to know

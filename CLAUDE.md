@@ -33,13 +33,50 @@ Read this before touching anything. Conventions here are binding.
 | `projects/` | one note per project | you + skills |
 | `notes/` | topics, lists, journal entries | you + skills |
 | `daily/` | optional daily log (`YYYY-MM-DD.md`) | you |
+| `maps/` | one MOC per life area (links only, never content) | `weave` + you |
+| `tasks.md` | ALL open tasks, inline checkboxes, nowhere else | `file-inbox` + you |
 | `digests/` | scheduled outputs (`YYYY-MM-DD-morning.md`, `…-evening.md`, `…-W##-interests.md`) | routines |
-| `_meta/identity.md` | "about Ben" profile (ported from life-os) | you + refresh |
+| `routines/` | the saved prompts pasted into each scheduled Routine | humans |
+| `docs/` | operator/setup documentation, not vault content | humans |
+| `attachments/` | binary files referenced by notes | you |
+| `_meta/identity.md` | "about Ben" profile (seeded by onboarding) | you + refresh |
 | `_meta/lessons.md` | routing/preference lessons | you |
 | `_meta/index.md` | map-of-content; refreshed by the morning routine | `file-inbox` |
 | `_meta/hot-cache.md` | recent-context digest; a cheap stand-in for embeddings | each run |
 | `_meta/skills/` | the skill prompt files themselves | humans |
-| `scripts/` | fetch-mail, fetch-ics, notify, bridge, migration | humans |
+| `scripts/` | fetch-mail, fetch-ics, notify, bridge | humans |
+
+## Areas & linking (the ordered network)
+
+The vault is organised as **shallow folders by entity type** (the map above) with
+**MOCs as the ordering layer** and a **closed tag list** for areas. Folders are
+never subdivided by topic.
+
+**The six areas (closed list — never invent a new tag):**
+`#family` (incl. friends) · `#house` · `#work` · `#health` · `#interests` · `#admin`
+
+Every entity note and task carries one or more area tags. "People" is not an
+area — it's the `people/` folder; a person is tagged with the areas they relate to.
+
+**Linking rules (anti-tenuous-link — these are binding):**
+- Link (`[[wikilink]]`) ONLY where text genuinely refers to that entity, and only
+  to notes that exist. Never link on theme, keyword coincidence, or "might be
+  related". First mention per note is enough.
+- Order lives in `maps/*.md` and `_meta/index.md`, not in cross-note link spam.
+  Hub-and-spoke: detail notes link to entities and appear in maps; no "Related"
+  sections of speculative links.
+- Maps contain links + one-line context only. Content in a map is a bug.
+
+**Token economy (keep sessions cheap):**
+- Cold-session orientation = `_meta/index.md` + `_meta/hot-cache.md` ONLY. Read a
+  full note only when routing to it or asked about it. Never crawl the vault.
+- Summaries at the top of entity notes exist so the note rarely needs a full read.
+- Split any note that exceeds ~200 lines; archive stale log years to a linked
+  `<name>-archive.md`.
+
+**Restructure permission:** the "smallest correct edit" rule binds scheduled
+routines. An explicit human request to reorganise, merge, or re-link overrides
+it — restructure freely when asked; git makes it revertable.
 
 ## Frontmatter schema (entity notes)
 
@@ -47,7 +84,7 @@ Read this before touching anything. Conventions here are binding.
 ---
 type: person        # person | project | topic
 name: Charlotte
-tags: [family, partner]
+tags: [family]        # area tags only, from the closed list
 updated: 2026-07-12
 ---
 ```
@@ -60,7 +97,7 @@ Structure every `people/*.md` and `projects/*.md` as:
 ---
 type: person
 name: Charlotte
-tags: [family, partner]
+tags: [family]        # area tags only, from the closed list
 updated: 2026-07-12
 ---
 

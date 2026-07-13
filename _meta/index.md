@@ -1,6 +1,25 @@
-# Index (map of content)
+# Index (master map of content)
 
-_Refreshed by the `morning` routine. A compact list of active people, projects and
-open threads so a cold session can orient fast._
+_The single entry point for a cold session: read this + `hot-cache.md`, then go
+direct to the target note. Refreshed by the morning routine and the weave skill._
 
-<!-- generated -->
+## Areas
+
+- [[family]] — Family & Friends
+- [[house]] — House
+- [[work]] — Work & Career
+- [[health]] — Health & Fitness
+- [[interests]] — Interests & Media
+- [[admin]] — Money & Admin
+
+## Active people
+
+- [[Charlotte]] — partner
+
+## Active projects
+
+<!-- [[project]] — one-line status; keep to genuinely active only -->
+
+## Open threads
+
+<!-- cross-area situations in flight; each line links to its source note -->

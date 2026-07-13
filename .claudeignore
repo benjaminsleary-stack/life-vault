@@ -1,6 +1,8 @@
 # Keep agent sessions cheap: never load these into context.
 .obsidian/
 .trash/
+.superceeded/
+.vault/
 inbox/_archive/
 attachments/
 .git/

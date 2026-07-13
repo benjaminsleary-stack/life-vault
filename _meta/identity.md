@@ -1,5 +1,6 @@
 # About Ben
 
-_Ported from life-os `user_profile` by the migration. Human-review after import._
+_Seeded by the onboarding interview (2026-07); the old life-os database was
+scrapped rather than migrated. Human-maintained thereafter._
 
-<!-- migration fills this from GET /api/profile -->
+<!-- onboarding fills this -->

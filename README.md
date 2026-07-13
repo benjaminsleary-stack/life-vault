@@ -26,8 +26,10 @@ PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
 ## What's in this repo (built for you)
 
 - `CLAUDE.md` — vault conventions every agent obeys. `.claudeignore` / `.gitignore`.
-- `_meta/skills/*.md` — the 8 skills (file-inbox, email-digest, morning-brief,
-  evening-brief, interest-scout, refresh-summaries, charlotte-surfacer, ask).
+- `_meta/skills/*.md` — the 10 skills (file-inbox, email-digest, morning-brief,
+  evening-brief, interest-scout, refresh-summaries, charlotte-surfacer, ask,
+  weave, onboard).
+- `maps/*.md` — one MOC per life area; the ordering layer over the flat folders.
 - `routines/*.md` — the thin saved-prompts you paste into each Routine.
 - `scripts/` — `fetch-mail.py`, `fetch-ics.py`, `notify.sh`, `bridge.sh`,
   `setup.sh`, `requirements.txt`, and `migrate-from-life-os.mjs`.
@@ -37,14 +39,14 @@ PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
 
 > Anything marked **[you]** is manual / off-device and can't be scripted from here.
 
-### Phase 0 — migrate your existing brain first
-- [ ] **[you]** From a browser/laptop with network to the app, download the export:
-      `GET https://<your-app>/api/export` with header `Authorization: Bearer <token>`.
-- [ ] Run the migration into this vault:
-      `node scripts/migrate-from-life-os.mjs --base https://<your-app> --token <token> --out .`
-      (or `--export ./life-brain-export.json` if you saved the file).
-- [ ] **[you]** Read `MIGRATION-REPORT.md` — spot-check flagged notes for the
-      comma-split "mangled checkbox" damage, confirm `_meta/lessons.md` is non-empty.
+### Phase 0 — onboard (fresh start; the old life-os database is scrapped)
+- [ ] **[you]** Run the guided interview on a low-cost model from the vault root:
+      `claude --model haiku` → "run the onboarding interview in _meta/skills/onboard.md"
+      (or Claude Desktop/Cowork with the model switched to Haiku, folder = this vault).
+- [ ] **[you]** Review the seeded notes; confirm `_meta/identity.md` is non-empty
+      and every entity appears in its `maps/*.md`.
+- [ ] Run "weave the network" (`_meta/skills/weave.md`) on a capable model; check
+      the Obsidian graph for orphans and tenuous links.
 
 ### Phase 1 — vault + sync + bridge
 - [ ] **[you]** Open this folder as an Obsidian vault; install plugins: **Tasks**,
