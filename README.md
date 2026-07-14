@@ -40,23 +40,23 @@ PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
 > Anything marked **[you]** is manual / off-device and can't be scripted from here.
 
 ### Phase 0 — onboard (fresh start; the old life-os database is scrapped)
-- [ ] **[you]** Run the guided interview on a low-cost model from the vault root:
+- [x] **[you]** Run the guided interview on a low-cost model from the vault root:
       `claude --model haiku` → "run the onboarding interview in _meta/skills/onboard.md"
       (or Claude Desktop/Cowork with the model switched to Haiku, folder = this vault).
-- [ ] **[you]** Review the seeded notes; confirm `_meta/identity.md` is non-empty
+- [x] **[you]** Review the seeded notes; confirm `_meta/identity.md` is non-empty
       and every entity appears in its `maps/*.md`.
-- [ ] Run "weave the network" (`_meta/skills/weave.md`) on a capable model; check
+- [x] Run "weave the network" (`_meta/skills/weave.md`) on a capable model; check
       the Obsidian graph for orphans and tenuous links.
 
 ### Phase 1 — vault + sync + bridge
-- [ ] **[you]** Open this folder as an Obsidian vault; install plugins: **Tasks**,
+- [x] **[you]** Open this folder as an Obsidian vault; install plugins: **Tasks**,
       **Dataview**. (Optional dashboard later.)
-- [ ] **[you]** Turn on **Obsidian Sync**; confirm it does **not** sync `.git/`
+- [x] **[you]** Turn on **Obsidian Sync**; confirm it does **not** sync `.git/`
       (spec §13.2). Install kepano's `obsidian-skills` into `.claude/`.
-- [ ] **[you]** Install the desktop **bridge** as an OS-scheduled job (launchd / Task
+- [x] **[you]** Install the desktop **bridge** as an OS-scheduled job (launchd / Task
       Scheduler / cron) running `scripts/bridge.sh` every 10 min. NOT the
       obsidian-git plugin as the mechanism of record.
-- [ ] Accept: a phone edit reaches GitHub within one bridge cycle; `.git` untouched
+- [x] Accept: a phone edit reaches GitHub within one bridge cycle; `.git` untouched
       by Sync; no conflict in 3 days.
 
 ### Phase 2 — capture

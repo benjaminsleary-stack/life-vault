@@ -9,7 +9,7 @@ updated: 2026-07-13
 Son, age 2. Birthday 23 May.
 
 ## Dates & occasions
-- 2027-05-23 — Milo's birthday
+- (occasion:: 2027-05-23) Milo's birthday
 
 ## Log
 - 2026-07-13 — Age 2.

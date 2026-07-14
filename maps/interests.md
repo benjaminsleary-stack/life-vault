@@ -13,10 +13,11 @@ updated: 2026-07-13
 
 ## Taste profile
 
-- [[music-taste]] — C418, Jeremy Soule, synthwave, ambient; afternoon listener (Tuesdays peak)
-- [[film-tv-anime]] — Sci-fi, fantasy; Attack on Titan, Jujutsu Kaisen, Cyberpunk Edgerunners
-- [[media-consumption]] — YouTube (Warhammer, Quinn's Ideas, MTG, tech); podcasts (The Rest Is History, Quinn's Ideas); audiobooks (sci-fi/fantasy + nonfiction, wide sampling)
+- [[music-taste]] — C418, Jeremy Soule, synthwave, ambient, soundtracks
+- [[film-tv-anime]] — Sci-fi, fantasy; Attack on Titan, Jujutsu Kaisen, Cyberpunk Edgerunners, Secret level, Astartes, Dune, Blade Runner,
+- [[media-consumption]] — YouTube (Warhammer, Quinn's Ideas, MTG, tech, lore videos); podcasts (The Rest Is History, Quinn's Ideas); audiobooks (sci-fi/fantasy + nonfiction, wide sampling)
 - [[outdoors-adventure]] — Camping, hiking, climbing, survival
+- [gaming]() — Cyberpunk 2077, the Witcher, Stellaris, space, strategy
 
 ## To watch / listen / read
 

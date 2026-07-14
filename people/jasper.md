@@ -9,7 +9,7 @@ updated: 2026-07-13
 Son, age 5. Birthday 11 August.
 
 ## Dates & occasions
-- 2026-08-11 — Jasper's birthday
+- (occasion:: 2026-08-11) Jasper's birthday
 
 ## Log
 - 2026-07-13 — Age 5.
