@@ -323,6 +323,16 @@ export default {
       if (req.method === "GET" && path === "/api/data") {
         return json(await buildData(env), env);
       }
+      if (req.method === "GET" && path === "/api/file") {
+        const p = url.searchParams.get("path") || "";
+        // Sanitize: relative vault paths only, no traversal, must be markdown.
+        if (!p || p.startsWith("/") || p.includes("..") || !p.endsWith(".md")) {
+          return json({ error: "bad path" }, env, 400);
+        }
+        const f = await readFile(env, p);
+        if (!f) return json({ error: "not found" }, env, 404);
+        return json({ path: p, text: f.text }, env);
+      }
       if (req.method === "POST") {
         const payload = await req.json().catch(() => ({}));
         let ok = false;

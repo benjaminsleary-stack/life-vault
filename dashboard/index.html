@@ -147,6 +147,25 @@
   .toast.err{ background:var(--red); color:#2a0f0d; }
   .foot{ color:var(--faint); font-size:12px; text-align:center; margin-top:6px; }
 
+  /* Output links under a skill */
+  .s-out{ font-size:12px; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 10px; }
+  .s-out a{ color:var(--accent-text); cursor:pointer; text-decoration:none; }
+  .s-out a:hover{ text-decoration:underline; }
+
+  /* File viewer modal */
+  .modal-back{ position:fixed; inset:0; background:rgba(7,6,4,.66); display:none; align-items:flex-start;
+    justify-content:center; padding:5vh 16px; z-index:80; overflow-y:auto; }
+  .modal-back.show{ display:flex; }
+  .modal{ background:var(--surface); border:1px solid var(--line); border-radius:16px; max-width:680px; width:100%;
+    box-shadow:0 30px 80px rgba(0,0,0,.5); }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px;
+    border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--surface); border-radius:16px 16px 0 0; }
+  .modal-head .m-name{ font-family:var(--display); font-size:15px; color:var(--accent-text); word-break:break-all; }
+  .modal-close{ flex:0 0 auto; background:var(--surface-2); border:1px solid var(--line-key); color:var(--text);
+    border-radius:8px; width:30px; height:30px; font-size:16px; cursor:pointer; }
+  .modal-close:hover{ border-color:var(--accent); }
+  .modal-body{ padding:14px 18px 20px; }
+
   /* Unlock gate */
   .gate{ position:fixed; inset:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); display:grid; place-items:center; padding:20px; z-index:100; }
   .gate-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; max-width:380px; width:100%; }
@@ -238,6 +257,17 @@
 
   <div class="toast" id="toast"></div>
 
+  <!-- File viewer modal: opens skill outputs (.md) rendered for reading -->
+  <div class="modal-back" id="modalBack" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="m-name" id="modalName">—</span>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body md" id="modalBody"></div>
+    </div>
+  </div>
+
 <script>
   // --- config, stored on-device only ---------------------------------------
   const AREAS = ["family","house","work","health","interests","admin"];
@@ -252,6 +282,8 @@
   ];
   let API = localStorage.getItem("lv_api") || "";
   let TOKEN = localStorage.getItem("lv_token") || "";
+  let lastData = null;
+  const awaiting = {};   // skill -> the .when seen when queued, to detect a fresh completion
 
   const $ = (id) => document.getElementById(id);
   function esc(s){ return (s||"").replace(/[&<>]/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])); }
@@ -307,6 +339,9 @@
     const status=btn.previousElementSibling;
     btn.classList.add("busy"); btn.textContent="Queued";
     status.innerHTML='<span class="running"></span> queued…';
+    // Remember the last-run stamp so we can spot when THIS run lands and pop its output.
+    const prev=(lastData && lastData.skills && lastData.skills[name]) ? lastData.skills[name].when : "";
+    awaiting[name]=prev||"queued";
     post("/api/run",{skill:name},"Queued "+name);
     setTimeout(()=>{ btn.classList.remove("busy"); btn.textContent="Run"; }, 1400);
   }
@@ -338,19 +373,45 @@
       (t.tags&&t.tags.length?" · #"+esc(t.tags[0]):"")+"</div></div></div>"
     ).join("") : '<div class="muted">Nothing pressing. Nice.</div>';
   }
+  function fmtWhen(iso){
+    if(!iso) return "";
+    const d=new Date(iso); if(isNaN(d)) return esc(iso);
+    return d.toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+  }
   function renderSkills(status){
     status=status||{};
     $("skills").innerHTML = SKILLS.map((s)=>{
       const st=status[s.name];
       let line='<span style="color:var(--faint)">not run yet</span>';
-      if(st){ const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
-        line=mark+" "+esc(st.when||st.ran||""); }
+      let outs="";
+      if(st){
+        const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
+        line=mark+" ran "+fmtWhen(st.when);
+        if(st.outputs && st.outputs.length){
+          outs='<div class="s-out">'+st.outputs.map((p)=>
+            '📄 <a onclick="openFile(\''+encodeURIComponent(p)+'\')">'+esc(p.split("/").pop())+"</a>").join("")+"</div>";
+        }
+      }
       return '<div class="skill"><div class="s-body"><div class="s-name">'+esc(s.name)+"</div>"+
-        '<div class="s-desc">'+esc(s.desc)+'</div></div>'+
+        '<div class="s-desc">'+esc(s.desc)+'</div>'+outs+'</div>'+
         '<div class="s-status">'+line+'</div>'+
         '<button class="run-btn" onclick="run(this,\''+s.name+'\')">Run</button></div>';
     }).join("");
   }
+
+  // File viewer modal ---------------------------------------------------------
+  function openFile(encPath){
+    const path=decodeURIComponent(encPath);
+    $("modalName").textContent=path;
+    $("modalBody").innerHTML='<div class="muted">Loading…</div>';
+    $("modalBack").classList.add("show");
+    req("/api/file?path="+encodeURIComponent(path))
+      .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
+      .then((d)=> $("modalBody").innerHTML=mdToHtml(d.text))
+      .catch(()=> $("modalBody").innerHTML='<div class="muted">Couldn\'t load this file.</div>');
+  }
+  function closeModal(){ $("modalBack").classList.remove("show"); }
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
   function renderTasks(tasks){
     const open=tasks.filter((t)=>!t.done);
     $("taskCount").textContent = open.length+" open · grouped by area";
@@ -385,9 +446,20 @@
     }).join("") : '<div class="muted">—</div>';
   }
   function render(d){
+    lastData=d;
     $("gen").textContent = "Updated "+new Date(d.generated).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" · reads and writes the vault directly";
     renderFocus(d.tasks); renderSkills(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderPeople(d.people||[]); renderOcc(d.occasions||[]);
+    // A run you triggered just landed → pop its first output for reading.
+    const skills=d.skills||{};
+    Object.keys(awaiting).forEach((name)=>{
+      const st=skills[name];
+      if(st && st.when && st.when!==awaiting[name]){
+        delete awaiting[name];
+        if(st.outputs && st.outputs.length){ toast(name+" done"); openFile(encodeURIComponent(st.outputs[0])); }
+        else toast(name+(st.ok===false?" failed":" ran"),st.ok===false);
+      }
+    });
   }
 
   // Tiny markdown renderer for the brief (### headings, - lists, --- rule, **bold**).

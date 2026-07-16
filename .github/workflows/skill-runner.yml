@@ -53,9 +53,18 @@ jobs:
           fi
           mkdir -p inbox/_runs/_archive
 
+          # The set of dirty (changed/new) .md files, excluding runner bookkeeping —
+          # used before/after a skill to see what it produced.
+          dirty_md() {
+            git status --porcelain --untracked-files=all \
+              | sed -E 's/^.{3}//' \
+              | grep -E '\.md$' | grep -v -E '^inbox/_runs/' | sort -u
+          }
+
           for f in "${runs[@]}"; do
             skill="$(basename "$f" .run | sed -E 's/-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}$//')"
             echo "::group::skill $skill ($f)"
+            before="$(dirty_md)"
 
             # Map the skill to its saved prompt: prefer the skill file, then a routine.
             prompt_file=""
@@ -78,8 +87,13 @@ jobs:
 
             when="$(date -u +%FT%TZ)"
             if [ $code -eq 0 ]; then ok=true; else ok=false; fi
-            printf '{"skill":"%s","ok":%s,"when":"%s"}\n' "$skill" "$ok" "$when" \
-              > "inbox/_runs/$skill.status"
+
+            # Files this skill produced/changed = whatever became dirty during it.
+            outputs="$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$(dirty_md)") | grep -v '^$' || true)"
+            outputs_json="$(printf '%s\n' "$outputs" | grep -v '^$' | jq -R . | jq -s . )"
+            [ -z "$outputs_json" ] && outputs_json="[]"
+            jq -n --arg skill "$skill" --argjson ok "$ok" --arg when "$when" --argjson outputs "$outputs_json" \
+              '{skill:$skill, ok:$ok, when:$when, outputs:$outputs}' > "inbox/_runs/$skill.status"
 
             # Archive the trigger — kept forever, never deleted.
             git mv "$f" "inbox/_runs/_archive/$(basename "$f")" 2>/dev/null || mv "$f" "inbox/_runs/_archive/$(basename "$f")"
