@@ -7,8 +7,14 @@ A light end-of-day note. Read `CLAUDE.md`.
 2. Compose `digests/<today>-evening.md`:
    - **Tomorrow** — tomorrow's calendar from `scripts/fetch-ics.py`.
    - **Filed today** — one line on what `file-inbox` routed (counts + notable items).
-   - **Anything to log?** — a single gentle nudge (e.g. "Worth noting anything from
-     today about Charlotte or the kids?"). One line, no list, never a chore.
+   - **## Charlotte** — surface anything captured or logged about Charlotte today
+     (from today's filed inbox and the recent `## Log` fragments in her people note),
+     with the capture dates. Only real, captured facts — never infer. If nothing, "—".
+   - **## Advice** — 1–3 short, **specific** suggestions for nurturing the relationship
+     this week, each grounded in what's actually been logged about Charlotte (not
+     generic platitudes). One bullet each so a single item can be saved. If nothing
+     specific is warranted, give one gentle, concrete idea.
+   - **Anything to log?** — a single gentle nudge. One line, never a chore.
 3. Commit + push.
 4. `bash scripts/notify.sh "Evening" digests/<today>-evening.md`.
 5. Assert the file exists and is non-trivial; on failure, notify the failure instead.

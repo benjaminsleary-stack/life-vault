@@ -205,7 +205,13 @@
   .modal-close{ flex:0 0 auto; background:var(--surface-2); border:1px solid var(--line-key); color:var(--text);
     border-radius:8px; width:30px; height:30px; font-size:16px; cursor:pointer; }
   .modal-close:hover{ border-color:var(--accent); }
-  .modal-body{ padding:14px 18px 20px; }
+  .modal-body{ padding:14px 18px 16px; }
+  .modal-reply{ border-top:1px solid var(--line); padding:12px 16px 16px; display:flex; flex-direction:column; gap:8px; }
+  .modal-reply textarea{ min-height:52px; }
+  .save-advice{ margin-left:8px; background:var(--surface-2); border:1px solid var(--line-key); color:var(--accent-text);
+    border-radius:6px; font:inherit; font-size:12px; padding:2px 9px; cursor:pointer; vertical-align:1px; }
+  .save-advice:hover{ border-color:var(--accent); }
+  .save-advice:disabled{ opacity:.6; cursor:default; }
 
   /* Unlock gate */
   .gate{ position:fixed; inset:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); display:grid; place-items:center; padding:20px; z-index:100; }
@@ -314,6 +320,10 @@
         <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
       </div>
       <div class="modal-body md" id="modalBody"></div>
+      <div class="modal-reply">
+        <textarea id="replyText" placeholder="Reply — captured to your inbox and actioned now…"></textarea>
+        <button class="btn primary" onclick="sendReply()">Send &amp; action</button>
+      </div>
     </div>
   </div>
 
@@ -478,13 +488,43 @@
     const path=decodeURIComponent(encPath);
     $("modalName").textContent=path;
     $("modalBody").innerHTML='<div class="muted">Loading…</div>';
+    $("replyText").value="";
     $("modalBack").classList.add("show");
     req("/api/file?path="+encodeURIComponent(path))
       .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
-      .then((d)=> $("modalBody").innerHTML=mdToHtml(d.text))
+      .then((d)=>{ $("modalBody").innerHTML=mdToHtml(d.text); decorateAdvice(); })
       .catch(()=> $("modalBody").innerHTML='<div class="muted">Couldn\'t load this file.</div>');
   }
   function closeModal(){ $("modalBack").classList.remove("show"); }
+  // Reply to an open brief → capture + immediately run File to action it.
+  function sendReply(){
+    const t=$("replyText").value.trim(); if(!t) return;
+    $("replyText").value="";
+    req("/api/capture",{method:"POST",body:JSON.stringify({text:t})})
+      .then((r)=>{ if(!r.ok) throw new Error(); return queueSkill("file-inbox","","Sent — filing now"); })
+      .catch(()=>toast("Failed",true));
+    closeModal();
+  }
+  // Add a "Save" to each item under an ## Advice heading → append to Charlotte.
+  function decorateAdvice(){
+    const body=$("modalBody");
+    const h=[...body.querySelectorAll("h3")].find((x)=>/advice/i.test(x.textContent));
+    const ul=h && h.nextElementSibling;
+    if(!ul || ul.tagName!=="UL") return;
+    [...ul.querySelectorAll("li")].forEach((li)=>{
+      const text=li.textContent.trim();
+      const btn=document.createElement("button");
+      btn.className="save-advice"; btn.textContent="＋ Save";
+      btn.onclick=()=>saveAdvice(text, btn);
+      li.appendChild(document.createTextNode(" ")); li.appendChild(btn);
+    });
+  }
+  function saveAdvice(text, btn){
+    btn.disabled=true; btn.textContent="Saving…";
+    req("/api/append",{method:"POST",body:JSON.stringify({person:"Charlotte",text})})
+      .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="Saved ✓"; toast("Saved to Charlotte"); })
+      .catch(()=>{ btn.disabled=false; btn.textContent="＋ Save"; toast("Failed",true); });
+  }
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
   let showAll=false;
   function toggleShowAll(){ showAll=!showAll; if(lastData) renderTasks(lastData.tasks); }
