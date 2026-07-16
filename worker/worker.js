@@ -228,14 +228,21 @@ async function readSkills(env) {
   return status;
 }
 
+// Count raw, unfiled captures sitting in inbox/ (excludes _archive / _runs).
+async function inboxCount(env) {
+  const files = await listDir(env, "inbox");
+  return files.filter((f) => f.name.endsWith(".md") && !f.name.startsWith("_")).length;
+}
+
 async function buildData(env) {
   const tasksFile = await readFile(env, "tasks.md");
-  const [projects, people, occasions, brief, skills] = await Promise.all([
+  const [projects, people, occasions, brief, skills, inbox] = await Promise.all([
     readEntities(env, "projects"),
     readEntities(env, "people"),
     readOccasions(env),
     latestBrief(env),
     readSkills(env),
+    inboxCount(env),
   ]);
   return {
     generated: new Date().toISOString(),
@@ -245,6 +252,7 @@ async function buildData(env) {
     occasions,
     brief,
     skills,
+    inbox,
   };
 }
 
@@ -356,12 +364,32 @@ async function reorderTasks(env, ids) {
   return true;
 }
 
-// Queue a skill run: a .run trigger file the GitHub Action picks up.
-async function queueRun(env, skill) {
+// Queue a skill run: a .run trigger file the runner (local or cloud) picks up.
+// `input` (optional) is free text handed to the skill — used by Ask.
+async function queueRun(env, skill, input) {
   skill = (skill || "").trim().replace(/[^a-z0-9-]/gi, "");
   if (!skill) return false;
-  const payload = JSON.stringify({ skill, requested: new Date().toISOString(), by: "dashboard" }, null, 2);
+  const payload = JSON.stringify(
+    { skill, requested: new Date().toISOString(), by: "dashboard", input: String(input || "") },
+    null, 2
+  );
   await putFile(env, `inbox/_runs/${skill}-${stamp()}.run`, payload + "\n", `dashboard: run ${skill}`);
+  return true;
+}
+
+// Append a dated fragment to a person's ## Log (used by evening-brief advice-save).
+async function appendFragment(env, person, text) {
+  person = String(person || "").trim();
+  text = String(text || "").trim();
+  if (!person || !text) return false;
+  const slug = person.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const path = `people/${slug}.md`;
+  const cur = await readFile(env, path);
+  if (!cur) return false;                       // never create a person from the dashboard
+  const line = `- ${today()} — ${text} _(saved from dashboard)_`;
+  let body = cur.text.replace(/\s*$/, "");
+  body += /##\s*Log/i.test(body) ? `\n${line}\n` : `\n\n## Log\n${line}\n`;
+  await putFile(env, path, body, `dashboard: log for ${person}`, cur.sha);
   return true;
 }
 
@@ -397,7 +425,8 @@ export default {
         else if (path === "/api/toggle") ok = await toggleTask(env, payload.id);
         else if (path === "/api/priority") ok = await setPriority(env, payload.id);
         else if (path === "/api/reorder") ok = await reorderTasks(env, payload.ids);
-        else if (path === "/api/run") ok = await queueRun(env, payload.skill);
+        else if (path === "/api/run") ok = await queueRun(env, payload.skill, payload.input);
+        else if (path === "/api/append") ok = await appendFragment(env, payload.person, payload.text);
         else return json({ error: "not found" }, env, 404);
         return json({ ok }, env);
       }

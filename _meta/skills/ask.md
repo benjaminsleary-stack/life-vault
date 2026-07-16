@@ -15,3 +15,10 @@ Desktop chat, and read-only from mobile via the GitHub MCP connector.
 
 Examples: "what should I be on top of for Charlotte this week?", "what's open for
 the house?", "what did I note about the plumber?", "add: bins out Thursday".
+
+## Non-interactive (dashboard) mode
+When run by the skill-runner with a question under `## Input from the dashboard`,
+answer as above but **write the answer to `_meta/last-answer.md`** (title it with
+the question, then the answer, then the notes you cited), and commit. That file is
+a transient scratch answer — overwrite it each time; it is not a capture or a
+fragment, so replacing it is fine. The dashboard opens it automatically.

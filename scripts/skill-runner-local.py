@@ -25,6 +25,7 @@ import os
 import re
 import sys
 import glob
+import json
 import time
 import shutil
 import subprocess
@@ -74,6 +75,13 @@ def process_once():
         base = os.path.basename(f)
         print(f"[local-runner] claim {skill} ({base})")
 
+        # Read any dashboard input before we move the trigger.
+        try:
+            with open(f, encoding="utf-8") as fh:
+                inp = (json.load(fh) or {}).get("input", "")
+        except Exception:
+            inp = ""
+
         # CLAIM first: archive the trigger and push before running, so the cloud
         # fallback sees it handled. If the push loses a race, back out cleanly.
         shutil.move(f, os.path.join(ARCHIVE, base))
@@ -86,7 +94,7 @@ def process_once():
 
         # RUN via the shared runner (writes inbox/_runs/<skill>.status).
         print(f"[local-runner] running {skill} …")
-        subprocess.run(["bash", "scripts/run-skill.sh", skill], cwd=VAULT)
+        subprocess.run(["bash", "scripts/run-skill.sh", skill, inp], cwd=VAULT)
         git("add", "-A")
         git("commit", "-m", f"local-runner: {skill} result")
         push_with_rebase(br)

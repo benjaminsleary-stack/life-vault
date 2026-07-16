@@ -9,7 +9,8 @@
 # Writes: inbox/_runs/<skill>.status  → {skill, ok, when, outputs:[changed .md]}
 # Exit:   0 if the skill succeeded, non-zero otherwise.
 set -uo pipefail
-skill="${1:?usage: run-skill.sh <skill-name>}"
+skill="${1:?usage: run-skill.sh <skill-name> [input]}"
+input="${2:-}"                                   # optional free text handed to the skill
 
 # The .md files that are currently changed/new, excluding runner bookkeeping.
 dirty_md() {
@@ -23,6 +24,12 @@ prompt_file=""
 if [ -f "_meta/skills/$skill.md" ]; then prompt_file="_meta/skills/$skill.md"
 elif [ -f "routines/$skill.md" ]; then prompt_file="routines/$skill.md"; fi
 if [ -n "$prompt_file" ]; then prompt="$(cat "$prompt_file")"; else prompt="/$skill"; fi
+if [ -n "$input" ]; then
+  prompt="$prompt
+
+## Input from the dashboard
+$input"
+fi
 
 before="$(dirty_md)"
 # --dangerously-skip-permissions: unattended vault-maintenance run, no approver.
