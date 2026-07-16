@@ -65,7 +65,8 @@ function b64decode(b64) {
 function gh(env, path, init = {}) {
   return fetch(`${API}/repos/${env.GH_OWNER}/${env.GH_REPO}${path}`, {
     ...init,
-    cache: "no-store",            // don't let Cloudflare serve a stale GitHub read
+    // Cloudflare-native way to bypass caching the GitHub read (the `cache` fetch
+    // option can throw "not implemented" in Workers, so we don't use it here).
     cf: { cacheTtl: 0, cacheEverything: false },
     headers: {
       Authorization: `Bearer ${env.GH_TOKEN}`,
