@@ -35,7 +35,7 @@ function cors(env) {
 function json(body, env, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...cors(env) },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...cors(env) },
   });
 }
 
@@ -65,6 +65,8 @@ function b64decode(b64) {
 function gh(env, path, init = {}) {
   return fetch(`${API}/repos/${env.GH_OWNER}/${env.GH_REPO}${path}`, {
     ...init,
+    cache: "no-store",            // don't let Cloudflare serve a stale GitHub read
+    cf: { cacheTtl: 0, cacheEverything: false },
     headers: {
       Authorization: `Bearer ${env.GH_TOKEN}`,
       Accept: "application/vnd.github+json",

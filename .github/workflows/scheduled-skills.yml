@@ -11,10 +11,10 @@ name: scheduled-skills
 
 on:
   schedule:
-    - cron: "45 4 * * *"    # morning-brief      — 05:45 BST / 04:45 GMT (ready by 6:30)
-    - cron: "45 19 * * *"   # evening-brief      — 20:45 BST / 19:45 GMT
-    - cron: "0 8 * * 6"     # interest-scout     — Sat 09:00 BST / 08:00 GMT
-    - cron: "0 2 * * 0"     # refresh-summaries  — Sun 03:00 BST / 02:00 GMT
+    - cron: "45 4 * * *"    # morning-brief   — 05:45 BST / 04:45 GMT (ready by 6:30)
+    - cron: "45 19 * * *"   # evening-brief   — 20:45 BST / 19:45 GMT
+    - cron: "0 8 * * 6"     # interest-scout  — Sat 09:00 BST / 08:00 GMT
+    # refresh-summaries is vault housekeeping — run it on-demand, not on a schedule.
   workflow_dispatch:
     inputs:
       skill:
@@ -52,7 +52,6 @@ jobs:
             "45 4 * * *")  skill=morning-brief ;;
             "45 19 * * *") skill=evening-brief ;;
             "0 8 * * 6")   skill=interest-scout ;;
-            "0 2 * * 0")   skill=refresh-summaries ;;
             *)             skill="${{ github.event.inputs.skill }}" ;;
           esac
           echo "Running scheduled skill: $skill"

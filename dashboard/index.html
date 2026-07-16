@@ -187,9 +187,7 @@
   <div class="gate" id="gate">
     <div class="gate-card">
       <h1>Life<span>·</span>Vault</h1>
-      <p>Connect to your vault. These are stored on this device only and sent with each request.</p>
-      <label for="gApi">Worker URL</label>
-      <input type="text" id="gApi" placeholder="https://life-vault.<you>.workers.dev" autocomplete="off" />
+      <p>Enter your unlock token. It's stored on this device only and sent with each request.</p>
       <label for="gTok">Unlock token</label>
       <input type="password" id="gTok" placeholder="your unlock token" autocomplete="off" />
       <div class="row"><button class="btn primary" onclick="saveGate()">Connect</button></div>
@@ -279,12 +277,12 @@
   const AREAS = ["family","house","work","health","interests","admin"];
   // Skills surfaced with a Run button + last-run status (merged with /api/data).
   const SKILLS = [
-    { name:"file-inbox",        desc:"Sort captures into people / tasks / notes" },
-    { name:"morning-brief",     desc:"Today's due items, occasions, one nudge" },
-    { name:"evening-brief",     desc:"Debrief + data-capture request" },
-    { name:"weave",             desc:"Refresh MOCs & the index" },
-    { name:"refresh-summaries", desc:"Rewrite people / project summaries" },
-    { name:"interest-scout",    desc:"Weekly discover feed for your interests" },
+    { name:"file-inbox",        label:"File",     desc:"Sort captures into people / tasks / notes" },
+    { name:"morning-brief",     label:"Morning",  desc:"Today's due items, occasions, news, one nudge" },
+    { name:"evening-brief",     label:"Evening",  desc:"Debrief, Charlotte, data-capture request" },
+    { name:"weave",             label:"Weave",    desc:"Refresh MOCs & the index" },
+    { name:"refresh-summaries", label:"Refresh",  desc:"Rewrite people / project summaries" },
+    { name:"interest-scout",    label:"Discover", desc:"Weekly discover feed for your interests" },
   ];
   // The Worker URL is fixed, so default it — you only ever enter the token.
   const DEFAULT_API = "https://life-vault.benvault.workers.dev";
@@ -301,12 +299,11 @@
   function showGate(msg){
     $("gate").classList.remove("hidden"); $("app").classList.add("hidden");
     if(msg){ $("gErr").textContent=msg; $("gErr").classList.remove("hidden"); }
-    $("gApi").value=API;
   }
   function saveGate(){
-    const api=$("gApi").value.trim().replace(/\/$/,""); const tok=$("gTok").value.trim();
-    if(!api||!tok){ $("gErr").textContent="Both fields are required."; $("gErr").classList.remove("hidden"); return; }
-    API=api; TOKEN=tok; localStorage.setItem("lv_api",API); localStorage.setItem("lv_token",TOKEN);
+    const tok=$("gTok").value.trim();
+    if(!tok){ $("gErr").textContent="Enter your unlock token."; $("gErr").classList.remove("hidden"); return; }
+    TOKEN=tok; localStorage.setItem("lv_token",TOKEN); localStorage.setItem("lv_api",API);
     $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load();
   }
   function signOut(){ if(!confirm("Disconnect this device? The token is cleared from here.")) return;
@@ -318,7 +315,7 @@
   }
   async function load(){
     try{
-      const r = await req("/api/data");
+      const r = await req("/api/data?t="+Date.now());   // cache-bust
       if(r.status===401){ showGate("Token rejected. Check the unlock token."); return; }
       if(!r.ok) throw new Error("HTTP "+r.status);
       render(await r.json());
@@ -338,10 +335,31 @@
 
   // --- actions --------------------------------------------------------------
   function doCapture(){ const e=$("cap"); if(!e.value.trim())return; post("/api/capture",{text:e.value},"Captured to inbox").then(()=>e.value=""); }
-  function doAddTask(){ const t=$("ttext"); if(!t.value.trim())return;
-    post("/api/task",{text:t.value,due:$("tdue").value,tag:$("ttag").value},"Task added")
-      .then(()=>{ t.value=""; $("tdue").value=""; $("ttag").value=""; }); }
-  function toggle(id){ post("/api/toggle",{id},"Updated"); }
+  function doAddTask(){
+    const t=$("ttext"); if(!t.value.trim())return;
+    const text=t.value.trim(), due=$("tdue").value, tag=$("ttag").value;
+    // Optimistic: show it now; persist in the background; the next poll reconciles.
+    if(lastData){
+      const todayStr=new Date().toISOString().slice(0,10);
+      (lastData.tasks=lastData.tasks||[]).push({ id:"tmp"+Date.now(), text, done:false,
+        due:due||null, tags:tag?[tag]:[], overdue: !!(due && due<=todayStr) });
+      render(lastData);
+    }
+    t.value=""; $("tdue").value=""; $("ttag").value="";
+    req("/api/task",{method:"POST",body:JSON.stringify({text,due,tag})})
+      .then((r)=>{ if(!r.ok) throw new Error(); toast("Task added"); })
+      .catch(()=>{ toast("Failed",true); load(); });
+  }
+  function toggle(id){
+    // Optimistic: flip locally now so a stale read can't bounce it back.
+    if(lastData){
+      const t=(lastData.tasks||[]).find((x)=>String(x.id)===String(id));
+      if(t){ t.done=!t.done; if(t.done) t.overdue=false; render(lastData); }
+    }
+    req("/api/toggle",{method:"POST",body:JSON.stringify({id})})
+      .then((r)=>{ if(!r.ok) throw new Error(); toast("Updated"); })
+      .catch(()=>{ toast("Failed",true); load(); });
+  }
   function run(btn, name){
     if(btn.classList.contains("busy")) return;
     const status=btn.closest(".skill").querySelector(".s-status");
@@ -405,7 +423,7 @@
       const openBtn = hasOut
         ? '<button class="open-btn" onclick="openFile(\''+encodeURIComponent(st.outputs[0])+'\')">Open</button>'
         : '<button class="open-btn disabled" title="No saved output yet" disabled>Open</button>';
-      return '<div class="skill"><div class="s-body"><div class="s-name">'+esc(s.name)+"</div>"+
+      return '<div class="skill"><div class="s-body"><div class="s-name">'+esc(s.label||s.name)+"</div>"+
         '<div class="s-desc">'+esc(s.desc)+'</div>'+outs+'</div>'+
         '<div class="s-status">'+line+'</div>'+
         '<div class="s-actions">'+openBtn+
