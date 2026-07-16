@@ -86,10 +86,16 @@
   .skill .s-status{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; white-space:nowrap; display:flex; align-items:center; gap:5px; }
   .tick{ color:var(--green); font-weight:700; }
   .cross{ color:var(--red); font-weight:700; }
-  .run-btn{ flex:0 0 auto; background:var(--surface-2); color:var(--accent-text); border:1px solid var(--line-key);
+  .s-actions{ flex:0 0 auto; display:flex; gap:6px; }
+  .run-btn{ background:var(--surface-2); color:var(--accent-text); border:1px solid var(--line-key);
     border-radius:8px; padding:7px 13px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
   .run-btn:hover{ border-color:var(--accent); background:rgba(217,138,99,.12); }
   .run-btn.busy{ color:var(--faint); border-color:var(--line); cursor:default; }
+  .open-btn{ background:none; color:var(--muted); border:1px solid var(--line-key); border-radius:8px;
+    padding:7px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+  .open-btn:hover{ border-color:var(--accent); color:var(--text); }
+  .open-btn.disabled{ opacity:.4; cursor:default; border-color:var(--line); }
+  .open-btn.disabled:hover{ color:var(--muted); }
   .running{ display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--yellow); animation:breathe 1.2s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce){ .running,.breathe-dot{ animation:none; } body{ background-image:none; } }
 
@@ -336,7 +342,7 @@
   function toggle(id){ post("/api/toggle",{id},"Updated"); }
   function run(btn, name){
     if(btn.classList.contains("busy")) return;
-    const status=btn.previousElementSibling;
+    const status=btn.closest(".skill").querySelector(".s-status");
     btn.classList.add("busy"); btn.textContent="Queued";
     status.innerHTML='<span class="running"></span> queued…';
     // Remember the last-run stamp so we can spot when THIS run lands and pop its output.
@@ -384,18 +390,24 @@
       const st=status[s.name];
       let line='<span style="color:var(--faint)">not run yet</span>';
       let outs="";
+      const hasOut = !!(st && st.outputs && st.outputs.length);
       if(st){
         const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
         line=mark+" ran "+fmtWhen(st.when);
-        if(st.outputs && st.outputs.length){
+        // If a run produced more than one file, list the extras (Open covers the newest).
+        if(hasOut && st.outputs.length>1){
           outs='<div class="s-out">'+st.outputs.map((p)=>
             '📄 <a onclick="openFile(\''+encodeURIComponent(p)+'\')">'+esc(p.split("/").pop())+"</a>").join("")+"</div>";
         }
       }
+      const openBtn = hasOut
+        ? '<button class="open-btn" onclick="openFile(\''+encodeURIComponent(st.outputs[0])+'\')">Open</button>'
+        : '<button class="open-btn disabled" title="No saved output yet" disabled>Open</button>';
       return '<div class="skill"><div class="s-body"><div class="s-name">'+esc(s.name)+"</div>"+
         '<div class="s-desc">'+esc(s.desc)+'</div>'+outs+'</div>'+
         '<div class="s-status">'+line+'</div>'+
-        '<button class="run-btn" onclick="run(this,\''+s.name+'\')">Run</button></div>';
+        '<div class="s-actions">'+openBtn+
+        '<button class="run-btn" onclick="run(this,\''+s.name+'\')">Run</button></div></div>';
     }).join("");
   }
 
