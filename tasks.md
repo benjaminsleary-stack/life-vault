@@ -5,7 +5,7 @@ The Obsidian **Tasks** plugin renders the sorted/filtered global list. The morni
 brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md rule 3).
 
 - [x] Fix Google One payment method (declined; £9.49 owed, Drive/Gmail/Photos storage at risk) #admin 📅 2026-06-11 ✅ 2026-07-13
-- [ ] Repaint [[Jasper]]'s room #house
+- [x] Repaint [[Jasper]]'s room #house ✅ 2026-07-16
 - [ ] Insulate [[Milo]]'s room #house
 - [ ] Plan new kitchen in extension #house
 - [ ] Ask mum to look after boy's from 11th December for 1 week. #family 📅 2026-07-16
