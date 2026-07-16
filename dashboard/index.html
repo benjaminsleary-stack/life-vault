@@ -146,6 +146,18 @@
   @media (max-width:560px){ .grid2{ grid-template-columns:1fr; } }
   .grid2 .card{ margin-bottom:0; }
 
+  /* Weather */
+  .wx-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .wx-now{ display:flex; align-items:center; gap:12px; }
+  .wx-emoji{ font-size:30px; line-height:1; }
+  .wx-temp{ font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; }
+  .wx-cond{ font-size:13px; color:var(--muted); margin-top:2px; }
+  .wx-hl{ font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .wx-hl b{ color:var(--text); font-weight:600; }
+  .wx-chart{ width:100%; margin-top:12px; }
+  .wx-chart svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .wx-axis{ fill:var(--faint); font-size:8px; font-family:var(--ui); }
+
   /* Desktop: reflow the single-column card stack into two columns (masonry). */
   @media (min-width:900px){
     .wrap{ max-width:1120px; }
@@ -266,6 +278,11 @@
       <div class="md" id="brief"><div class="muted">—</div></div>
     </div>
 
+    <div class="card">
+      <div class="section-head"><p class="label">Weather</p><span class="count">Cambridge</span></div>
+      <div id="weatherBody"><div class="muted">Loading…</div></div>
+    </div>
+
     <div class="grid2">
       <div class="card">
         <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
@@ -326,7 +343,7 @@
     const tok=$("gTok").value.trim();
     if(!tok){ $("gErr").textContent="Enter your unlock token."; $("gErr").classList.remove("hidden"); return; }
     TOKEN=tok; localStorage.setItem("lv_token",TOKEN); localStorage.setItem("lv_api",API);
-    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load();
+    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load(); loadWeather();
   }
   function signOut(){ if(!confirm("Disconnect this device? The token is cleared from here.")) return;
     localStorage.removeItem("lv_token"); TOKEN=""; showGate(); }
@@ -570,8 +587,61 @@
     return html;
   }
 
+  // --- weather (Open-Meteo, no key needed) ---------------------------------
+  const WX={ lat:52.2053, lon:0.1218 };   // Cambridge, UK
+  function wmo(c){
+    if(c===0) return ["☀️","Clear"];
+    if(c<=2) return ["🌤️","Partly cloudy"];
+    if(c===3) return ["☁️","Overcast"];
+    if(c<=48) return ["🌫️","Fog"];
+    if(c<=57) return ["🌦️","Drizzle"];
+    if(c<=67) return ["🌧️","Rain"];
+    if(c<=77) return ["🌨️","Snow"];
+    if(c<=82) return ["🌧️","Showers"];
+    if(c<=86) return ["🌨️","Snow showers"];
+    return ["⛈️","Thunderstorm"];
+  }
+  async function loadWeather(){
+    try{
+      const u="https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon+
+        "&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability"+
+        "&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FLondon&forecast_days=1";
+      const r=await fetch(u); if(!r.ok) throw new Error();
+      renderWeather(await r.json());
+    }catch(e){ $("weatherBody").innerHTML='<div class="muted">Weather unavailable.</div>'; }
+  }
+  function renderWeather(d){
+    const cur=d.current, day=d.daily, h=d.hourly;
+    const [em,txt]=wmo(cur.weather_code);
+    const hi=Math.round(day.temperature_2m_max[0]), lo=Math.round(day.temperature_2m_min[0]);
+    const temps=h.temperature_2m.slice(0,24), precs=(h.precipitation_probability||[]).slice(0,24), times=h.time.slice(0,24);
+    const W=240,H=100,padT=14,padB=16,left=3,right=W-3;
+    const mn=Math.min(...temps), mx=Math.max(...temps), span=(mx-mn)||1;
+    const xs=(i)=> left+i*((right-left)/23);
+    const ys=(t)=> padT+(1-(t-mn)/span)*(H-padT-padB);
+    let line="", area="M "+xs(0).toFixed(1)+" "+ys(temps[0]).toFixed(1);
+    temps.forEach((t,i)=>{ const x=xs(i).toFixed(1),y=ys(t).toFixed(1); line+=(i?" L ":"M ")+x+" "+y; if(i) area+=" L "+x+" "+y; });
+    area+=" L "+xs(23).toFixed(1)+" "+(H-padB)+" L "+xs(0).toFixed(1)+" "+(H-padB)+" Z";
+    let bars="";
+    precs.forEach((p,i)=>{ if(!p) return; const x=xs(i), bh=(p/100)*(H-padT-padB);
+      bars+='<rect x="'+(x-3).toFixed(1)+'" y="'+(H-padB-bh).toFixed(1)+'" width="6" height="'+bh.toFixed(1)+'" rx="1" fill="var(--blue)" opacity="0.25"/>'; });
+    let labels="";
+    [0,6,12,18].forEach((i)=>{ labels+='<text class="wx-axis" x="'+xs(i).toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+times[i].slice(11,13)+'h</text>'; });
+    const nh=Math.max(0,Math.min(23,new Date().getHours()));
+    const marker='<line x1="'+xs(nh).toFixed(1)+'" y1="'+padT+'" x2="'+xs(nh).toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--line-key)" stroke-dasharray="2 2"/>'+
+      '<circle cx="'+xs(nh).toFixed(1)+'" cy="'+ys(temps[nh]).toFixed(1)+'" r="3" fill="var(--accent)"/>';
+    $("weatherBody").innerHTML =
+      '<div class="wx-top"><div class="wx-now"><span class="wx-emoji">'+em+'</span>'+
+      '<div><span class="wx-temp">'+Math.round(cur.temperature_2m)+'°</span><div class="wx-cond">'+txt+'</div></div></div>'+
+      '<div class="wx-hl"><b>'+hi+'°</b> / '+lo+'°<div>high / low</div></div></div>'+
+      '<div class="wx-chart"><svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+
+      bars+'<path d="'+area+'" fill="var(--accent)" opacity="0.10"/>'+
+      '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
+      marker+labels+'</svg></div>';
+  }
+
   // --- boot -----------------------------------------------------------------
-  if(API && TOKEN){ load(); setInterval(load, 60000); }
+  if(API && TOKEN){ load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); }
   else { showGate(); }
 </script>
 </body>
