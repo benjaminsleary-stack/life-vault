@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1c1813" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>Life-Vault</title>
+<style>
+  /* Warm dark agentic-OS theme, from .superceeded/public/styles.css.
+     Single committed warm-dark world. Newsreader/Hanken fall back to
+     Georgia/system-ui — the real faces can be served locally later. */
+  :root{
+    --bg1:#241f19; --bg2:#1c1813; --surface:#221d17; --surface-2:#2a2419;
+    --line:#362e24; --line-row:#302921; --line-key:#3a3228;
+    --text:#f2ece0; --text2:#ece5d8; --muted:#8c8272; --faint:#7d7365;
+    --accent:#d98a63; --accent-text:#e6a884; --accent-ink:#1c1813;
+    --blue:#8ca6b0; --purple:#b79bd0; --yellow:#d9a441; --green:#7d9877;
+    --life:#cf98aa; --honey:#d4ab5e; --red:#c9736e;
+    --a-family:var(--blue); --a-house:var(--green); --a-work:var(--honey);
+    --a-health:var(--life); --a-interests:var(--purple); --a-admin:var(--yellow);
+    --radius:12px;
+    --ui:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:"Newsreader",Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box;}
+  body{ font-family:var(--ui); background:var(--bg2); color:var(--text);
+    line-height:1.5; margin:0; padding:22px 16px 64px; -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(680px 420px at 88% -6%, rgba(217,138,99,.10), transparent 60%);
+    background-attachment:fixed; }
+  .wrap{ max-width:760px; margin:0 auto; position:relative; z-index:1; }
+
+  .top{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:3px; }
+  .brand{ display:flex; align-items:center; gap:11px; }
+  .mascot{ width:32px; height:32px; flex:none; border-radius:50%; background:#2a3327;
+    display:grid; place-items:center; font-size:16px; box-shadow:0 0 0 1px var(--line); }
+  .top h1{ font-family:var(--display); font-weight:500; font-size:25px; margin:0; letter-spacing:.01em; }
+  .top h1 span{ color:var(--accent); }
+  .status-pill{ display:inline-flex; align-items:center; gap:8px; padding:7px 13px; border-radius:999px;
+    background:rgba(217,138,99,.14); border:1px solid rgba(217,138,99,.4); font-size:12.5px; font-weight:600; color:var(--accent-text); cursor:pointer; }
+  .status-pill.off{ background:rgba(201,115,110,.14); border-color:rgba(201,115,110,.4); color:#e29b96; }
+  .breathe-dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px rgba(217,138,99,.7);
+    animation:breathe 2.4s ease-in-out infinite; }
+  .status-pill.off .breathe-dot{ background:var(--red); box-shadow:none; animation:none; }
+  @keyframes breathe{ 0%,100%{opacity:.5; transform:scale(.85);} 50%{opacity:1; transform:scale(1);} }
+  .sub{ color:var(--faint); font-size:13px; margin:6px 0 20px; font-variant-numeric:tabular-nums; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:15px 16px; margin-bottom:14px; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 12px; }
+  .label{ font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin:0; font-weight:600; }
+  .count{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .link{ background:none; border:none; color:var(--accent); font:inherit; font-size:13px; cursor:pointer; padding:2px 4px; }
+  .link:hover{ text-decoration:underline; }
+  .muted{ color:var(--muted); font-size:14px; }
+
+  textarea,input[type=text],input[type=date],input[type=password],select{ width:100%; background:var(--bg1); color:var(--text);
+    border:1px solid var(--line-key); border-radius:10px; padding:11px 12px; font:inherit; font-size:15px; }
+  textarea{ min-height:64px; resize:vertical; }
+  textarea::placeholder,input::placeholder{ color:var(--muted); }
+  textarea:focus,input:focus,select:focus{ outline:2px solid var(--accent); outline-offset:-1px; border-color:var(--accent); }
+  .row{ display:flex; gap:8px; margin-top:9px; flex-wrap:wrap; }
+  .row>*{ flex:1; min-width:130px; }
+  .btn{ background:var(--surface-2); color:var(--text); border:1px solid var(--line-key); border-radius:10px;
+    padding:11px 15px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn.primary:hover{ filter:brightness(1.06); }
+
+  .priority{ display:flex; align-items:center; gap:11px; background:var(--bg1);
+    border:1px solid var(--line-row); border-left:3px solid var(--accent); border-radius:10px;
+    padding:10px 12px; margin-bottom:7px; }
+  .priority:last-child{ margin-bottom:0; }
+  .priority .rank{ flex:0 0 auto; width:23px; height:23px; display:grid; place-items:center; border-radius:50%;
+    background:var(--accent); color:var(--accent-ink); font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .priority .p-title{ font-size:15px; }
+  .priority .p-meta{ font-size:12px; color:var(--muted); margin-top:1px; }
+  .priority.over{ border-left-color:var(--red); }
+  .priority.over .rank{ background:var(--red); color:#1c1813; }
+
+  .skill{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line-row); }
+  .skill:last-child{ border-bottom:0; }
+  .skill .s-body{ flex:1; min-width:0; }
+  .skill .s-name{ font-size:14.5px; font-weight:600; }
+  .skill .s-desc{ font-size:12px; color:var(--muted); margin-top:1px; }
+  .skill .s-status{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+  .tick{ color:var(--green); font-weight:700; }
+  .cross{ color:var(--red); font-weight:700; }
+  .run-btn{ flex:0 0 auto; background:var(--surface-2); color:var(--accent-text); border:1px solid var(--line-key);
+    border-radius:8px; padding:7px 13px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+  .run-btn:hover{ border-color:var(--accent); background:rgba(217,138,99,.12); }
+  .run-btn.busy{ color:var(--faint); border-color:var(--line); cursor:default; }
+  .running{ display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--yellow); animation:breathe 1.2s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ .running,.breathe-dot{ animation:none; } body{ background-image:none; } }
+
+  .domain{ margin-bottom:14px; }
+  .domain:last-child{ margin-bottom:0; }
+  .domain h3{ font-size:11px; margin:0 0 6px; text-transform:uppercase; letter-spacing:.14em; font-weight:700;
+    display:flex; align-items:center; gap:8px; color:var(--hue,var(--accent)); }
+  .domain h3::before{ content:""; width:8px; height:8px; border-radius:2px; background:var(--hue,var(--accent)); }
+  .domain h3 .n{ color:var(--faint); letter-spacing:0; font-weight:600; }
+  .domain.family{ --hue:var(--a-family); } .domain.house{ --hue:var(--a-house); }
+  .domain.work{ --hue:var(--a-work); } .domain.health{ --hue:var(--a-health); }
+  .domain.interests{ --hue:var(--a-interests); } .domain.admin{ --hue:var(--a-admin); }
+  .task{ display:flex; align-items:flex-start; gap:11px; padding:8px 0; border-bottom:1px solid var(--line-row); }
+  .task:last-child{ border-bottom:0; }
+  .check{ width:22px; height:22px; flex:0 0 auto; border-radius:6px; border:1.5px solid var(--line-key);
+    background:var(--bg1); color:transparent; display:grid; place-items:center; cursor:pointer;
+    font-size:14px; margin-top:1px; transition:.12s; }
+  .check:hover{ border-color:var(--green); }
+  .check.on{ background:var(--green); border-color:var(--green); color:#14200f; }
+  .t-body{ flex:1; min-width:0; }
+  .t-title{ font-size:15px; }
+  .task.done .t-title{ color:var(--muted); text-decoration:line-through; }
+  .pill{ display:inline-block; font-size:11px; padding:1px 8px; border-radius:20px; border:1px solid var(--line-key);
+    color:var(--muted); margin-left:7px; vertical-align:1px; font-variant-numeric:tabular-nums; }
+  .pill.over{ color:var(--red); border-color:color-mix(in srgb,var(--red) 55%,var(--line-key)); }
+  .pill.due{ color:var(--yellow); border-color:color-mix(in srgb,var(--yellow) 55%,var(--line-key)); }
+
+  .md h3{ font-family:var(--display); font-weight:600; font-size:16px; color:var(--accent-text); margin:14px 0 6px; }
+  .md h3:first-child{ margin-top:0; }
+  .md ul{ margin:0 0 8px; padding-left:18px; }
+  .md li{ margin:3px 0; font-size:14px; }
+  .md strong{ color:var(--text); }
+  .md hr{ border:none; border-top:1px solid var(--line); margin:12px 0; }
+  .md p{ font-size:14px; margin:6px 0; }
+
+  .ent{ display:flex; gap:11px; padding:9px 0; border-bottom:1px solid var(--line-row); }
+  .ent:last-child{ border-bottom:0; }
+  .ent .av{ flex:0 0 auto; width:30px; height:30px; border-radius:50%; background:var(--surface-2);
+    border:1px solid var(--line-key); display:grid; place-items:center; font-size:13px; font-weight:700; color:var(--accent-text); }
+  .ent .e-name{ font-weight:600; font-size:14.5px; }
+  .ent .e-sum{ font-size:12.5px; color:var(--muted); margin-top:1px; }
+  .occ{ display:flex; align-items:baseline; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
+  .occ:last-child{ border-bottom:0; }
+  .occ .d{ color:var(--accent-text); font-variant-numeric:tabular-nums; font-size:12.5px; min-width:52px; }
+  .occ .in{ color:var(--faint); font-size:12px; margin-left:auto; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .grid2{ grid-template-columns:1fr; } }
+  .grid2 .card{ margin-bottom:0; }
+
+  .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(8px); background:var(--green);
+    color:#14200f; padding:9px 18px; border-radius:20px; font-weight:700; font-size:14px; opacity:0;
+    transition:.2s; pointer-events:none; z-index:50; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.err{ background:var(--red); color:#2a0f0d; }
+  .foot{ color:var(--faint); font-size:12px; text-align:center; margin-top:6px; }
+
+  /* Unlock gate */
+  .gate{ position:fixed; inset:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); display:grid; place-items:center; padding:20px; z-index:100; }
+  .gate-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; max-width:380px; width:100%; }
+  .gate-card h1{ font-family:var(--display); font-weight:500; font-size:24px; margin:0 0 4px; }
+  .gate-card h1 span{ color:var(--accent); }
+  .gate-card p{ color:var(--muted); font-size:13.5px; margin:0 0 16px; }
+  .gate-card label{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin:12px 0 5px; font-weight:600; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+  <!-- Unlock gate: no vault data is fetched until a Worker URL + unlock token exist -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <h1>Life<span>·</span>Vault</h1>
+      <p>Connect to your vault. These are stored on this device only and sent with each request.</p>
+      <label for="gApi">Worker URL</label>
+      <input type="text" id="gApi" placeholder="https://life-vault.<you>.workers.dev" autocomplete="off" />
+      <label for="gTok">Unlock token</label>
+      <input type="password" id="gTok" placeholder="your unlock token" autocomplete="off" />
+      <div class="row"><button class="btn primary" onclick="saveGate()">Connect</button></div>
+      <p id="gErr" class="hidden" style="color:var(--red); margin-top:12px;"></p>
+    </div>
+  </div>
+
+  <div class="wrap hidden" id="app">
+    <div class="top">
+      <div class="brand">
+        <div class="mascot">🐢</div>
+        <h1>Life<span>·</span>Vault</h1>
+      </div>
+      <span class="status-pill" id="statusPill" onclick="signOut()" title="Tap to disconnect"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
+    </div>
+    <div class="sub" id="gen">reads and writes the vault markdown directly</div>
+
+    <div class="card">
+      <div class="section-head"><p class="label">Capture</p><span class="count">→ inbox/</span></div>
+      <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
+      <div class="row"><button class="btn primary" onclick="doCapture()">Capture to inbox</button></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><p class="label">Focus</p><span class="count">top 3 · due / overdue</span></div>
+      <div id="focus"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><p class="label">Skills</p><span class="count">queued to inbox/_runs · run by the bridge</span></div>
+      <div id="skills"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount">grouped by area</span></div>
+      <div id="tasks"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><p class="label">Add task</p><span class="count">→ tasks.md</span></div>
+      <input type="text" id="ttext" placeholder="What needs doing" />
+      <div class="row">
+        <input type="date" id="tdue" />
+        <select id="ttag">
+          <option value="">#area…</option>
+          <option>family</option><option>house</option><option>work</option>
+          <option>health</option><option>interests</option><option>admin</option>
+        </select>
+      </div>
+      <div class="row"><button class="btn primary" onclick="doAddTask()">Add to task list</button></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span></div>
+      <div class="md" id="brief"><div class="muted">—</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
+        <div id="ppl"></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><p class="label">Upcoming</p><span class="count">occasions</span></div>
+        <div id="occ"></div>
+      </div>
+    </div>
+
+    <div class="foot">Cloud dashboard · reads/writes the vault via GitHub · one source of truth</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // --- config, stored on-device only ---------------------------------------
+  const AREAS = ["family","house","work","health","interests","admin"];
+  // Skills surfaced with a Run button + last-run status (merged with /api/data).
+  const SKILLS = [
+    { name:"file-inbox",        desc:"Sort captures into people / tasks / notes" },
+    { name:"morning-brief",     desc:"Today's due items, occasions, one nudge" },
+    { name:"evening-brief",     desc:"Debrief + data-capture request" },
+    { name:"weave",             desc:"Refresh MOCs & the index" },
+    { name:"refresh-summaries", desc:"Rewrite people / project summaries" },
+    { name:"interest-scout",    desc:"Weekly discover feed for your interests" },
+  ];
+  let API = localStorage.getItem("lv_api") || "";
+  let TOKEN = localStorage.getItem("lv_token") || "";
+
+  const $ = (id) => document.getElementById(id);
+  function esc(s){ return (s||"").replace(/[&<>]/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])); }
+  function toast(m, err){ const t=$("toast"); t.textContent=m; t.classList.toggle("err",!!err); t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
+
+  // --- gate -----------------------------------------------------------------
+  function showGate(msg){
+    $("gate").classList.remove("hidden"); $("app").classList.add("hidden");
+    if(msg){ $("gErr").textContent=msg; $("gErr").classList.remove("hidden"); }
+    $("gApi").value=API;
+  }
+  function saveGate(){
+    const api=$("gApi").value.trim().replace(/\/$/,""); const tok=$("gTok").value.trim();
+    if(!api||!tok){ $("gErr").textContent="Both fields are required."; $("gErr").classList.remove("hidden"); return; }
+    API=api; TOKEN=tok; localStorage.setItem("lv_api",API); localStorage.setItem("lv_token",TOKEN);
+    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load();
+  }
+  function signOut(){ if(!confirm("Disconnect this device? The token is cleared from here.")) return;
+    localStorage.removeItem("lv_token"); TOKEN=""; showGate(); }
+
+  // --- api ------------------------------------------------------------------
+  function req(path, opts={}){
+    return fetch(API+path, { ...opts, headers:{ "Authorization":"Bearer "+TOKEN, "Content-Type":"application/json", ...(opts.headers||{}) } });
+  }
+  async function load(){
+    try{
+      const r = await req("/api/data");
+      if(r.status===401){ showGate("Token rejected. Check the unlock token."); return; }
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      render(await r.json());
+      setStatus(true);
+    }catch(e){ setStatus(false); toast("Load failed — check the Worker URL",true); }
+  }
+  function post(path, body, msg){
+    return req(path,{ method:"POST", body:JSON.stringify(body) })
+      .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
+      .then(()=>{ toast(msg); load(); })
+      .catch(()=>toast("Failed",true));
+  }
+  function setStatus(ok){
+    $("statusPill").classList.toggle("off",!ok);
+    $("statusText").textContent = ok ? "live on the vault" : "disconnected";
+  }
+
+  // --- actions --------------------------------------------------------------
+  function doCapture(){ const e=$("cap"); if(!e.value.trim())return; post("/api/capture",{text:e.value},"Captured to inbox").then(()=>e.value=""); }
+  function doAddTask(){ const t=$("ttext"); if(!t.value.trim())return;
+    post("/api/task",{text:t.value,due:$("tdue").value,tag:$("ttag").value},"Task added")
+      .then(()=>{ t.value=""; $("tdue").value=""; $("ttag").value=""; }); }
+  function toggle(id){ post("/api/toggle",{id},"Updated"); }
+  function run(btn, name){
+    if(btn.classList.contains("busy")) return;
+    const status=btn.previousElementSibling;
+    btn.classList.add("busy"); btn.textContent="Queued";
+    status.innerHTML='<span class="running"></span> queued…';
+    post("/api/run",{skill:name},"Queued "+name);
+    setTimeout(()=>{ btn.classList.remove("busy"); btn.textContent="Run"; }, 1400);
+  }
+
+  // --- render ---------------------------------------------------------------
+  function fmtDate(iso){ // YYYY-MM-DD -> "Fri 18 Jul"
+    if(!iso) return ""; const d=new Date(iso+"T00:00:00");
+    return d.toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short"});
+  }
+  function duePill(t){
+    if(!t.due) return "";
+    const cls = t.overdue ? "over" : (t.due===new Date().toISOString().slice(0,10) ? "due" : "");
+    const lbl = t.overdue ? fmtDate(t.due) : (cls==="due" ? "today" : fmtDate(t.due));
+    return '<span class="pill '+cls+'">'+lbl+"</span>";
+  }
+  function taskRow(t){
+    return '<div class="task'+(t.done?" done":"")+'">'+
+      '<div class="check'+(t.done?" on":"")+'" onclick="toggle(\''+t.id+'\')">'+(t.done?"✓":"")+"</div>"+
+      '<div class="t-body"><span class="t-title">'+esc(t.text)+"</span>"+duePill(t)+"</div></div>";
+  }
+  function renderFocus(tasks){
+    const open=tasks.filter((t)=>!t.done);
+    const rank=(t)=> t.overdue?0 : (t.due?1:2);
+    const top=open.slice().sort((a,b)=> rank(a)-rank(b) || String(a.due||"9").localeCompare(String(b.due||"9"))).slice(0,3);
+    $("focus").innerHTML = top.length ? top.map((t,i)=>
+      '<div class="priority'+(t.overdue?" over":"")+'"><span class="rank">'+(i+1)+"</span>"+
+      '<div><div class="p-title">'+esc(t.text)+"</div>"+
+      '<div class="p-meta">'+(t.overdue?"overdue":(t.due?"due "+fmtDate(t.due):"no date"))+
+      (t.tags&&t.tags.length?" · #"+esc(t.tags[0]):"")+"</div></div></div>"
+    ).join("") : '<div class="muted">Nothing pressing. Nice.</div>';
+  }
+  function renderSkills(status){
+    status=status||{};
+    $("skills").innerHTML = SKILLS.map((s)=>{
+      const st=status[s.name];
+      let line='<span style="color:var(--faint)">not run yet</span>';
+      if(st){ const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
+        line=mark+" "+esc(st.when||st.ran||""); }
+      return '<div class="skill"><div class="s-body"><div class="s-name">'+esc(s.name)+"</div>"+
+        '<div class="s-desc">'+esc(s.desc)+'</div></div>'+
+        '<div class="s-status">'+line+'</div>'+
+        '<button class="run-btn" onclick="run(this,\''+s.name+'\')">Run</button></div>';
+    }).join("");
+  }
+  function renderTasks(tasks){
+    const open=tasks.filter((t)=>!t.done);
+    $("taskCount").textContent = open.length+" open · grouped by area";
+    const byArea={}; const other=[];
+    open.forEach((t)=>{ const a=(t.tags||[]).find((g)=>AREAS.includes(g));
+      if(a){ (byArea[a]=byArea[a]||[]).push(t); } else other.push(t); });
+    let html="";
+    AREAS.forEach((a)=>{ if(!byArea[a]) return;
+      html+='<div class="domain '+a+'"><h3>'+a+' <span class="n">'+byArea[a].length+"</span></h3>"+
+        byArea[a].map(taskRow).join("")+"</div>"; });
+    if(other.length) html+='<div class="domain"><h3>other <span class="n">'+other.length+"</span></h3>"+other.map(taskRow).join("")+"</div>";
+    $("tasks").innerHTML = html || '<div class="muted">No open tasks.</div>';
+  }
+  function renderBrief(b){
+    $("briefName").textContent = b ? b.name.replace(/\.md$/,"") : "—";
+    $("brief").innerHTML = b ? mdToHtml(b.text) : '<div class="muted">—</div>';
+  }
+  function renderPeople(people){
+    $("pplCount").textContent = people.length;
+    $("ppl").innerHTML = people.length ? people.slice(0,6).map((p)=>
+      '<div class="ent"><div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
+      '<div><div class="e-name">'+esc(p.name)+"</div>"+
+      '<div class="e-sum">'+esc(p.summary||"")+"</div></div></div>"
+    ).join("") : '<div class="muted">—</div>';
+  }
+  function renderOcc(occ){
+    const t=new Date().toISOString().slice(0,10);
+    $("occ").innerHTML = occ.length ? occ.slice(0,6).map((o)=>{
+      const days=Math.round((new Date(o.date)-new Date(t))/864e5);
+      const inTxt = days<=0?"today":(days===1?"tomorrow":"in "+days+" days");
+      return '<div class="occ"><span class="d">'+fmtDate(o.date).replace(/^\w+\s/,"")+"</span><span>"+esc(o.text)+"</span><span class=\"in\">"+inTxt+"</span></div>";
+    }).join("") : '<div class="muted">—</div>';
+  }
+  function render(d){
+    $("gen").textContent = "Updated "+new Date(d.generated).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" · reads and writes the vault directly";
+    renderFocus(d.tasks); renderSkills(d.skills); renderTasks(d.tasks);
+    renderBrief(d.brief); renderPeople(d.people||[]); renderOcc(d.occasions||[]);
+  }
+
+  // Tiny markdown renderer for the brief (### headings, - lists, --- rule, **bold**).
+  function mdToHtml(md){
+    const lines=md.replace(/\r/g,"").split("\n"); let html="", inList=false;
+    const inline=(s)=>esc(s).replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    for(let raw of lines){
+      const l=raw.trimEnd();
+      if(/^#{1,6}\s/.test(l)){ if(inList){html+="</ul>";inList=false;} html+="<h3>"+inline(l.replace(/^#{1,6}\s/,""))+"</h3>"; continue; }
+      if(/^---+$/.test(l)){ if(inList){html+="</ul>";inList=false;} html+="<hr>"; continue; }
+      if(/^[-*]\s+/.test(l)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+inline(l.replace(/^[-*]\s+/,""))+"</li>"; continue; }
+      if(!l.trim()){ if(inList){html+="</ul>";inList=false;} continue; }
+      if(inList){html+="</ul>";inList=false;} html+="<p>"+inline(l)+"</p>";
+    }
+    if(inList) html+="</ul>";
+    return html;
+  }
+
+  // --- boot -----------------------------------------------------------------
+  if(API && TOKEN){ load(); setInterval(load, 60000); }
+  else { showGate(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+# Skill runner — executes a skill when the dashboard queues one.
+#
+# The dashboard "Run" button commits a trigger file to inbox/_runs/<skill>-<ts>.run
+# (via the Worker). This workflow picks it up, runs the skill with the Claude Code
+# CLI in the cloud (no laptop involved), writes a <skill>.status file the dashboard
+# reads, archives the trigger (never deletes — golden rule 1), and commits the result.
+#
+# Auth: CLAUDE_CODE_OAUTH_TOKEN (a long-lived Claude Code token from your plan),
+# stored as a repo secret. Runs draw on your Claude plan, not API billing.
+
+name: skill-runner
+
+on:
+  push:
+    paths:
+      - "inbox/_runs/**.run"
+  workflow_dispatch: {}   # manual "run the queue now"
+
+# Let the default token push the results back.
+permissions:
+  contents: write
+
+concurrency:
+  group: skill-runner
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run queued skills
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+          runs=(inbox/_runs/*.run)
+          if [ ${#runs[@]} -eq 0 ]; then
+            echo "No queued runs."; exit 0
+          fi
+          mkdir -p inbox/_runs/_archive
+
+          for f in "${runs[@]}"; do
+            skill="$(basename "$f" .run | sed -E 's/-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}$//')"
+            echo "::group::skill $skill ($f)"
+
+            # Map the skill to its saved prompt: prefer the skill file, then a routine.
+            prompt_file=""
+            if [ -f "_meta/skills/$skill.md" ]; then prompt_file="_meta/skills/$skill.md"
+            elif [ -f "routines/$skill.md" ]; then prompt_file="routines/$skill.md"; fi
+
+            if [ -n "$prompt_file" ]; then
+              prompt="$(cat "$prompt_file")"
+            else
+              prompt="/$skill"
+            fi
+
+            # Run headless. --dangerously-skip-permissions: this is an unattended
+            # vault-maintenance run with no interactive approver.
+            set +e
+            out="$(claude -p "$prompt" --dangerously-skip-permissions 2>&1)"
+            code=$?
+            set -e
+            echo "$out" | tail -n 40
+
+            when="$(date -u +%FT%TZ)"
+            if [ $code -eq 0 ]; then ok=true; else ok=false; fi
+            printf '{"skill":"%s","ok":%s,"when":"%s"}\n' "$skill" "$ok" "$when" \
+              > "inbox/_runs/$skill.status"
+
+            # Archive the trigger — kept forever, never deleted.
+            git mv "$f" "inbox/_runs/_archive/$(basename "$f")" 2>/dev/null || mv "$f" "inbox/_runs/_archive/$(basename "$f")"
+
+            if [ "$ok" = false ] && [ -n "${NTFY_TOPIC:-}" ]; then
+              curl -s -H "Title: ⚠️ skill $skill failed" -d "$(echo "$out" | tail -n 5)" "https://ntfy.sh/$NTFY_TOPIC" || true
+            fi
+            echo "::endgroup::"
+          done
+
+      - name: Commit results
+        run: |
+          git config user.name "life-vault skill-runner"
+          git config user.email "actions@github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "skill-runner: results $(date -u +%FT%TZ)"
+            git push
+          fi

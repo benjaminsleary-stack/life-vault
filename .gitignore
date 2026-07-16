@@ -11,6 +11,9 @@ conflict-files-obsidian-git.md
 # Transient script working dirs (mail bodies/attachments are never committed).
 scripts/.venv/
 scripts/_work/
+# Wrangler (Cloudflare) local cache for the dashboard worker + PWA.
+.wrangler/
+node_modules/
 *.pyc
 __pycache__/
 .DS_Store

@@ -1,0 +1,16 @@
+# Cloudflare Worker config for the Life-Vault dashboard API.
+# Deploy:  cd worker && npx wrangler deploy
+# Secrets (never put these here — they go in Cloudflare, encrypted):
+#   npx wrangler secret put GH_TOKEN       # fine-grained PAT, life-vault repo, contents RW
+#   npx wrangler secret put UNLOCK_TOKEN   # the app-unlock secret you choose
+
+name = "life-vault"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+GH_OWNER = "benjaminsleary-stack"            # <-- your GitHub username / org
+GH_REPO = "life-vault"      # <-- the vault repo name
+GH_BRANCH = "main"
+# Tighten this to your Pages URL once you have it, e.g. https://life-vault.pages.dev
+ALLOW_ORIGIN = "*"
