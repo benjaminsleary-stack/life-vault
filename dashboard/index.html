@@ -146,6 +146,29 @@
   @media (max-width:560px){ .grid2{ grid-template-columns:1fr; } }
   .grid2 .card{ margin-bottom:0; }
 
+  /* Desktop: reflow the single-column card stack into two columns (masonry). */
+  @media (min-width:900px){
+    .wrap{ max-width:1120px; }
+    .cards{ column-count:2; column-gap:14px; }
+    .cards > .card, .cards > .grid2{ break-inside:avoid; }
+    .cards > .grid2{ grid-template-columns:1fr; margin-bottom:14px; }
+  }
+
+  /* Tasks: drag handle, priority star, category headers */
+  .task .drag{ flex:0 0 auto; cursor:grab; color:var(--faint); font-size:15px; margin-top:1px;
+    touch-action:none; user-select:none; padding:0 3px 0 0; }
+  .task.dragging{ opacity:.6; background:var(--bg1); border-radius:8px; }
+  .pstar{ flex:0 0 auto; background:none; border:none; color:var(--line-key); font-size:14px; cursor:pointer; padding:2px; line-height:1; }
+  .pstar.on{ color:var(--accent); }
+  .pstar:hover{ color:var(--accent-text); }
+  .task.pri .t-title{ color:var(--text); }
+  .tcat{ font-size:11px; margin:13px 0 4px; text-transform:uppercase; letter-spacing:.14em; font-weight:700;
+    color:var(--hue,var(--accent)); display:flex; align-items:center; gap:8px; }
+  .tcat::before{ content:""; width:8px; height:8px; border-radius:2px; background:var(--hue,var(--accent)); }
+  .tcat:first-child{ margin-top:0; }
+  .tcat.family{ --hue:var(--a-family);} .tcat.house{ --hue:var(--a-house);} .tcat.work{ --hue:var(--a-work);}
+  .tcat.health{ --hue:var(--a-health);} .tcat.interests{ --hue:var(--a-interests);} .tcat.admin{ --hue:var(--a-admin);}
+
   .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(8px); background:var(--green);
     color:#14200f; padding:9px 18px; border-radius:20px; font-weight:700; font-size:14px; opacity:0;
     transition:.2s; pointer-events:none; z-index:50; }
@@ -205,6 +228,7 @@
     </div>
     <div class="sub" id="gen">reads and writes the vault markdown directly</div>
 
+    <div class="cards">
     <div class="card">
       <div class="section-head"><p class="label">Capture</p><span class="count">→ inbox/</span></div>
       <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
@@ -212,18 +236,15 @@
     </div>
 
     <div class="card">
-      <div class="section-head"><p class="label">Focus</p><span class="count">top 3 · due / overdue</span></div>
-      <div id="focus"></div>
+      <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount"></span></div>
+      <div id="tasksTop"></div>
+      <div id="tasksAll" class="hidden"></div>
+      <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
     </div>
 
     <div class="card">
       <div class="section-head"><p class="label">Skills</p><span class="count">queued to inbox/_runs · run by the bridge</span></div>
       <div id="skills"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount">grouped by area</span></div>
-      <div id="tasks"></div>
     </div>
 
     <div class="card">
@@ -255,6 +276,7 @@
         <div id="occ"></div>
       </div>
     </div>
+    </div><!-- /.cards -->
 
     <div class="foot">Cloud dashboard · reads/writes the vault via GitHub · one source of truth</div>
   </div>
@@ -383,21 +405,18 @@
     const lbl = t.overdue ? fmtDate(t.due) : (cls==="due" ? "today" : fmtDate(t.due));
     return '<span class="pill '+cls+'">'+lbl+"</span>";
   }
-  function taskRow(t){
-    return '<div class="task'+(t.done?" done":"")+'">'+
+  function taskRow(t, draggable){
+    return '<div class="task'+(t.done?" done":"")+(t.priority?" pri":"")+'" data-id="'+t.id+'">'+
+      (draggable?'<span class="drag" onpointerdown="dragStart(event)" title="Drag to reorder">⠿</span>':'')+
       '<div class="check'+(t.done?" on":"")+'" onclick="toggle(\''+t.id+'\')">'+(t.done?"✓":"")+"</div>"+
-      '<div class="t-body"><span class="t-title">'+esc(t.text)+"</span>"+duePill(t)+"</div></div>";
+      '<div class="t-body"><span class="t-title">'+esc(t.text)+"</span>"+duePill(t)+"</div>"+
+      '<button class="pstar'+(t.priority?" on":"")+'" onclick="togglePriority(\''+t.id+'\')" title="Mark priority">⏫</button>'+
+      "</div>";
   }
-  function renderFocus(tasks){
-    const open=tasks.filter((t)=>!t.done);
-    const rank=(t)=> t.overdue?0 : (t.due?1:2);
-    const top=open.slice().sort((a,b)=> rank(a)-rank(b) || String(a.due||"9").localeCompare(String(b.due||"9"))).slice(0,3);
-    $("focus").innerHTML = top.length ? top.map((t,i)=>
-      '<div class="priority'+(t.overdue?" over":"")+'"><span class="rank">'+(i+1)+"</span>"+
-      '<div><div class="p-title">'+esc(t.text)+"</div>"+
-      '<div class="p-meta">'+(t.overdue?"overdue":(t.due?"due "+fmtDate(t.due):"no date"))+
-      (t.tags&&t.tags.length?" · #"+esc(t.tags[0]):"")+"</div></div></div>"
-    ).join("") : '<div class="muted">Nothing pressing. Nice.</div>';
+  // Open tasks ordered priority-first, then by the vault's file order.
+  function orderedOpen(tasks){
+    const open=(tasks||[]).filter((t)=>!t.done);
+    return open.map((t,i)=>({t,i})).sort((a,b)=>(b.t.priority?1:0)-(a.t.priority?1:0)||a.i-b.i).map((x)=>x.t);
   }
   function fmtWhen(iso){
     if(!iso) return "";
@@ -444,18 +463,59 @@
   }
   function closeModal(){ $("modalBack").classList.remove("show"); }
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+  let showAll=false;
+  function toggleShowAll(){ showAll=!showAll; if(lastData) renderTasks(lastData.tasks); }
   function renderTasks(tasks){
-    const open=tasks.filter((t)=>!t.done);
-    $("taskCount").textContent = open.length+" open · grouped by area";
+    const openFO=(tasks||[]).filter((t)=>!t.done);     // file order (drag-controlled)
+    const top=orderedOpen(tasks).slice(0,3);           // priority-first for the top
+    $("taskCount").textContent = openFO.length+" open";
+    $("tasksTop").innerHTML = top.length ? top.map((t)=>taskRow(t,false)).join("")
+      : '<div class="muted">No open tasks.</div>';
+    const all=$("tasksAll");
+    if(!showAll){ all.classList.add("hidden");
+      $("showAllBtn").textContent = openFO.length>3 ? "Show all ("+openFO.length+")" : "Show all";
+      $("showAllBtn").style.display = openFO.length ? "" : "none"; return; }
+    all.classList.remove("hidden"); $("showAllBtn").textContent="Show less";
     const byArea={}; const other=[];
-    open.forEach((t)=>{ const a=(t.tags||[]).find((g)=>AREAS.includes(g));
+    openFO.forEach((t)=>{ const a=(t.tags||[]).find((g)=>AREAS.includes(g));
       if(a){ (byArea[a]=byArea[a]||[]).push(t); } else other.push(t); });
     let html="";
     AREAS.forEach((a)=>{ if(!byArea[a]) return;
-      html+='<div class="domain '+a+'"><h3>'+a+' <span class="n">'+byArea[a].length+"</span></h3>"+
-        byArea[a].map(taskRow).join("")+"</div>"; });
-    if(other.length) html+='<div class="domain"><h3>other <span class="n">'+other.length+"</span></h3>"+other.map(taskRow).join("")+"</div>";
-    $("tasks").innerHTML = html || '<div class="muted">No open tasks.</div>';
+      html+='<div class="tcat '+a+'">'+a+' <span style="color:var(--faint)">'+byArea[a].length+'</span></div>'+
+        '<div class="tgroup" data-area="'+a+'">'+byArea[a].map((t)=>taskRow(t,true)).join("")+'</div>'; });
+    if(other.length) html+='<div class="tcat">other</div><div class="tgroup" data-area="">'+other.map((t)=>taskRow(t,true)).join("")+'</div>';
+    all.innerHTML = html;
+  }
+  // --- priority + drag-reorder ---------------------------------------------
+  function togglePriority(id){
+    if(lastData){ const t=(lastData.tasks||[]).find((x)=>String(x.id)===String(id)); if(t){ t.priority=!t.priority; renderTasks(lastData.tasks); } }
+    req("/api/priority",{method:"POST",body:JSON.stringify({id})})
+      .then((r)=>{ if(!r.ok) throw new Error(); }).catch(()=>{ toast("Failed",true); load(); });
+  }
+  let dragEl=null, dragGroup=null;
+  function dragStart(e){
+    const row=e.target.closest(".task"); if(!row) return;
+    e.preventDefault();
+    dragEl=row; dragGroup=row.parentElement; row.classList.add("dragging");
+    document.addEventListener("pointermove", dragMove);
+    document.addEventListener("pointerup", dragEnd, {once:true});
+  }
+  function dragMove(e){
+    if(!dragEl) return;
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    const over=el&&el.closest(".task");
+    if(over&&over!==dragEl&&over.parentElement===dragGroup){
+      const r=over.getBoundingClientRect();
+      dragGroup.insertBefore(dragEl, (e.clientY-r.top)<r.height/2 ? over : over.nextSibling);
+    }
+  }
+  function dragEnd(){
+    document.removeEventListener("pointermove", dragMove);
+    if(!dragEl) return;
+    dragEl.classList.remove("dragging"); dragEl=null;
+    const ids=[...$("tasksAll").querySelectorAll(".task")].map((r)=>r.dataset.id);
+    req("/api/reorder",{method:"POST",body:JSON.stringify({ids})})
+      .then((r)=>{ if(!r.ok) throw new Error(); toast("Reordered"); }).catch(()=>{ toast("Reorder failed",true); load(); });
   }
   function renderBrief(b){
     $("briefName").textContent = b ? b.name.replace(/\.md$/,"") : "—";
@@ -480,7 +540,7 @@
   function render(d){
     lastData=d;
     $("gen").textContent = "Updated "+new Date(d.generated).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" · reads and writes the vault directly";
-    renderFocus(d.tasks); renderSkills(d.skills); renderTasks(d.tasks);
+    renderSkills(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderPeople(d.people||[]); renderOcc(d.occasions||[]);
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};

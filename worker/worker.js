@@ -117,6 +117,8 @@ const DONE_RE = /✅\s*(\d{4}-\d{2}-\d{2})/;            // ✅ YYYY-MM-DD
 const TAG_RE = /(?:^|\s)#([A-Za-z0-9_/-]+)/g;
 const TASK_RE = /^(\s*)- \[( |x|X)\]\s+(.*)$/;
 const OCCASION_RE = /\(occasion::\s*(\d{4}-\d{2}-\d{2})\)\s*(.*)/g;
+const PRIORITY_RE = /[🔺⏫🔼🔽⏬]/g;            // Obsidian Tasks priority markers
+const HIGH_RE = /[🔺⏫]/;                         // counts as "priority" in the UI
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -125,7 +127,7 @@ function today() {
 // Stable id: text stripped of stamps/tags, then a small stable hash. The Worker
 // is the only place ids are made, so browser round-trips stay consistent.
 function coreText(text) {
-  let t = text.replace(DUE_RE, "").replace(DONE_RE, "");
+  let t = text.replace(DUE_RE, "").replace(DONE_RE, "").replace(PRIORITY_RE, "");
   t = t.replace(/(?:^|\s)#[A-Za-z0-9_/-]+/g, "");
   return t.split(/\s+/).join(" ").trim().toLowerCase();
 }
@@ -146,12 +148,13 @@ function parseTasks(text) {
     const dueM = body.match(DUE_RE);
     const due = dueM ? dueM[1] : null;
     const tags = [...body.matchAll(TAG_RE)].map((x) => x[1]);
-    let label = body.replace(DUE_RE, "").replace(DONE_RE, "");
+    let label = body.replace(DUE_RE, "").replace(DONE_RE, "").replace(PRIORITY_RE, "");
     label = label.replace(/(?:^|\s)#[A-Za-z0-9_/-]+/g, "");
     label = label.replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "$1"); // wikilinks
     label = label.split(/\s+/).join(" ").trim();
     const overdue = !!(due && !checked && due <= today());
-    out.push({ id: taskId(body), text: label, done: checked, due, tags, overdue });
+    const priority = HIGH_RE.test(body);
+    out.push({ id: taskId(body), text: label, done: checked, due, tags, overdue, priority });
   }
   return out;
 }
@@ -303,6 +306,56 @@ async function toggleTask(env, id) {
   return true;
 }
 
+// Toggle the ⏫ priority marker on a task.
+async function setPriority(env, id) {
+  const cur = await readFile(env, "tasks.md");
+  if (!cur) return false;
+  const lines = cur.text.split("\n");
+  let changed = false;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(TASK_RE);
+    if (!m || taskId(m[3]) !== String(id)) continue;
+    const had = HIGH_RE.test(m[3]);
+    let body = m[3].replace(PRIORITY_RE, "").replace(/\s{2,}/g, " ").replace(/\s+$/, "");
+    if (!had) body = body + " ⏫";
+    lines[i] = `${m[1]}- [${m[2]}] ${body}`;
+    changed = true;
+    break;
+  }
+  if (!changed) return false;
+  await putFile(env, "tasks.md", lines.join("\n"), "dashboard: toggle priority", cur.sha);
+  return true;
+}
+
+// Reorder the task lines in tasks.md to match the given id order. Task lines are
+// rewritten into their existing slots in the new order; non-task lines stay put.
+async function reorderTasks(env, ids) {
+  if (!Array.isArray(ids)) return false;
+  const cur = await readFile(env, "tasks.md");
+  if (!cur) return false;
+  const lines = cur.text.split("\n");
+  const slots = [];
+  const byId = {};
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(TASK_RE);
+    if (m) { slots.push(i); byId[taskId(m[3])] = lines[i]; }
+  }
+  const used = new Set();
+  const ordered = [];
+  for (const id of ids) {
+    const ln = byId[String(id)];
+    if (ln !== undefined && !used.has(String(id))) { ordered.push(ln); used.add(String(id)); }
+  }
+  for (const idx of slots) {
+    const m = lines[idx].match(TASK_RE);
+    const id = taskId(m[3]);
+    if (!used.has(id)) { ordered.push(lines[idx]); used.add(id); }
+  }
+  slots.forEach((idx, k) => { lines[idx] = ordered[k]; });
+  await putFile(env, "tasks.md", lines.join("\n"), "dashboard: reorder tasks", cur.sha);
+  return true;
+}
+
 // Queue a skill run: a .run trigger file the GitHub Action picks up.
 async function queueRun(env, skill) {
   skill = (skill || "").trim().replace(/[^a-z0-9-]/gi, "");
@@ -342,6 +395,8 @@ export default {
         if (path === "/api/capture") ok = await capture(env, payload.text);
         else if (path === "/api/task") ok = await addTask(env, payload.text, payload.due, payload.tag);
         else if (path === "/api/toggle") ok = await toggleTask(env, payload.id);
+        else if (path === "/api/priority") ok = await setPriority(env, payload.id);
+        else if (path === "/api/reorder") ok = await reorderTasks(env, payload.ids);
         else if (path === "/api/run") ok = await queueRun(env, payload.skill);
         else return json({ error: "not found" }, env, 404);
         return json({ ok }, env);
