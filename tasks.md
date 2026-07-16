@@ -8,4 +8,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Repaint [[Jasper]]'s room #house
 - [ ] Insulate [[Milo]]'s room #house
 - [ ] Plan new kitchen in extension #house
-- [ ] Ask mum to look after boy's from 11th December for 1 week. #family 📅 2026-07-16
+- [x] Ask mum to look after boy's from 11th December for 1 week. #family 📅 2026-07-16 ✅ 2026-07-16
