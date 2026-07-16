@@ -29,6 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main          # always process against the latest queue, not the trigger SHA
+          fetch-depth: 0      # full history so rebase-before-push works
 
       - uses: actions/setup-node@v4
         with:
@@ -94,7 +97,17 @@ jobs:
           git add -A
           if git diff --cached --quiet; then
             echo "Nothing to commit."
-          else
-            git commit -m "skill-runner: results $(date -u +%FT%TZ)"
-            git push
+            exit 0
           fi
+          git commit -m "skill-runner: results $(date -u +%FT%TZ)"
+          # Push, but survive a concurrent push (bridge / routines / another run):
+          # rebase onto whatever landed and retry, mirroring scripts/bridge.sh.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "pushed on attempt $attempt"; exit 0
+            fi
+            echo "push rejected — integrating remote and retrying ($attempt)…"
+            git pull --rebase --autostash origin main || git rebase --abort || true
+            sleep $((attempt * 3))
+          done
+          echo "push still failing after retries"; exit 1
