@@ -1,0 +1,74 @@
+# Scheduled skills — the laptop-off timer. Runs skills in the cloud on a cron so
+# outputs (e.g. the morning brief) are ready before you wake, desktop off or on.
+# These run the skill DIRECTLY (not via a .run trigger), so they never involve
+# the local watcher and can't double-run with it.
+#
+# Times are UTC (GitHub cron has no DST). London is UTC+1 in summer (BST), UTC in
+# winter (GMT), and GitHub may fire up to ~15 min late — so each is set early
+# with buffer. Adjust the cron lines to taste.
+
+name: scheduled-skills
+
+on:
+  schedule:
+    - cron: "45 4 * * *"    # morning-brief      — 05:45 BST / 04:45 GMT (ready by 6:30)
+    - cron: "45 19 * * *"   # evening-brief      — 20:45 BST / 19:45 GMT
+    - cron: "0 8 * * 6"     # interest-scout     — Sat 09:00 BST / 08:00 GMT
+    - cron: "0 2 * * 0"     # refresh-summaries  — Sun 03:00 BST / 02:00 GMT
+  workflow_dispatch:
+    inputs:
+      skill:
+        description: "Skill to run now"
+        required: true
+        default: morning-brief
+
+permissions:
+  contents: write
+
+concurrency:
+  group: skill-runner        # share the lane with skill-runner.yml — never overlap
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run the due skill
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          set -uo pipefail
+          case "${{ github.event.schedule }}" in
+            "45 4 * * *")  skill=morning-brief ;;
+            "45 19 * * *") skill=evening-brief ;;
+            "0 8 * * 6")   skill=interest-scout ;;
+            "0 2 * * 0")   skill=refresh-summaries ;;
+            *)             skill="${{ github.event.inputs.skill }}" ;;
+          esac
+          echo "Running scheduled skill: $skill"
+          bash scripts/run-skill.sh "$skill" || true
+
+      - name: Commit results
+        run: |
+          git config user.name "life-vault scheduled-skills"
+          git config user.email "actions@github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "scheduled-skills: results $(date -u +%FT%TZ)"
+          for a in 1 2 3 4 5; do
+            git push && exit 0
+            echo "push rejected — rebasing ($a)…"
+            git pull --rebase --autostash origin main || git rebase --abort || true
+            sleep $((a * 3))
+          done
+          echo "push failed after retries"; exit 1

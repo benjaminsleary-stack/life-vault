@@ -1,0 +1,4 @@
+# Shell scripts must stay LF — CRLF breaks bash (`set -euo pipefail\r` is a parse
+# error), which is what silently broke notify.sh. Force LF regardless of OS.
+*.sh text eol=lf
+scripts/skill-runner-local.py text eol=lf

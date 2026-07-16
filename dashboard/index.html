@@ -286,7 +286,9 @@
     { name:"refresh-summaries", desc:"Rewrite people / project summaries" },
     { name:"interest-scout",    desc:"Weekly discover feed for your interests" },
   ];
-  let API = localStorage.getItem("lv_api") || "";
+  // The Worker URL is fixed, so default it — you only ever enter the token.
+  const DEFAULT_API = "https://life-vault.benvault.workers.dev";
+  let API = localStorage.getItem("lv_api") || DEFAULT_API;
   let TOKEN = localStorage.getItem("lv_token") || "";
   let lastData = null;
   const awaiting = {};   // skill -> the .when seen when queued, to detect a fresh completion
