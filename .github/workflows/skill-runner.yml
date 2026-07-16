@@ -78,20 +78,20 @@ jobs:
             fi
 
             # Run headless. --dangerously-skip-permissions: this is an unattended
-            # vault-maintenance run with no interactive approver.
-            set +e
+            # vault-maintenance run with no interactive approver. (No `set -e` in
+            # this step, so a non-zero exit here is captured, not fatal.)
             out="$(claude -p "$prompt" --dangerously-skip-permissions 2>&1)"
             code=$?
-            set -e
             echo "$out" | tail -n 40
 
             when="$(date -u +%FT%TZ)"
             if [ $code -eq 0 ]; then ok=true; else ok=false; fi
 
             # Files this skill produced/changed = whatever became dirty during it.
-            outputs="$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$(dirty_md)") | grep -v '^$' || true)"
-            outputs_json="$(printf '%s\n' "$outputs" | grep -v '^$' | jq -R . | jq -s . )"
-            [ -z "$outputs_json" ] && outputs_json="[]"
+            # jq -R 'select(length>0)' drops blank lines without relying on grep's
+            # exit code, so an empty result is fine (yields []).
+            outputs="$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$(dirty_md)"))"
+            outputs_json="$(printf '%s\n' "$outputs" | jq -R 'select(length>0)' | jq -s .)"
             jq -n --arg skill "$skill" --argjson ok "$ok" --arg when "$when" --argjson outputs "$outputs_json" \
               '{skill:$skill, ok:$ok, when:$when, outputs:$outputs}' > "inbox/_runs/$skill.status"
 
