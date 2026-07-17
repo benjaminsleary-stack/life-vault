@@ -7,9 +7,14 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <title>Life-Vault</title>
 <style>
+  /* The theme's intended faces, self-hosted (latin variable subsets). */
+  @font-face{ font-family:"Hanken Grotesk"; src:url("fonts/hanken-grotesk-var.woff2") format("woff2");
+    font-weight:400 700; font-style:normal; font-display:swap; }
+  @font-face{ font-family:"Newsreader"; src:url("fonts/newsreader-var.woff2") format("woff2");
+    font-weight:400 700; font-style:normal; font-display:swap; }
+
   /* Warm dark agentic-OS theme, from .superceeded/public/styles.css.
-     Single committed warm-dark world. Newsreader/Hanken fall back to
-     Georgia/system-ui — the real faces can be served locally later. */
+     Single committed warm-dark world. */
   :root{
     --bg1:#241f19; --bg2:#1c1813; --surface:#221d17; --surface-2:#2a2419;
     --line:#362e24; --line-row:#302921; --line-key:#3a3228;
@@ -20,7 +25,7 @@
     --a-family:var(--blue); --a-house:var(--green); --a-work:var(--honey);
     --a-health:var(--life); --a-interests:var(--purple); --a-admin:var(--yellow);
     --radius:12px;
-    --ui:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --ui:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --display:"Newsreader",Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box;}
@@ -158,12 +163,27 @@
   .wx-chart svg{ width:100%; height:auto; display:block; overflow:visible; }
   .wx-axis{ fill:var(--faint); font-size:8px; font-family:var(--ui); }
 
-  /* Desktop: reflow the single-column card stack into two columns (masonry). */
+  /* Desktop: deliberate bento arrangement — tasks is the tall hero on the
+     left, capture/ask stack beside it, weather and brief on the right rail.
+     Mobile keeps the natural single-column source order. */
   @media (min-width:900px){
-    .wrap{ max-width:1120px; }
-    .cards{ column-count:2; column-gap:14px; }
-    .cards > .card, .cards > .grid2{ break-inside:avoid; }
-    .cards > .grid2{ grid-template-columns:1fr; margin-bottom:14px; }
+    .wrap{ max-width:1180px; }
+    .cards{
+      display:grid; gap:14px; align-items:start;
+      grid-template-columns:1.15fr 1fr 1fr;
+      grid-template-areas:
+        "tasks capture weather"
+        "tasks ask     weather"
+        "tasks skills  brief"
+        "add   skills  brief"
+        "add   people  agenda";
+    }
+    .cards .card{ margin-bottom:0; }
+    .c-tasks{ grid-area:tasks; } .c-capture{ grid-area:capture; }
+    .c-weather{ grid-area:weather; } .c-ask{ grid-area:ask; }
+    .c-skills{ grid-area:skills; } .c-brief{ grid-area:brief; }
+    .c-add{ grid-area:add; } .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
+    .cards > .grid2{ display:contents; }
   }
 
   /* Tasks: drag handle, priority star, category headers */
@@ -188,15 +208,45 @@
   .toast.err{ background:var(--red); color:#2a0f0d; }
   .foot{ color:var(--faint); font-size:12px; text-align:center; margin-top:6px; }
 
+  /* Skeleton shimmer while a JS-filled container is still empty. */
+  .skel:empty{ display:block; min-height:56px; border-radius:8px;
+    background:linear-gradient(100deg, var(--surface-2) 35%, var(--line-row) 50%, var(--surface-2) 65%);
+    background-size:200% 100%; animation:shimmer 1.3s linear infinite; }
+  @keyframes shimmer{ to{ background-position:-200% 0; } }
+
+  /* Task completion: strike settles in before the list re-renders. */
+  .task .t-title{ transition:color .25s ease; }
+  .task.done-anim .t-title{ color:var(--muted); text-decoration:line-through; }
+  .task.done-anim{ opacity:.55; transition:opacity .25s ease; }
+
+  /* Glass on the status pill. */
+  .status-pill{ backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+
+  /* Section-jump pills (mobile only — desktop sees everything at once). */
+  html{ scroll-behavior:smooth; }
+  .jump{ position:sticky; top:0; z-index:40; display:flex; gap:8px; padding:8px 0 10px;
+    margin:0 -16px 8px; padding-left:16px; padding-right:16px;
+    background:color-mix(in srgb, var(--bg2) 82%, transparent);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+  .jump a{ text-decoration:none; color:var(--muted); font-size:12.5px; font-weight:600;
+    border:1px solid var(--line-key); border-radius:999px; padding:6px 13px; }
+  .jump a:active, .jump a:hover{ color:var(--text); border-color:var(--accent); }
+  @media (min-width:900px){ .jump{ display:none; } }
+
+
   /* Output links under a skill */
   .s-out{ font-size:12px; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 10px; }
   .s-out a{ color:var(--accent-text); cursor:pointer; text-decoration:none; }
   .s-out a:hover{ text-decoration:underline; }
 
-  /* File viewer modal */
-  .modal-back{ position:fixed; inset:0; background:rgba(7,6,4,.66); display:none; align-items:flex-start;
-    justify-content:center; padding:5vh 16px; z-index:80; overflow-y:auto; }
-  .modal-back.show{ display:flex; }
+  /* File viewer modal (fades in; the sheet slides). */
+  .modal-back{ position:fixed; inset:0; background:rgba(7,6,4,.6); backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px); display:flex; align-items:flex-start; justify-content:center;
+    padding:5vh 16px; z-index:80; overflow-y:auto;
+    visibility:hidden; opacity:0; transition:opacity .22s ease, visibility .22s; }
+  .modal-back.show{ visibility:visible; opacity:1; }
+  .modal{ transform:translateY(14px); transition:transform .22s ease; }
+  .modal-back.show .modal{ transform:none; }
   .modal{ background:var(--surface); border:1px solid var(--line); border-radius:16px; max-width:680px; width:100%;
     box-shadow:0 30px 80px rgba(0,0,0,.5); }
   .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px;
@@ -221,6 +271,25 @@
   .gate-card p{ color:var(--muted); font-size:13.5px; margin:0 0 16px; }
   .gate-card label{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin:12px 0 5px; font-weight:600; }
   .hidden{ display:none !important; }
+
+  /* Mobile: the file viewer becomes a full-height bottom sheet.
+     (Kept at the end of the sheet so it wins the equal-specificity cascade
+     against the base .modal rules above.) */
+  @media (max-width:560px){
+    .modal-back{ align-items:flex-end; padding:0; }
+    .modal{ width:100%; max-width:none; border-radius:18px 18px 0 0; max-height:92dvh;
+      overflow-y:auto; transform:translateY(100%); }
+    .modal-back.show .modal{ transform:none; }
+    .modal-head{ position:sticky; border-radius:18px 18px 0 0; padding-top:14px; }
+    .modal-head::before{ content:""; position:absolute; left:50%; top:6px; width:40px; height:4px;
+      border-radius:2px; background:var(--line-key); transform:translateX(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .skel:empty{ animation:none; }
+    .modal-back,.modal,.task,.task .t-title{ transition:none; }
+  }
 </style>
 </head>
 <body>
@@ -246,32 +315,38 @@
     </div>
     <div class="sub" id="gen">reads and writes the vault markdown directly</div>
 
+    <nav class="jump">
+      <a href="#sec-today">Today</a>
+      <a href="#sec-skills">Skills</a>
+      <a href="#sec-people">People</a>
+    </nav>
+
     <div class="cards">
-    <div class="card">
+    <div class="card c-capture">
       <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
       <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
       <div class="row"><button class="btn primary" onclick="doCapture()">Capture to inbox</button></div>
     </div>
 
-    <div class="card">
+    <div class="card c-ask">
       <div class="section-head"><p class="label">Ask</p><span class="count">your vault</span></div>
       <input type="text" id="askq" placeholder="e.g. what's open for the house?" onkeydown="if(event.key==='Enter')askVault()" />
       <div class="row"><button class="btn primary" onclick="askVault()">Ask</button></div>
     </div>
 
-    <div class="card">
+    <div class="card c-tasks" id="sec-today">
       <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount"></span></div>
-      <div id="tasksTop"></div>
+      <div id="tasksTop" class="skel"></div>
       <div id="tasksAll" class="hidden"></div>
       <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
     </div>
 
-    <div class="card">
+    <div class="card c-skills" id="sec-skills">
       <div class="section-head"><p class="label">Skills</p><span class="count">queued to inbox/_runs · run by the bridge</span></div>
-      <div id="skills"></div>
+      <div id="skills" class="skel"></div>
     </div>
 
-    <div class="card">
+    <div class="card c-add">
       <div class="section-head"><p class="label">Add task</p><span class="count">→ tasks.md</span></div>
       <input type="text" id="ttext" placeholder="What needs doing" />
       <div class="row">
@@ -285,24 +360,24 @@
       <div class="row"><button class="btn primary" onclick="doAddTask()">Add to task list</button></div>
     </div>
 
-    <div class="card">
+    <div class="card c-brief">
       <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span></div>
       <div class="md" id="brief"><div class="muted">—</div></div>
     </div>
 
-    <div class="card">
+    <div class="card c-weather">
       <div class="section-head"><p class="label">Weather</p><span class="count">Cambridge</span></div>
-      <div id="weatherBody"><div class="muted">Loading…</div></div>
+      <div id="weatherBody" class="skel"></div>
     </div>
 
-    <div class="grid2">
-      <div class="card">
+    <div class="grid2" id="sec-people">
+      <div class="card c-people">
         <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
-        <div id="ppl"></div>
+        <div id="ppl" class="skel"></div>
       </div>
-      <div class="card">
+      <div class="card c-agenda">
         <div class="section-head"><p class="label">Agenda</p><span class="count">next 7 days</span></div>
-        <div id="agenda"></div>
+        <div id="agenda" class="skel"></div>
       </div>
     </div>
     </div><!-- /.cards -->
@@ -415,11 +490,21 @@
       .catch(()=>{ toast("Failed",true); load(); });
   }
   function toggle(id){
-    // Optimistic: flip locally now so a stale read can't bounce it back.
-    if(lastData){
-      const t=(lastData.tasks||[]).find((x)=>String(x.id)===String(id));
-      if(t){ t.done=!t.done; if(t.done) t.overdue=false; render(lastData); }
-    }
+    // Optimistic: flip locally now so a stale read can't bounce it back. When
+    // completing, let the strike animation settle before the list re-renders.
+    const doFlip=()=>{
+      if(lastData){
+        const t=(lastData.tasks||[]).find((x)=>String(x.id)===String(id));
+        if(t){ t.done=!t.done; if(t.done) t.overdue=false; render(lastData); }
+      }
+    };
+    const row=document.querySelector('.task[data-id="'+id+'"]');
+    const completing=row && !row.classList.contains("done");
+    if(completing && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+      row.classList.add("done-anim");
+      const chk=row.querySelector(".check"); if(chk){ chk.classList.add("on"); chk.textContent="✓"; }
+      setTimeout(doFlip, 280);
+    } else doFlip();
     req("/api/toggle",{method:"POST",body:JSON.stringify({id})})
       .then((r)=>{ if(!r.ok) throw new Error(); toast("Updated"); })
       .catch(()=>{ toast("Failed",true); load(); });
