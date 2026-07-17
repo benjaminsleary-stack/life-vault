@@ -26,8 +26,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: skill-runner        # share the lane with skill-runner.yml — never overlap
-  cancel-in-progress: false
+  group: skill-runner-scheduled   # distinct from the on-demand lane — a shared
+  cancel-in-progress: false       # group cancels pending runs, skipping briefs
 
 jobs:
   run:
@@ -56,6 +56,28 @@ jobs:
           esac
           echo "Running scheduled skill: $skill"
           bash scripts/run-skill.sh "$skill" || true
+
+      # Orphaned on-demand triggers (a crashed run, or a push that never fired
+      # the on-demand workflow) would otherwise wait for the next .run commit.
+      - name: Sweep leftover queued runs
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+          runs=(inbox/_runs/*.run)
+          [ ${#runs[@]} -eq 0 ] && { echo "No leftover runs."; exit 0; }
+          mkdir -p inbox/_runs/_archive
+          for f in "${runs[@]}"; do
+            skill="$(basename "$f" .run | sed -E 's/-[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}$//')"
+            echo "::group::leftover $skill ($f)"
+            input="$(node -e 'try{process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).input||""))}catch(e){}' "$f")"
+            bash scripts/run-skill.sh "$skill" "$input" || true
+            git mv "$f" "inbox/_runs/_archive/$(basename "$f")" 2>/dev/null \
+              || mv "$f" "inbox/_runs/_archive/$(basename "$f")"
+            echo "::endgroup::"
+          done
 
       - name: Commit results
         run: |

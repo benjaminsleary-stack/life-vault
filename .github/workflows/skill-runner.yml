@@ -14,14 +14,20 @@ name: skill-runner
 on:
   push:
     paths:
-      - "inbox/_runs/**.run"
+      # Only live triggers — archiving a processed .run must not re-fire the
+      # workflow (it archives into inbox/_runs/_archive/).
+      - "inbox/_runs/*.run"
+      - "!inbox/_runs/_archive/**"
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
+# Distinct group from scheduled-skills: sharing one group means a third entrant
+# CANCELS the pending run (GitHub keeps 1 running + 1 queued per group), which
+# could silently skip a queued brief.
 concurrency:
-  group: skill-runner        # shared with scheduled-skills.yml — never overlap
+  group: skill-runner-ondemand
   cancel-in-progress: false
 
 jobs:

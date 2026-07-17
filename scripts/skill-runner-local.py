@@ -48,7 +48,10 @@ def push_with_rebase(br):
     for attempt in range(1, 6):
         if git("push").returncode == 0:
             return True
-        git("pull", "--rebase", "--autostash", "origin", br)
+        if git("pull", "--rebase", "--autostash", "origin", br).returncode != 0:
+            # A conflicted rebase left mid-flight wedges every later cycle —
+            # always abort back to a clean state before retrying.
+            git("rebase", "--abort")
         time.sleep(attempt * 2)
     return False
 
@@ -83,13 +86,18 @@ def process_once():
             inp = ""
 
         # CLAIM first: archive the trigger and push before running, so the cloud
-        # fallback sees it handled. If the push loses a race, back out cleanly.
+        # fallback sees it handled. Stage ONLY the trigger move — `add -A` would
+        # bundle unrelated local edits into the claim and a failed push would
+        # then throw them away.
         shutil.move(f, os.path.join(ARCHIVE, base))
-        git("add", "-A")
+        git("add", "inbox/_runs")
         git("commit", "-m", f"local-runner: claim {skill}")
         if not push_with_rebase(br):
             print("  claim push failed — leaving it for the cloud fallback")
-            git("reset", "--hard", f"origin/{br}")
+            # Undo just the claim commit (verified), never a blanket reset to origin.
+            head = git("log", "-1", "--format=%s").stdout.strip()
+            if head == f"local-runner: claim {skill}":
+                git("reset", "--hard", "HEAD~1")
             continue
 
         # RUN via the shared runner (writes inbox/_runs/<skill>.status).

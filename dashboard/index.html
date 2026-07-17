@@ -338,16 +338,25 @@
     { name:"weave",             label:"Weave",    desc:"Refresh MOCs & the index" },
     { name:"refresh-summaries", label:"Refresh",  desc:"Rewrite people / project summaries" },
     { name:"interest-scout",    label:"Discover", desc:"Weekly discover feed for your interests" },
+    { name:"ask",               label:"Ask",      desc:"Answers from the vault (use the Ask box)", noRun:true },
   ];
   // The Worker URL is fixed, so default it — you only ever enter the token.
   const DEFAULT_API = "https://life-vault.benvault.workers.dev";
   let API = localStorage.getItem("lv_api") || DEFAULT_API;
   let TOKEN = localStorage.getItem("lv_token") || "";
   let lastData = null;
-  const awaiting = {};   // skill -> the .when seen when queued, to detect a fresh completion
+  // skill -> the .when seen when queued, to detect a fresh completion and
+  // auto-open its output. Persisted so a reload between queue and finish
+  // doesn't lose the pending auto-open.
+  let awaiting = {};
+  try { awaiting = JSON.parse(localStorage.getItem("lv_awaiting") || "{}"); } catch {}
+  function saveAwaiting(){ localStorage.setItem("lv_awaiting", JSON.stringify(awaiting)); }
 
   const $ = (id) => document.getElementById(id);
-  function esc(s){ return (s||"").replace(/[&<>]/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c])); }
+  function esc(s){ return (s||"").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+  // Vault dates are Europe/London days — toISOString() is UTC and rolls a day
+  // early between 23:00 and midnight in summer.
+  function localToday(){ return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date()); }
   function toast(m, err){ const t=$("toast"); t.textContent=m; t.classList.toggle("err",!!err); t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
 
   // --- gate -----------------------------------------------------------------
@@ -395,7 +404,7 @@
     const text=t.value.trim(), due=$("tdue").value, tag=$("ttag").value;
     // Optimistic: show it now; persist in the background; the next poll reconciles.
     if(lastData){
-      const todayStr=new Date().toISOString().slice(0,10);
+      const todayStr=localToday();
       (lastData.tasks=lastData.tasks||[]).push({ id:"tmp"+Date.now(), text, done:false,
         due:due||null, tags:tag?[tag]:[], overdue: !!(due && due<=todayStr) });
       render(lastData);
@@ -422,7 +431,7 @@
     status.innerHTML='<span class="running"></span> queued…';
     // Remember the last-run stamp so we can spot when THIS run lands and pop its output.
     const prev=(lastData && lastData.skills && lastData.skills[name]) ? lastData.skills[name].when : "";
-    awaiting[name]=prev||"queued";
+    awaiting[name]=prev||"queued"; saveAwaiting();
     post("/api/run",{skill:name},"Queued "+name);
     setTimeout(()=>{ btn.classList.remove("busy"); btn.textContent="Run"; }, 1400);
   }
@@ -434,7 +443,7 @@
   }
   function duePill(t){
     if(!t.due) return "";
-    const cls = t.overdue ? "over" : (t.due===new Date().toISOString().slice(0,10) ? "due" : "");
+    const cls = t.overdue ? "over" : (t.due===localToday() ? "due" : "");
     const lbl = t.overdue ? fmtDate(t.due) : (cls==="due" ? "today" : fmtDate(t.due));
     return '<span class="pill '+cls+'">'+lbl+"</span>";
   }
@@ -468,24 +477,32 @@
         line=mark+" ran "+fmtWhen(st.when);
         // If a run produced more than one file, list the extras (Open covers the newest).
         if(hasOut && st.outputs.length>1){
+          // data-path (not an inline onclick) so quotes/parens in a filename
+          // can't break out of the handler — the delegated listener reads it back.
           outs='<div class="s-out">'+st.outputs.map((p)=>
-            '📄 <a onclick="openFile(\''+encodeURIComponent(p)+'\')">'+esc(p.split("/").pop())+"</a>").join("")+"</div>";
+            '📄 <a data-path="'+esc(p)+'">'+esc(p.split("/").pop())+"</a>").join("")+"</div>";
         }
       }
       const openBtn = hasOut
-        ? '<button class="open-btn" onclick="openFile(\''+encodeURIComponent(st.outputs[0])+'\')">Open</button>'
+        ? '<button class="open-btn" data-path="'+esc(st.outputs[0])+'">Open</button>'
         : '<button class="open-btn disabled" title="No saved output yet" disabled>Open</button>';
+      const runBtn = s.noRun ? "" : '<button class="run-btn" data-skill="'+esc(s.name)+'">Run</button>';
       return '<div class="skill"><div class="s-body"><div class="s-name">'+esc(s.label||s.name)+"</div>"+
         '<div class="s-desc">'+esc(s.desc)+'</div>'+outs+'</div>'+
         '<div class="s-status">'+line+'</div>'+
-        '<div class="s-actions">'+openBtn+
-        '<button class="run-btn" onclick="run(this,\''+s.name+'\')">Run</button></div></div>';
+        '<div class="s-actions">'+openBtn+runBtn+'</div></div>';
     }).join("");
   }
+  // One delegated listener instead of per-row inline handlers.
+  $("skills").addEventListener("click",(e)=>{
+    const opener=e.target.closest("[data-path]");
+    if(opener && !opener.disabled){ openFile(opener.dataset.path); return; }
+    const runBtn=e.target.closest(".run-btn[data-skill]");
+    if(runBtn) run(runBtn, runBtn.dataset.skill);
+  });
 
   // File viewer modal ---------------------------------------------------------
-  function openFile(encPath){
-    const path=decodeURIComponent(encPath);
+  function openFile(path){
     $("modalName").textContent=path;
     $("modalBody").innerHTML='<div class="muted">Loading…</div>';
     $("replyText").value="";
@@ -594,8 +611,8 @@
   }
   // Agenda = occasions + due tasks in the next 7 days, merged and dated.
   function renderAgenda(d){
-    const today=new Date().toISOString().slice(0,10);
-    const wk=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+    const today=localToday();
+    const wk=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+7*864e5));
     const items=[];
     (d.occasions||[]).forEach((o)=>{ if(o.date>=today && o.date<=wk) items.push({date:o.date,text:o.text,kind:"occasion"}); });
     (d.tasks||[]).forEach((t)=>{ if(!t.done && t.due && t.due>=today && t.due<=wk) items.push({date:t.due,text:t.text,kind:"task"}); });
@@ -614,7 +631,7 @@
     else { el.textContent = "→ inbox/"; }
   }
   function queueSkill(name, input, msg){
-    awaiting[name]=(lastData&&lastData.skills&&lastData.skills[name])?lastData.skills[name].when:"queued";
+    awaiting[name]=(lastData&&lastData.skills&&lastData.skills[name])?lastData.skills[name].when:"queued"; saveAwaiting();
     return req("/api/run",{method:"POST",body:JSON.stringify({skill:name,input:input||""})})
       .then((r)=>{ if(!r.ok) throw new Error(); toast(msg); })
       .catch(()=>toast("Failed",true));
@@ -634,8 +651,8 @@
     Object.keys(awaiting).forEach((name)=>{
       const st=skills[name];
       if(st && st.when && st.when!==awaiting[name]){
-        delete awaiting[name];
-        if(st.outputs && st.outputs.length){ toast(name+" done"); openFile(encodeURIComponent(st.outputs[0])); }
+        delete awaiting[name]; saveAwaiting();
+        if(st.outputs && st.outputs.length){ toast(name+" done"); openFile(st.outputs[0]); }
         else toast(name+(st.ok===false?" failed":" ran"),st.ok===false);
       }
     });

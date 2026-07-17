@@ -12,5 +12,6 @@ compatibility_date = "2024-11-01"
 GH_OWNER = "benjaminsleary-stack"            # <-- your GitHub username / org
 GH_REPO = "life-vault"      # <-- the vault repo name
 GH_BRANCH = "main"
-# Tighten this to your Pages URL once you have it, e.g. https://life-vault.pages.dev
-ALLOW_ORIGIN = "*"
+# CORS locked to the deployed dashboard origin (auth is a bearer token, so this
+# is defence-in-depth against cross-origin probing, not the primary gate).
+ALLOW_ORIGIN = "https://life-vault-app.pages.dev"

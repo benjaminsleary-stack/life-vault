@@ -98,16 +98,27 @@ async function listDir(env, path) {
 }
 
 // Create or update a file (a commit). Pass sha to update, omit to create.
+// A concurrent writer (bridge, scheduled skill, second device) makes the sha
+// stale → GitHub returns 409/422; re-read the sha and retry a few times rather
+// than surfacing a 500 to the dashboard.
 async function putFile(env, path, text, message, sha) {
   const branch = env.GH_BRANCH || "main";
-  const body = { message, content: b64encode(text), branch };
-  if (sha) body.sha = sha;
-  const r = await gh(env, `/contents/${encodeURI(path)}`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(`put ${path}: ${r.status} ${await r.text()}`);
-  return r.json();
+  for (let attempt = 0; ; attempt++) {
+    const body = { message, content: b64encode(text), branch };
+    if (sha) body.sha = sha;
+    const r = await gh(env, `/contents/${encodeURI(path)}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+    if (r.ok) return r.json();
+    if ((r.status === 409 || r.status === 422) && attempt < 3) {
+      await new Promise((res) => setTimeout(res, 250 * (attempt + 1)));
+      const cur = await readFile(env, path);
+      sha = cur ? cur.sha : undefined;
+      continue;
+    }
+    throw new Error(`put ${path}: ${r.status} ${await r.text()}`);
+  }
 }
 
 /* -------------------------------------------------- markdown parsing (ported) */
@@ -117,11 +128,16 @@ const DONE_RE = /✅\s*(\d{4}-\d{2}-\d{2})/;            // ✅ YYYY-MM-DD
 const TAG_RE = /(?:^|\s)#([A-Za-z0-9_/-]+)/g;
 const TASK_RE = /^(\s*)- \[( |x|X)\]\s+(.*)$/;
 const OCCASION_RE = /\(occasion::\s*(\d{4}-\d{2}-\d{2})\)\s*(.*)/g;
-const PRIORITY_RE = /[🔺⏫🔼🔽⏬]/g;            // Obsidian Tasks priority markers
-const HIGH_RE = /[🔺⏫]/;                         // counts as "priority" in the UI
+// `u` flag is load-bearing: without it these classes match lone UTF-16
+// surrogates, so 📅 (shares the D83D high surrogate) false-matches and gets
+// half-stripped by replace() — corrupting due dates in tasks.md.
+const PRIORITY_RE = /[🔺⏫🔼🔽⏬]/gu;           // Obsidian Tasks priority markers
+const HIGH_RE = /[🔺⏫]/u;                        // counts as "priority" in the UI
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  // Vault dates are Europe/London days, not UTC (they differ 23:00–00:00 GMT
+  // in summer). en-CA formats as YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
 }
 
 // Stable id: text stripped of stamps/tags, then a small stable hash. The Worker
@@ -138,11 +154,26 @@ function taskId(text) {
   return String(Math.abs(h));
 }
 
+// Walk a file's task lines assigning occurrence-stable ids: duplicate task text
+// gets "-2", "-3", … suffixes in file order, so two identical tasks stay
+// individually addressable by toggle/priority/reorder.
+function taskLines(lines) {
+  const seen = {};
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(TASK_RE);
+    if (!m) continue;
+    const h = taskId(m[3]);
+    const n = (seen[h] = (seen[h] || 0) + 1);
+    out.push({ idx: i, id: n > 1 ? `${h}-${n}` : h, m });
+  }
+  return out;
+}
+
 function parseTasks(text) {
   const out = [];
-  for (const line of text.split("\n")) {
-    const m = line.match(TASK_RE);
-    if (!m) continue;
+  for (const tl of taskLines(text.split("\n"))) {
+    const m = tl.m;
     const checked = m[2].toLowerCase() === "x";
     const body = m[3];
     const dueM = body.match(DUE_RE);
@@ -154,7 +185,7 @@ function parseTasks(text) {
     label = label.split(/\s+/).join(" ").trim();
     const overdue = !!(due && !checked && due <= today());
     const priority = HIGH_RE.test(body);
-    out.push({ id: taskId(body), text: label, done: checked, due, tags, overdue, priority });
+    out.push({ id: tl.id, text: label, done: checked, due, tags, overdue, priority });
   }
   return out;
 }
@@ -204,11 +235,20 @@ async function readOccasions(env) {
   return out;
 }
 
+// The brief card wants the newest morning/evening digest specifically — a bare
+// name sort would rank 2026-W29-interests.md above every dated brief ('W' > '0')
+// and "evening" below "morning" within a day.
 async function latestBrief(env) {
-  const files = (await listDir(env, "digests")).filter((f) => f.name.endsWith(".md"));
-  if (!files.length) return null;
-  files.sort((a, b) => a.name.localeCompare(b.name));
-  const newest = files[files.length - 1];
+  const BRIEF_RE = /^(\d{4}-\d{2}-\d{2})-(morning|evening)\.md$/;
+  const briefs = (await listDir(env, "digests"))
+    .map((f) => ({ f, m: f.name.match(BRIEF_RE) }))
+    .filter((x) => x.m);
+  if (!briefs.length) return null;
+  briefs.sort((a, b) =>
+    a.m[1].localeCompare(b.m[1]) ||
+    (a.m[2] === "evening" ? 1 : 0) - (b.m[2] === "evening" ? 1 : 0)
+  );
+  const newest = briefs[briefs.length - 1].f;
   const file = await readFile(env, newest.path);
   return file ? { name: newest.name, text: file.text } : null;
 }
@@ -293,23 +333,17 @@ async function toggleTask(env, id) {
   const cur = await readFile(env, "tasks.md");
   if (!cur) return false;
   const lines = cur.text.split("\n");
-  let changed = false;
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(TASK_RE);
-    if (!m || taskId(m[3]) !== String(id)) continue;
-    const indent = m[1];
-    let body = m[3];
-    if (m[2].toLowerCase() === "x") {
-      body = body.replace(DONE_RE, "").replace(/\s+$/, "");
-      lines[i] = `${indent}- [ ] ${body}`;
-    } else {
-      body = body.replace(/\s+$/, "") + ` ✅ ${today()}`;
-      lines[i] = `${indent}- [x] ${body}`;
-    }
-    changed = true;
-    break;
+  const tl = taskLines(lines).find((t) => t.id === String(id));
+  if (!tl) return false;
+  const indent = tl.m[1];
+  let body = tl.m[3];
+  if (tl.m[2].toLowerCase() === "x") {
+    body = body.replace(DONE_RE, "").replace(/\s+$/, "");
+    lines[tl.idx] = `${indent}- [ ] ${body}`;
+  } else {
+    body = body.replace(/\s+$/, "") + ` ✅ ${today()}`;
+    lines[tl.idx] = `${indent}- [x] ${body}`;
   }
-  if (!changed) return false;
   await putFile(env, "tasks.md", lines.join("\n"), "dashboard: toggle task", cur.sha);
   return true;
 }
@@ -319,47 +353,39 @@ async function setPriority(env, id) {
   const cur = await readFile(env, "tasks.md");
   if (!cur) return false;
   const lines = cur.text.split("\n");
-  let changed = false;
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(TASK_RE);
-    if (!m || taskId(m[3]) !== String(id)) continue;
-    const had = HIGH_RE.test(m[3]);
-    let body = m[3].replace(PRIORITY_RE, "").replace(/\s{2,}/g, " ").replace(/\s+$/, "");
-    if (!had) body = body + " ⏫";
-    lines[i] = `${m[1]}- [${m[2]}] ${body}`;
-    changed = true;
-    break;
-  }
-  if (!changed) return false;
+  const tl = taskLines(lines).find((t) => t.id === String(id));
+  if (!tl) return false;
+  const had = HIGH_RE.test(tl.m[3]);
+  let body = tl.m[3].replace(PRIORITY_RE, "").replace(/\s{2,}/g, " ").replace(/\s+$/, "");
+  if (!had) body = body + " ⏫";
+  lines[tl.idx] = `${tl.m[1]}- [${tl.m[2]}] ${body}`;
   await putFile(env, "tasks.md", lines.join("\n"), "dashboard: toggle priority", cur.sha);
   return true;
 }
 
-// Reorder the task lines in tasks.md to match the given id order. Task lines are
-// rewritten into their existing slots in the new order; non-task lines stay put.
+// Reorder tasks.md to match the given id order. Only the slots whose ids were
+// actually received are permuted; done tasks, unknown ids, and non-task lines
+// stay exactly where they are (so a partial/duplicate list can't lose a line).
 async function reorderTasks(env, ids) {
   if (!Array.isArray(ids)) return false;
   const cur = await readFile(env, "tasks.md");
   if (!cur) return false;
   const lines = cur.text.split("\n");
-  const slots = [];
+  const tl = taskLines(lines);
   const byId = {};
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(TASK_RE);
-    if (m) { slots.push(i); byId[taskId(m[3])] = lines[i]; }
+  for (const t of tl) byId[t.id] = t;
+  // De-dupe the request and keep only ids that exist in the file.
+  const received = [];
+  const seen = new Set();
+  for (const raw of ids) {
+    const id = String(raw);
+    if (byId[id] && !seen.has(id)) { received.push(id); seen.add(id); }
   }
-  const used = new Set();
-  const ordered = [];
-  for (const id of ids) {
-    const ln = byId[String(id)];
-    if (ln !== undefined && !used.has(String(id))) { ordered.push(ln); used.add(String(id)); }
-  }
-  for (const idx of slots) {
-    const m = lines[idx].match(TASK_RE);
-    const id = taskId(m[3]);
-    if (!used.has(id)) { ordered.push(lines[idx]); used.add(id); }
-  }
-  slots.forEach((idx, k) => { lines[idx] = ordered[k]; });
+  if (!received.length) return true;   // nothing to do
+  // Capture the lines first, then permute them into the received slots.
+  const orderedLines = received.map((id) => lines[byId[id].idx]);
+  const targetSlots = tl.filter((t) => seen.has(t.id)).map((t) => t.idx);
+  targetSlots.forEach((idx, k) => { lines[idx] = orderedLines[k]; });
   await putFile(env, "tasks.md", lines.join("\n"), "dashboard: reorder tasks", cur.sha);
   return true;
 }
