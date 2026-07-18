@@ -59,15 +59,5 @@ if [ "$ok" = false ] && [ -n "${NTFY_TOPIC:-}" ]; then
     "https://ntfy.sh/$NTFY_TOPIC" >/dev/null 2>&1 || true
 fi
 
-# Web push via the Worker (best-effort; needs WORKER_URL + UNLOCK_TOKEN env).
-# One hook here covers all three run paths: local watcher, on-demand CI, cron.
-if [ -n "${WORKER_URL:-}" ] && [ -n "${UNLOCK_TOKEN:-}" ]; then
-  if [ "$ok" = true ]; then title="$skill finished"; else title="$skill failed"; fi
-  first_out="$(printf '%s\n' "$outputs" | head -n 1)"
-  body="${first_out:-tap to open the dashboard}"
-  curl -s -X POST "$WORKER_URL/api/notify" \
-    -H "Authorization: Bearer $UNLOCK_TOKEN" -H "Content-Type: application/json" \
-    -d "{\"title\":\"$title\",\"body\":\"$body\",\"tag\":\"skill-$skill\"}" >/dev/null 2>&1 || true
-fi
 
 [ "$ok" = true ]

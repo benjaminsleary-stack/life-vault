@@ -83,7 +83,7 @@ const calendars = [
   process.env.CAL_PERSONAL && { name: "personal", url: process.env.CAL_PERSONAL },
 ].filter(Boolean);
 
-const handle = createApi(store, { calendars, pushKey: () => "" });
+const handle = createApi(store, { calendars });
 
 /* -------------------------------------------------------------- http shell */
 

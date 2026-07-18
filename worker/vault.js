@@ -484,7 +484,7 @@ async function readCalendar(feeds, fromDay, toDay, force) {
 /* -------------------------------------------------------------- assembly */
 
 // How far the agenda looks. Matches the dashboard's own horizon.
-const AGENDA_DAYS = 31;
+const AGENDA_DAYS = 14;
 
 async function buildData(store, feeds, forceCalendar) {
   const tasksFile = await store.readFile("tasks.md");
@@ -816,7 +816,6 @@ export function createApi(rawStore, hooks = {}) {
         return f ? { status: 200, body: { path: p, text: f.text } }
           : { status: 404, body: { error: "not found" } };
       }
-      if (path === "/api/push-key" && hooks.pushKey) return { status: 200, body: { key: hooks.pushKey() } };
       return { status: 404, body: { error: "not found" } };
     }
 
@@ -837,10 +836,6 @@ export function createApi(rawStore, hooks = {}) {
         case "/api/habit":      ok = await toggleHabit(store, p.habit, p.item); break;
         case "/api/lesson":     ok = await addLesson(store, p.scope, p.text, p.verdict); break;
         default:
-          if (hooks.post) {
-            const r = await hooks.post(path, p);
-            if (r) return r;
-          }
           return { status: 404, body: { error: "not found" } };
       }
       return { status: 200, body: { ok } };

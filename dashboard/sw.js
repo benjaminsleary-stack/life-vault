@@ -3,9 +3,8 @@
 // handler is required on older versions and harmless on new ones. (2) serve the
 // app shell offline. It deliberately NEVER caches API responses — live task data
 // masquerading as current from a stale cache is worse than a network error.
-// (3) Web Push display + click-through.
 
-const SHELL = "lv-shell-v2";
+const SHELL = "lv-shell-v3";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -33,24 +32,4 @@ self.addEventListener("fetch", (e) => {
       })
       .catch(() => caches.match(e.request).then((r) => r || caches.match("./index.html")))
   );
-});
-
-self.addEventListener("push", (e) => {
-  let d = {};
-  try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || "Life-Vault", {
-    body: d.body || "",
-    tag: d.tag || "life-vault",
-    icon: "./icon-192.png",
-    badge: "./icon-192.png",
-    data: { url: d.url || "/" },
-  }));
-});
-
-self.addEventListener("notificationclick", (e) => {
-  e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((ws) => {
-    for (const w of ws) if ("focus" in w) return w.focus();
-    return self.clients.openWindow((e.notification.data && e.notification.data.url) || "/");
-  }));
 });

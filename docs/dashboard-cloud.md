@@ -96,26 +96,29 @@ Action executes the skill and writes its status, and the dashboard shows it.
 
 ---
 
-### 6. Push notifications (optional — brief ready / ask answered / skill failed)
-Generate a VAPID key pair once (any machine with Node):
-```
-npx web-push generate-vapid-keys
-```
-Add them to the Worker:
+### 6. Calendars (optional — the Agenda card and the briefs)
+
+The dashboard subscribes to published `.ics` feeds. **A private feed URL is a
+credential**: anyone holding it can read the calendar. It is never committed —
+locally it lives in `.env` (gitignored), and in the cloud it is a secret.
+
 ```
 cd worker
-npx wrangler secret put VAPID_PUBLIC_KEY    # the Public Key line
-npx wrangler secret put VAPID_PRIVATE_KEY   # the Private Key line
-npx wrangler secret put VAPID_SUBJECT       # e.g. mailto:you@example.com
+npx wrangler secret put CAL_WORK        # work Outlook published .ics
+npx wrangler secret put CAL_PERSONAL    # personal Google private .ics
 npx wrangler deploy
 ```
-And two GitHub Actions secrets so runs can trigger the push:
-- `WORKER_URL` = `https://life-vault.<subdomain>.workers.dev`
-- `UNLOCK_TOKEN` = the same unlock token the dashboard uses
 
-Then on each device: open the dashboard → tap **🔔 Alerts** → allow.
-Subscriptions are stored in `_meta/push-subs.json` in the vault (private repo);
-dead subscriptions are pruned automatically.
+Add the same values as **Actions** secrets (`CAL_WORK`, `CAL_PERSONAL`) so the
+morning and evening briefs see them too — they run in CI, not on your desktop,
+and do not get the Worker's secrets.
+
+Notes:
+- Outlook regenerates its published feed on every request, so it is never stale.
+  The only lag is the dashboard's own 15-minute cache; the Agenda shows when it
+  last synced and offers a refresh that bypasses it.
+- A feed that fails to load says so, in the app and in the brief. A calendar
+  that has quietly stopped syncing looks exactly like a free week.
 
 ## Everyday use
 Nothing to start. Open the installed app; it reads the current vault and every

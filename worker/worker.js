@@ -2,7 +2,7 @@
  * Life-Vault dashboard — Cloudflare Worker (the write-proxy / API).
  *
  * This file is now only two things: a GitHub-backed `store`, and the HTTP shell
- * (CORS, auth, web push). Every rule about what a task or a habit or a person
+ * (CORS and auth). Every rule about what a task or a habit or a person
  * note MEANS lives in vault.js, shared with the local dev server, so the two
  * can no longer drift apart.
  *
@@ -19,11 +19,9 @@
  *   ALLOW_ORIGIN   the Pages origin allowed by CORS (default "*")
  */
 
-import { sendPush } from "./push.js";
 import { createApi } from "./vault.js";
 
 const API = "https://api.github.com";
-const SUBS_PATH = "_meta/push-subs.json";
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -124,42 +122,6 @@ function githubStore(env) {
   };
 }
 
-/* ---------------------------------------------------------------- web push */
-
-async function readSubs(store) {
-  const f = await store.readFile(SUBS_PATH);
-  if (!f) return { subs: [], sha: undefined };
-  try { return { subs: JSON.parse(f.text), sha: f.sha }; }
-  catch { return { subs: [], sha: f.sha }; }
-}
-
-async function pushSubscribe(store, sub) {
-  if (!sub || !sub.endpoint || !sub.keys) return false;
-  const { subs, sha } = await readSubs(store);
-  if (!subs.some((s) => s.endpoint === sub.endpoint)) {
-    subs.push({ endpoint: sub.endpoint, keys: sub.keys });
-    await store.putFile(SUBS_PATH, JSON.stringify(subs, null, 2) + "\n", "dashboard: push subscribe", sha);
-  }
-  return true;
-}
-
-async function notify(env, store, payload) {
-  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return false;
-  const { subs, sha } = await readSubs(store);
-  if (!subs.length) return true;
-  const dead = await sendPush(env, subs, {
-    title: String(payload.title || "Life-Vault"),
-    body: String(payload.body || ""),
-    tag: String(payload.tag || "life-vault"),
-    url: String(payload.url || "/"),
-  });
-  if (dead.length) {
-    const alive = subs.filter((s) => !dead.includes(s.endpoint));
-    await store.putFile(SUBS_PATH, JSON.stringify(alive, null, 2) + "\n", "dashboard: prune push subs", sha);
-  }
-  return true;
-}
-
 /* ------------------------------------------------------------------ routing */
 
 export default {
@@ -179,18 +141,6 @@ export default {
         env.CAL_WORK && { name: "work", url: env.CAL_WORK },
         env.CAL_PERSONAL && { name: "personal", url: env.CAL_PERSONAL },
       ].filter(Boolean),
-      pushKey: () => env.VAPID_PUBLIC_KEY || "",
-      // Push lives in the host, not the vault layer — it is the one thing the
-      // local dev server has no business doing.
-      post: async (path, payload) => {
-        if (path === "/api/push-subscribe") {
-          return { status: 200, body: { ok: await pushSubscribe(store, payload.subscription || payload) } };
-        }
-        if (path === "/api/notify") {
-          return { status: 200, body: { ok: await notify(env, store, payload) } };
-        }
-        return null;
-      },
     });
 
     try {

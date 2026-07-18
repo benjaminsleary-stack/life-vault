@@ -233,7 +233,10 @@
   .cap-list{ margin-top:11px; border-top:1px solid var(--line-row); padding-top:9px; }
   .cap{ display:flex; gap:9px; padding:5px 0; font-size:13px; }
   .cap-when{ flex:none; color:var(--faint); font-size:12px; font-variant-numeric:tabular-nums; }
-  .cap-text{ color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* min-width:0 is load-bearing: a flex child defaults to min-width:auto, so
+     nowrap text reports its FULL width as min-content and forces the whole
+     column that wide. This one line was crushing the Tasks card. */
+  .cap-text{ color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
   .cap-more{ color:var(--faint); font-size:12px; padding-top:4px; }
 
   /* Ask: a question in flight, and the last answer kept reachable. */
@@ -271,9 +274,6 @@
   .habit-item.on .hchk{ background:var(--green); border-color:var(--green); color:#14200f; }
   .habit-item.on{ color:var(--muted); }
 
-  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  @media (max-width:560px){ .grid2{ grid-template-columns:1fr; } }
-  .grid2 .card{ margin-bottom:0; }
 
   /* Weather */
   .wx-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -293,29 +293,29 @@
   .wx-aq{ margin-top:6px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .wx-axis{ fill:var(--faint); font-size:8px; font-family:var(--ui); }
 
-  /* Desktop: deliberate bento arrangement — tasks is the tall hero on the
-     left, capture/ask stack beside it, weather and brief on the right rail.
-     Mobile keeps the natural single-column source order. */
+  /* Desktop: a masonry flow, not a fixed bento.
+
+     This was a named-area grid, and it failed twice over. Rows are shared
+     across columns, so the tall Brief stretched the rows beside it and left
+     dead space under Ask. Worse, an `fr` column cannot shrink below its
+     content's min-content width — one long unbreakable capture line blew the
+     middle column out to 855px and crushed Tasks to 169px, overflowing the
+     wrapper entirely.
+
+     Columns have neither failure mode: each card is atomic, heights are
+     independent, and nothing one card contains can resize its neighbours. */
   @media (min-width:900px){
-    .wrap{ max-width:1180px; }
-    .cards{
-      display:grid; gap:14px; align-items:start;
-      grid-template-columns:1.15fr 1fr 1fr;
-      grid-template-areas:
-        "tasks  capture weather"
-        "tasks  ask     brief"
-        "tasks  skills  brief"
-        "habits skills  brief"
-        "habits people  agenda";
-    }
-    .cards .card{ margin-bottom:0; }
-    .c-tasks{ grid-area:tasks; } .c-capture{ grid-area:capture; }
-    .c-weather{ grid-area:weather; } .c-ask{ grid-area:ask; }
-    .c-skills{ grid-area:skills; } .c-brief{ grid-area:brief; }
-    .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
-    .c-habits{ grid-area:habits; }
-    .cards > .grid2{ display:contents; }
+    .wrap{ max-width:1240px; }
+    .cards{ column-count:3; column-gap:14px; }
+    .cards .card{ break-inside:avoid; margin-bottom:14px; display:flow-root; }
   }
+  @media (min-width:1800px){
+    .wrap{ max-width:1720px; }
+    .cards{ column-count:4; }
+  }
+  /* Any card whose text can be long needs an explicit floor, or its
+     min-content width becomes the column's. Belt and braces after the above. */
+  .card{ overflow-wrap:anywhere; }
 
   /* Tasks: drag handle, priority star, category headers */
   .task .drag{ flex:0 0 auto; cursor:grab; color:var(--faint); font-size:15px; margin-top:1px;
@@ -359,9 +359,6 @@
 
   /* Glass on the status pill. */
   .status-pill{ backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-  .alerts-btn{ background:var(--surface); color:var(--muted); border:1px solid var(--line-key);
-    border-radius:999px; padding:7px 13px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
-  .alerts-btn:hover{ border-color:var(--accent); color:var(--text); }
 
   /* Section-jump pills (mobile only — desktop sees everything at once). */
   html{ scroll-behavior:smooth; }
@@ -465,7 +462,6 @@
         <h1>Life<span>·</span>Vault</h1>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
-        <button class="alerts-btn hidden" id="alertsBtn" onclick="enableAlerts()" title="Get a push when a brief or answer is ready">🔔 Alerts</button>
         <span class="status-pill" id="statusPill" onclick="openHealth()" title="Connection and routine health"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
       </div>
     </div>
@@ -486,23 +482,6 @@
     </nav>
 
     <div class="cards">
-    <div class="card c-capture">
-      <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
-      <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
-      <div class="row">
-        <button class="btn mic hidden" id="micBtn" onclick="toggleMic()" title="Dictate">🎙 Rec</button>
-        <button class="btn primary" onclick="doCapture()">Capture to inbox</button>
-      </div>
-      <div id="inboxList"></div>
-    </div>
-
-    <div class="card c-ask">
-      <div class="section-head"><p class="label">Ask</p><span class="count" id="askState">your vault</span></div>
-      <input type="text" id="askq" placeholder="e.g. what's open for the house?" onkeydown="if(event.key==='Enter')askVault()" />
-      <div class="row"><button class="btn primary" onclick="askVault()">Ask</button></div>
-      <div id="askBody"></div>
-    </div>
-
     <div class="card c-tasks" id="sec-today">
       <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount"></span></div>
       <div class="addrow">
@@ -521,36 +500,44 @@
       <div id="tasksAll" class="hidden"></div>
       <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
     </div>
-
-    <div class="card c-skills" id="sec-skills">
-      <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span></div>
-      <div id="skills" class="skel"></div>
+    <div class="card c-agenda">
+      <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next 2 weeks</span></div>
+      <div id="agenda" class="skel"></div>
     </div>
-
+    <div class="card c-capture">
+      <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
+      <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
+      <div class="row">
+        <button class="btn mic hidden" id="micBtn" onclick="toggleMic()" title="Dictate">🎙 Rec</button>
+        <button class="btn primary" onclick="doCapture()">Capture to inbox</button>
+      </div>
+      <div id="inboxList"></div>
+    </div>
     <div class="card c-brief" id="sec-brief">
       <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span></div>
       <div class="md" id="brief"><div class="muted">—</div></div>
     </div>
-
-    <div class="card c-weather">
-      <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
-      <div id="weatherBody" class="skel"></div>
-    </div>
-
     <div class="card c-habits">
       <div class="section-head"><p class="label">Habits</p><span class="count" id="habitPct"></span></div>
       <div id="habits" class="skel"></div>
     </div>
-
-    <div class="grid2" id="sec-people">
-      <div class="card c-people">
-        <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
-        <div id="ppl" class="skel"></div>
-      </div>
-      <div class="card c-agenda">
-        <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next month</span></div>
-        <div id="agenda" class="skel"></div>
-      </div>
+    <div class="card c-weather">
+      <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
+      <div id="weatherBody" class="skel"></div>
+    </div>
+    <div class="card c-ask">
+      <div class="section-head"><p class="label">Ask</p><span class="count" id="askState">your vault</span></div>
+      <input type="text" id="askq" placeholder="e.g. what's open for the house?" onkeydown="if(event.key==='Enter')askVault()" />
+      <div class="row"><button class="btn primary" onclick="askVault()">Ask</button></div>
+      <div id="askBody"></div>
+    </div>
+    <div class="card c-people" id="sec-people">
+      <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
+      <div id="ppl" class="skel"></div>
+    </div>
+    <div class="card c-skills" id="sec-skills">
+      <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span></div>
+      <div id="skills" class="skel"></div>
     </div>
     </div><!-- /.cards -->
 
@@ -635,7 +622,7 @@
     const tok=$("gTok").value.trim();
     if(!tok){ $("gErr").textContent="Enter your unlock token."; $("gErr").classList.remove("hidden"); return; }
     TOKEN=tok; localStorage.setItem("lv_token",TOKEN); localStorage.setItem("lv_api",API);
-    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load(); loadWeather(); refreshAlertsBtn();
+    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load(); loadWeather();
   }
   function signOut(){ if(!confirm("Disconnect this device? The token is cleared from here.")) return;
     localStorage.removeItem("lv_token"); TOKEN=""; showGate(); }
@@ -1214,7 +1201,12 @@
   // time of under a week is useless for anything you have to buy or book. It
   // now looks a month out and says whose occasion it is, and every row goes
   // somewhere: a task to its list, an occasion to that person.
-  const AGENDA_DAYS=31;
+  // Two weeks. A month put 33 meetings on screen and made the card 2,181px
+  // tall — past the point where a list is something you read rather than
+  // scroll past. Occasions further out still reach you via the People card.
+  const AGENDA_DAYS=14;
+  let agendaAll=false;
+  function toggleAgenda(){ agendaAll=!agendaAll; if(lastData) renderAgenda(lastData); }
   function renderAgenda(d){
     const today=localToday();
     const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+AGENDA_DAYS*864e5));
@@ -1234,15 +1226,22 @@
     const days=Object.keys(byDay).sort();
     const rank=(x)=> x.kind==="event" ? (x.allDay?0:1) : x.kind==="occasion"?2:3;
     const count=(d.calendar||[]).filter((e)=>e.date===today).length;
-    $("agendaCount").textContent = count ? count+" today" : "next month";
+    $("agendaCount").textContent = count ? count+" today" : "next 2 weeks";
 
-    $("agenda").innerHTML = days.length ? days.map((day)=>{
+    // Show the coming week; the rest is behind a toggle. A fortnight of a real
+    // work calendar is a 1,200px card, which is something you scroll past
+    // rather than read.
+    const shown = agendaAll ? days : days.filter((d)=>Math.round((new Date(d)-new Date(today))/864e5) <= 7);
+    const hidden = days.length - shown.length;
+    $("agenda").innerHTML = (days.length ? shown.map((day)=>{
       const n=Math.round((new Date(day)-new Date(today))/864e5);
       const label = n<=0?"Today" : n===1?"Tomorrow" : fmtDate(day);
       const rows=byDay[day].sort((a,b)=>rank(a)-rank(b)||String(a.time||"").localeCompare(String(b.time||"")));
       return '<div class="aday"><div class="aday-h'+(n<=0?" now":"")+'">'+esc(label)+"</div>"+
         rows.map((it)=>agendaRow(it,n)).join("")+"</div>";
-    }).join("") : '<div class="muted">Nothing due or coming up in the next month.</div>';
+    }).join("") : '<div class="muted">Nothing due or coming up in the next fortnight.</div>')
+      + (hidden>0 ? '<button class="link" style="margin-top:6px" onclick="toggleAgenda()">Show '+hidden+' more day'+(hidden>1?"s":"")+'</button>'
+        : agendaAll && days.length ? '<button class="link" style="margin-top:6px" onclick="toggleAgenda()">Show less</button>' : "");
 
     // A calendar that quietly stopped syncing looks exactly like a free week,
     // so both the failure and the freshness are stated rather than assumed.
@@ -1485,28 +1484,8 @@
     return html;
   }
 
-  // --- web push -------------------------------------------------------------
-  const pushSupported = "serviceWorker" in navigator && "PushManager" in window;
-  // Register for installability whenever service workers exist — not only when Push does.
+  // Service worker: installability + offline app shell. No push — see sw.js.
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
-  function refreshAlertsBtn(){
-    const show = pushSupported && TOKEN && Notification.permission !== "granted";
-    $("alertsBtn").classList.toggle("hidden", !show);
-  }
-  async function enableAlerts(){
-    try{
-      const perm = await Notification.requestPermission();
-      if(perm !== "granted"){ toast("Alerts blocked in browser settings", true); return; }
-      const reg = await navigator.serviceWorker.ready;
-      const kr = await req("/api/push-key"); const { key } = await kr.json();
-      if(!key){ toast("Push not configured on the Worker yet", true); refreshAlertsBtn(); return; }
-      const raw = Uint8Array.from(atob(key.replace(/-/g,"+").replace(/_/g,"/")), (c)=>c.charCodeAt(0));
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: raw });
-      const r = await req("/api/push-subscribe",{ method:"POST", body:JSON.stringify({ subscription: sub.toJSON() }) });
-      if(!r.ok) throw new Error();
-      toast("Alerts on"); refreshAlertsBtn();
-    }catch(e){ toast("Couldn't enable alerts", true); }
-  }
 
   // --- voice capture (browser speech-to-text; hidden where unsupported) ----
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1665,7 +1644,7 @@
   if(DEV || (API && TOKEN)){
     $("gate").classList.add("hidden"); $("app").classList.remove("hidden");
     renderOutbox(); flushOutbox();
-    load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
+    load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); }
   else { showGate(); }
 </script>
 </body>
