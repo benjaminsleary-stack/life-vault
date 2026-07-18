@@ -1147,6 +1147,11 @@
           '<button onclick="quickDue(null)">No date</button>'+
         "</div></div>"+
       '<div class="tfield"><label for="earea">Area</label><select id="earea">'+areaOpts+"</select></div>"+
+      '<div class="tfield"><label for="eproj">Project</label><select id="eproj">'+
+        ['<option value="">no project</option>'].concat(
+          ((lastData&&lastData.projects)||[]).map((p)=>
+            '<option value="'+esc(p.slug)+'"'+(t.project===p.slug?" selected":"")+">"+esc(p.name||p.slug)+"</option>")
+        ).join("")+"</select></div>"+
       '<div class="row"><button class="btn primary" onclick="saveTask()">Save</button>'+
         '<button class="btn danger" onclick="removeTask()">Remove</button></div>'+
       '<p class="muted" style="margin-top:10px">Removing archives the line to '+
@@ -1160,6 +1165,7 @@
   async function saveTask(){
     if(!curTask) return;
     const text=$("etext").value.trim(), due=$("edue").value||null, area=$("earea").value;
+    const proj=$("eproj")?$("eproj").value:null;
     const id=curTask.id;
     // One call: the id is a hash of the title, so a retitle invalidates it and
     // any follow-up edit would match nothing.
@@ -1167,6 +1173,7 @@
     if(text && text!==curTask.text) fields.text=text;
     if(due!==(curTask.due||null)) fields.due=due;
     if(area!==(curTask.area||"")) fields.tag=area;
+    if(proj!==null && proj!==(curTask.project||"")) fields.project=proj;
     closeModal();
     if(!Object.keys(fields).length) return;
     try{ await postOK("/api/edit",{id,fields}); toast("Task updated"); load(); }

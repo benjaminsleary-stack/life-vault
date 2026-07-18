@@ -942,16 +942,39 @@ async function rescheduleTask(store, id, due) {
  *
  * Fields absent from the payload are left alone; `due: null` clears the date.
  */
-async function editTask(store, id, fields) {
+// The title as WRITTEN — stamps and tags removed, but [[wikilinks]] left alone.
+//
+// taskLabel() strips wikilinks for display, and rebuilding a line from it meant
+// that editing only a due date rewrote "Insulate [[Milo]]'s room" as "Insulate
+// Milo's room" — quietly severing the link to Milo's note. An edit must never
+// destroy a link the user did not touch.
+function taskTitleRaw(body) {
+  let t = body.replace(DUE_RE, "").replace(DONE_RE, "").replace(PRIORITY_RE, "");
+  t = t.replace(/(?:^|\s)#[A-Za-z0-9_/-]+/g, "");
+  return t.split(/\s+/).join(" ").trim();
+}
+
+async function editTask(store, id, fields, projectSlugs) {
   const has = (k) => Object.prototype.hasOwnProperty.call(fields, k);
   if (has("due") && fields.due && !/^\d{4}-\d{2}-\d{2}$/.test(String(fields.due))) return false;
   const tag = has("tag") ? String(fields.tag || "").replace(/^#/, "").trim() : null;
   if (tag && !AREAS.includes(tag)) return false;
+  const project = has("project") ? String(fields.project || "").trim() : null;
 
   return editTaskLine(store, id, "dashboard: edit task", (body) => {
-    const title = has("text") && String(fields.text).trim()
+    let title = has("text") && String(fields.text).trim()
       ? String(fields.text).trim()
-      : taskLabel(body);
+      : taskTitleRaw(body);
+
+    // Reassigning the project swaps only the link that names a project; links to
+    // people or notes in the title are none of this operation's business.
+    if (has("project")) {
+      const known = new Set((projectSlugs || []).map((s) => s.toLowerCase()));
+      title = title.replace(/\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, (m, target) =>
+        known.has(slugify(target)) || known.has(target.toLowerCase()) ? "" : m).trim();
+      if (project) title += ` [[${project}]]`;
+    }
+
     const dueM = body.match(DUE_RE);
     const due = has("due") ? fields.due : (dueM ? dueM[1] : null);
     const doneM = body.match(DONE_RE);
@@ -962,7 +985,7 @@ async function editTask(store, id, fields) {
     if (HIGH_RE.test(body)) parts.push("⏫");
     if (due) parts.push(`📅 ${due}`);
     if (doneM) parts.push(doneM[0]);
-    return parts.join(" ");
+    return parts.join(" ").replace(/\s{2,}/g, " ").trim();
   });
 }
 
@@ -1175,7 +1198,15 @@ export function createApi(rawStore, hooks = {}) {
         }
         case "/api/toggle":     ok = await toggleTask(store, p.id); break;
         case "/api/priority":   ok = await setPriority(store, p.id); break;
-        case "/api/edit":       ok = await editTask(store, p.id, p.fields || {}); break;
+        case "/api/edit": {
+          // Reassigning a project needs to know which links name projects, so a
+          // [[Milo]] in the title is left alone.
+          const slugs = Object.prototype.hasOwnProperty.call(p.fields || {}, "project")
+            ? (await store.listDir("projects")).filter((f) => f.name.endsWith(".md")).map((f) => f.name.slice(0, -3))
+            : [];
+          ok = await editTask(store, p.id, p.fields || {}, slugs);
+          break;
+        }
         case "/api/reschedule": ok = await rescheduleTask(store, p.id, p.due || null); break;
         case "/api/delete":     ok = await deleteTask(store, p.id); break;
         case "/api/reorder":    ok = await reorderTasks(store, p.ids); break;
