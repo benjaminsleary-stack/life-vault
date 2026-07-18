@@ -13,3 +13,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Give Charlotte her self referral forms #family 📅 2026-07-18
 - [ ] Order pixels food. #admin 📅 2026-07-19
 - [ ] Add stones to freecycle #house
+- [ ] Order [[Jasper]]'s bike #family

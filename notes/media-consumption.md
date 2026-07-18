@@ -19,5 +19,11 @@ Audiobooks: Sci-fi and fantasy (The Silmarillion, Cyberpunk 2077: No Coincidence
 
 **Goal:** Read more; expand beyond sci-fi and fantasy into other genres.
 
+## News interests
+
+Wants more positive news: geopolitics, science, tech, environment. Architecture
+and building services are another interest.
+
 ## Log
 - 2026-07-13 — Media consumption profile captured.
+- 2026-07-18 — Wants more positive-news coverage of geopolitics/science/tech/environment; architecture and building services also an interest.
