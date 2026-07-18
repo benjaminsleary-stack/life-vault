@@ -71,6 +71,8 @@
   .btn:hover{ border-color:var(--accent); }
   .btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
   .btn.primary:hover{ filter:brightness(1.06); }
+  .btn.mic{ flex:0 0 auto; min-width:0; }
+  .btn.mic.rec{ background:rgba(201,115,110,.16); border-color:var(--red); color:#e8a29d; animation:breathe 1.6s ease-in-out infinite; }
 
   .priority{ display:flex; align-items:center; gap:11px; background:var(--bg1);
     border:1px solid var(--line-row); border-left:3px solid var(--accent); border-radius:10px;
@@ -147,6 +149,21 @@
   .occ .d{ color:var(--accent-text); font-variant-numeric:tabular-nums; font-size:12.5px; min-width:52px; }
   .occ .in{ color:var(--faint); font-size:12px; margin-left:auto; }
 
+  /* Habits */
+  .habit{ background:var(--bg1); border:1px solid var(--line-row); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .habit:last-child{ margin-bottom:0; }
+  .habit.complete{ border-color:color-mix(in srgb, var(--green) 55%, var(--line-row)); }
+  .habit-head{ display:flex; align-items:baseline; gap:8px; }
+  .habit-name{ flex:1; font-weight:600; font-size:14.5px; }
+  .habit-count{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .habit-streak{ font-size:12px; color:var(--honey); font-variant-numeric:tabular-nums; }
+  .habit-items{ margin-top:7px; display:flex; flex-direction:column; gap:4px; }
+  .habit-item{ display:flex; align-items:center; gap:9px; font-size:14px; cursor:pointer; color:var(--text2); }
+  .habit-item .hchk{ width:18px; height:18px; flex:none; border-radius:5px; border:1.5px solid var(--line-key);
+    background:var(--surface); display:grid; place-items:center; font-size:11px; color:transparent; transition:.12s; }
+  .habit-item.on .hchk{ background:var(--green); border-color:var(--green); color:#14200f; }
+  .habit-item.on{ color:var(--muted); }
+
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   @media (max-width:560px){ .grid2{ grid-template-columns:1fr; } }
   .grid2 .card{ margin-bottom:0; }
@@ -172,17 +189,18 @@
       display:grid; gap:14px; align-items:start;
       grid-template-columns:1.15fr 1fr 1fr;
       grid-template-areas:
-        "tasks capture weather"
-        "tasks ask     weather"
-        "tasks skills  brief"
-        "add   skills  brief"
-        "add   people  agenda";
+        "tasks  capture weather"
+        "tasks  ask     weather"
+        "tasks  skills  brief"
+        "add    skills  brief"
+        "habits people  agenda";
     }
     .cards .card{ margin-bottom:0; }
     .c-tasks{ grid-area:tasks; } .c-capture{ grid-area:capture; }
     .c-weather{ grid-area:weather; } .c-ask{ grid-area:ask; }
     .c-skills{ grid-area:skills; } .c-brief{ grid-area:brief; }
     .c-add{ grid-area:add; } .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
+    .c-habits{ grid-area:habits; }
     .cards > .grid2{ display:contents; }
   }
 
@@ -221,6 +239,9 @@
 
   /* Glass on the status pill. */
   .status-pill{ backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .alerts-btn{ background:var(--surface); color:var(--muted); border:1px solid var(--line-key);
+    border-radius:999px; padding:7px 13px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .alerts-btn:hover{ border-color:var(--accent); color:var(--text); }
 
   /* Section-jump pills (mobile only — desktop sees everything at once). */
   html{ scroll-behavior:smooth; }
@@ -311,7 +332,10 @@
         <div class="mascot">🐢</div>
         <h1>Life<span>·</span>Vault</h1>
       </div>
-      <span class="status-pill" id="statusPill" onclick="signOut()" title="Tap to disconnect"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="alerts-btn hidden" id="alertsBtn" onclick="enableAlerts()" title="Get a push when a brief or answer is ready">🔔 Alerts</button>
+        <span class="status-pill" id="statusPill" onclick="signOut()" title="Tap to disconnect"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
+      </div>
     </div>
     <div class="sub" id="gen">reads and writes the vault markdown directly</div>
 
@@ -325,7 +349,10 @@
     <div class="card c-capture">
       <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
       <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
-      <div class="row"><button class="btn primary" onclick="doCapture()">Capture to inbox</button></div>
+      <div class="row">
+        <button class="btn mic hidden" id="micBtn" onclick="toggleMic()" title="Dictate">🎙 Rec</button>
+        <button class="btn primary" onclick="doCapture()">Capture to inbox</button>
+      </div>
     </div>
 
     <div class="card c-ask">
@@ -368,6 +395,11 @@
     <div class="card c-weather">
       <div class="section-head"><p class="label">Weather</p><span class="count">Cambridge</span></div>
       <div id="weatherBody" class="skel"></div>
+    </div>
+
+    <div class="card c-habits">
+      <div class="section-head"><p class="label">Habits</p><span class="count" id="habitPct"></span></div>
+      <div id="habits" class="skel"></div>
     </div>
 
     <div class="grid2" id="sec-people">
@@ -443,7 +475,7 @@
     const tok=$("gTok").value.trim();
     if(!tok){ $("gErr").textContent="Enter your unlock token."; $("gErr").classList.remove("hidden"); return; }
     TOKEN=tok; localStorage.setItem("lv_token",TOKEN); localStorage.setItem("lv_api",API);
-    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load(); loadWeather();
+    $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load(); loadWeather(); refreshAlertsBtn();
   }
   function signOut(){ if(!confirm("Disconnect this device? The token is cleared from here.")) return;
     localStorage.removeItem("lv_token"); TOKEN=""; showGate(); }
@@ -709,6 +741,39 @@
       return '<div class="occ"><span class="d">'+fmtDate(it.date).replace(/^\w+\s/,"")+'</span><span>'+mark+esc(it.text)+'</span><span class="in">'+inTxt+'</span></div>';
     }).join("") : '<div class="muted">Nothing in the next 7 days.</div>';
   }
+  // Habits: today's tick-offs with per-habit streaks (data from habits.md).
+  function renderHabits(habits){
+    habits=habits||[];
+    const el=$("habits");
+    if(!habits.length){ el.classList.remove("skel"); el.innerHTML='<div class="muted">Add habits to habits.md in the vault.</div>'; $("habitPct").textContent=""; return; }
+    const all=habits.reduce((n,h)=>n+h.items.length,0);
+    const done=habits.reduce((n,h)=>n+h.items.filter(i=>i.done).length,0);
+    $("habitPct").textContent = all ? Math.round(100*done/all)+"% today" : "";
+    el.innerHTML = habits.map((h)=>{
+      const d=h.items.filter(i=>i.done).length;
+      return '<div class="habit'+(d===h.items.length?" complete":"")+'">'+
+        '<div class="habit-head"><span class="habit-name">'+esc(h.name)+'</span>'+
+        (h.streak>1?'<span class="habit-streak">🔥 '+h.streak+'</span>':'')+
+        '<span class="habit-count">'+d+"/"+h.items.length+'</span></div>'+
+        '<div class="habit-items">'+h.items.map((i)=>
+          '<div class="habit-item'+(i.done?" on":"")+'" data-habit="'+esc(h.name)+'" data-item="'+esc(i.text)+'">'+
+          '<span class="hchk">✓</span><span>'+esc(i.text)+'</span></div>').join("")+'</div></div>';
+    }).join("");
+  }
+  $("habits").addEventListener("click",(e)=>{
+    const row=e.target.closest(".habit-item"); if(!row) return;
+    const habit=row.dataset.habit, item=row.dataset.item;
+    // Optimistic flip, then persist.
+    if(lastData && lastData.habits){
+      const h=lastData.habits.find((x)=>x.name===habit);
+      const i=h && h.items.find((x)=>x.text===item);
+      if(i){ i.done=!i.done; renderHabits(lastData.habits); }
+    }
+    req("/api/habit",{method:"POST",body:JSON.stringify({habit,item})})
+      .then((r)=>{ if(!r.ok) throw new Error(); })
+      .catch(()=>{ toast("Failed",true); load(); });
+  });
+
   // Inbox chip: unfiled captures + one-tap File.
   function renderInbox(n){
     const el=$("inboxChip");
@@ -731,6 +796,7 @@
     $("gen").textContent = "Updated "+new Date(d.generated).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" · reads and writes the vault directly";
     renderSkills(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox||0);
+    renderHabits(d.habits);
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};
     Object.keys(awaiting).forEach((name)=>{
@@ -757,6 +823,49 @@
     }
     if(inList) html+="</ul>";
     return html;
+  }
+
+  // --- web push -------------------------------------------------------------
+  const pushSupported = "serviceWorker" in navigator && "PushManager" in window;
+  // Register for installability whenever service workers exist — not only when Push does.
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  function refreshAlertsBtn(){
+    const show = pushSupported && TOKEN && Notification.permission !== "granted";
+    $("alertsBtn").classList.toggle("hidden", !show);
+  }
+  async function enableAlerts(){
+    try{
+      const perm = await Notification.requestPermission();
+      if(perm !== "granted"){ toast("Alerts blocked in browser settings", true); return; }
+      const reg = await navigator.serviceWorker.ready;
+      const kr = await req("/api/push-key"); const { key } = await kr.json();
+      if(!key){ toast("Push not configured on the Worker yet", true); refreshAlertsBtn(); return; }
+      const raw = Uint8Array.from(atob(key.replace(/-/g,"+").replace(/_/g,"/")), (c)=>c.charCodeAt(0));
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey: raw });
+      const r = await req("/api/push-subscribe",{ method:"POST", body:JSON.stringify({ subscription: sub.toJSON() }) });
+      if(!r.ok) throw new Error();
+      toast("Alerts on"); refreshAlertsBtn();
+    }catch(e){ toast("Couldn't enable alerts", true); }
+  }
+
+  // --- voice capture (browser speech-to-text; hidden where unsupported) ----
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, recBase = "";
+  if (SR) $("micBtn").classList.remove("hidden");
+  function toggleMic(){
+    if(rec){ rec.stop(); return; }
+    rec = new SR();
+    rec.lang = "en-GB"; rec.continuous = true; rec.interimResults = true;
+    recBase = $("cap").value ? $("cap").value.replace(/\s+$/,"") + " " : "";
+    rec.onresult = (e)=>{
+      let text = "";
+      for (const r of e.results) text += r[0].transcript;
+      $("cap").value = recBase + text.trim();
+    };
+    rec.onend = ()=>{ rec = null; $("micBtn").classList.remove("rec"); $("micBtn").textContent = "🎙 Rec"; };
+    rec.onerror = (e)=>{ if(e.error!=="aborted") toast("Mic: "+e.error, true); };
+    rec.start();
+    $("micBtn").classList.add("rec"); $("micBtn").textContent = "■ Stop";
   }
 
   // --- weather (Open-Meteo, no key needed) ---------------------------------
@@ -813,7 +922,7 @@
   }
 
   // --- boot -----------------------------------------------------------------
-  if(API && TOKEN){ load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); }
+  if(API && TOKEN){ load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
   else { showGate(); }
 </script>
 </body>
