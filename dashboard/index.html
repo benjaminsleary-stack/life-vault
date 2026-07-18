@@ -50,6 +50,31 @@
   @keyframes breathe{ 0%,100%{opacity:.5; transform:scale(.85);} 50%{opacity:1; transform:scale(1);} }
   .sub{ color:var(--faint); font-size:13px; margin:6px 0 20px; font-variant-numeric:tabular-nums; }
 
+  /* System strip: is the agent loop actually alive, and when did we last hear
+     from it. Golden rule 5 — green ≠ done, so this states its evidence. */
+  .sysbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0 18px; }
+  .sys-chip{ display:inline-flex; align-items:center; gap:7px; background:var(--surface); cursor:pointer;
+    border:1px solid var(--line-key); border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px;
+    font-weight:600; color:var(--muted); }
+  .sys-chip:hover{ border-color:var(--accent); color:var(--text); }
+  .sys-chip .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:none; }
+  .sys-chip.warn{ color:#e0b969; border-color:color-mix(in srgb,var(--yellow) 45%,var(--line-key)); }
+  .sys-chip.warn .dot{ background:var(--yellow); }
+  .sys-chip.bad{ color:#e29b96; border-color:color-mix(in srgb,var(--red) 45%,var(--line-key)); }
+  .sys-chip.bad .dot{ background:var(--red); }
+  .sys-updated{ color:var(--faint); font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .sys-refresh{ background:none; border:none; color:var(--faint); font:inherit; font-size:14px; cursor:pointer;
+    padding:2px 6px; border-radius:6px; }
+  .sys-refresh:hover{ color:var(--accent-text); }
+  .sys-refresh.spin{ animation:spin .7s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* Health detail rows inside the system sheet. */
+  .hrow{ display:flex; align-items:baseline; gap:10px; padding:9px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
+  .hrow:last-child{ border-bottom:0; }
+  .hrow .hname{ flex:1; }
+  .hrow .hwhy{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+
   .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
     padding:15px 16px; margin-bottom:14px; }
   .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 12px; }
@@ -137,6 +162,15 @@
   .md strong{ color:var(--text); }
   .md hr{ border:none; border-top:1px solid var(--line); margin:12px 0; }
   .md p{ font-size:14px; margin:6px 0; }
+  .md em{ color:var(--text2); }
+  .md code{ font-size:12.5px; background:var(--bg1); border:1px solid var(--line-row); border-radius:5px; padding:1px 5px; }
+  .md a{ color:var(--accent-text); }
+  .md blockquote{ margin:8px 0; padding-left:11px; border-left:2px solid var(--line-key); color:var(--muted); font-size:14px; }
+  .md li.md-task{ list-style:none; margin-left:-18px; display:flex; gap:8px; align-items:flex-start; }
+  .md .md-box{ flex:none; width:15px; height:15px; margin-top:3px; border-radius:4px; border:1.5px solid var(--line-key);
+    background:var(--bg1); display:grid; place-items:center; font-size:10px; color:transparent; }
+  .md li.md-task.done .md-box{ background:var(--green); border-color:var(--green); color:#14200f; }
+  .md li.md-task.done{ color:var(--muted); }
 
   .ent{ display:flex; gap:11px; padding:9px 0; border-bottom:1px solid var(--line-row); }
   .ent:last-child{ border-bottom:0; }
@@ -338,10 +372,16 @@
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
         <button class="alerts-btn hidden" id="alertsBtn" onclick="enableAlerts()" title="Get a push when a brief or answer is ready">🔔 Alerts</button>
-        <span class="status-pill" id="statusPill" onclick="signOut()" title="Tap to disconnect"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
+        <span class="status-pill" id="statusPill" onclick="openHealth()" title="Connection and routine health"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
       </div>
     </div>
-    <div class="sub" id="gen">reads and writes the vault markdown directly</div>
+    <div class="sysbar">
+      <button class="sys-chip" id="sysHealth" onclick="openHealth()" title="Are the routines actually running?">
+        <span class="dot"></span><span id="sysHealthText">checking…</span>
+      </button>
+      <span class="sys-updated" id="gen">—</span>
+      <button class="sys-refresh" id="refreshBtn" onclick="load(true)" title="Refresh now" aria-label="Refresh">↻</button>
+    </div>
 
     <nav class="jump">
       <a href="#sec-today">Today</a>
@@ -373,7 +413,7 @@
     </div>
 
     <div class="card c-skills" id="sec-skills">
-      <div class="section-head"><p class="label">Skills</p><span class="count">queued to inbox/_runs · run by the bridge</span></div>
+      <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span></div>
       <div id="skills" class="skel"></div>
     </div>
 
@@ -418,7 +458,6 @@
     </div>
     </div><!-- /.cards -->
 
-    <div class="foot">Cloud dashboard · reads/writes the vault via GitHub · one source of truth</div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -431,7 +470,7 @@
         <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
       </div>
       <div class="modal-body md" id="modalBody"></div>
-      <div class="modal-reply">
+      <div class="modal-reply" id="modalReply">
         <textarea id="replyText" placeholder="Reply — captured to your inbox and actioned now…"></textarea>
         <button class="btn primary" onclick="sendReply()">Send &amp; action</button>
       </div>
@@ -491,14 +530,56 @@
   function req(path, opts={}){
     return fetch(API+path, { ...opts, headers:{ "Authorization":"Bearer "+TOKEN, "Content-Type":"application/json", ...(opts.headers||{}) } });
   }
-  async function load(){
+  async function load(manual){
+    const btn=$("refreshBtn");
+    if(manual) btn.classList.add("spin");
     try{
       const r = await req("/api/data?t="+Date.now());   // cache-bust
       if(r.status===401){ showGate("Token rejected. Check the unlock token."); return; }
       if(!r.ok) throw new Error("HTTP "+r.status);
       render(await r.json());
       setStatus(true);
-    }catch(e){ setStatus(false); toast("Load failed — check the Worker URL",true); }
+      if(manual) toast("Up to date");
+    }catch(e){ setStatus(false); if(manual) toast("Couldn't reach the vault",true); }
+    finally{ if(manual) setTimeout(()=>btn.classList.remove("spin"),400); }
+    loadHealth();
+  }
+
+  // --- is the agent loop alive? --------------------------------------------
+  // The most useful thing this app can tell you is that it has stopped working.
+  // A brief that silently hasn't run for three days looks identical to one that
+  // ran fine, unless something checks. This is that check (golden rule 5).
+  let lastHealth=null;
+  async function loadHealth(){
+    try{
+      const r=await req("/api/health"); if(!r.ok) throw new Error();
+      renderHealth(lastHealth=await r.json());
+    }catch(e){
+      $("sysHealthText").textContent="health unknown";
+      $("sysHealth").className="sys-chip warn";
+    }
+  }
+  function renderHealth(h){
+    $("sysHealthText").textContent=h.summary;
+    $("sysHealth").className="sys-chip"+(h.stuck.length?" bad":(h.ok?"":" warn"));
+  }
+  function openHealth(){
+    const h=lastHealth;
+    if(!h){ openPanel("System", '<div class="muted">Health unavailable.</div>'); return; }
+    let html="<h3>Routines</h3>";
+    html+=h.checks.map((c)=>
+      '<div class="hrow"><span class="'+(c.ok?"tick":"cross")+'">'+(c.ok?"✓":"✗")+'</span>'+
+      '<span class="hname">'+esc(c.name)+'</span>'+
+      '<span class="hwhy">'+esc(c.why || (c.when?fmtWhen(c.when):""))+'</span></div>').join("");
+    if(h.stuck.length){
+      html+="<h3>Waiting for a runner</h3>"+h.stuck.map((s)=>
+        '<div class="hrow"><span class="cross">✗</span><span class="hname">'+esc(s.name)+
+        '</span><span class="hwhy">queued '+s.mins+'m ago</span></div>').join("")+
+        '<p class="muted">Nothing has picked these up. Start the desktop watcher, or check the '+
+        'skill-runner workflow on GitHub.</p>';
+    }
+    html+='<hr><p><button class="btn" onclick="signOut()">Disconnect this device</button></p>';
+    openPanel("System", html);
   }
   function post(path, body, msg){
     return req(path,{ method:"POST", body:JSON.stringify(body) })
@@ -630,6 +711,7 @@
     $("modalName").textContent=path;
     $("modalBody").innerHTML='<div class="muted">Loading…</div>';
     $("replyText").value="";
+    $("modalReply").classList.remove("hidden");
     $("modalBack").classList.add("show");
     req("/api/file?path="+encodeURIComponent(path))
       .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
@@ -637,6 +719,13 @@
       .catch(()=> $("modalBody").innerHTML='<div class="muted">Couldn\'t load this file.</div>');
   }
   function closeModal(){ $("modalBack").classList.remove("show"); }
+  // The sheet does double duty: a file with a reply box, or a plain panel.
+  function openPanel(title, html){
+    $("modalName").textContent=title;
+    $("modalBody").innerHTML=html;
+    $("modalReply").classList.add("hidden");
+    $("modalBack").classList.add("show");
+  }
   // Reply to an open brief → capture + immediately run File to action it.
   function sendReply(){
     const t=$("replyText").value.trim(); if(!t) return;
@@ -730,7 +819,7 @@
     $("ppl").innerHTML = people.length ? people.slice(0,6).map((p)=>
       '<div class="ent"><div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
       '<div><div class="e-name">'+esc(p.name)+"</div>"+
-      '<div class="e-sum">'+esc(p.summary||"")+"</div></div></div>"
+      '<div class="e-sum">'+esc(mdPlain(p.summary))+"</div></div></div>"
     ).join("") : '<div class="muted">—</div>';
   }
   // Agenda = occasions + due tasks in the next 7 days, merged and dated.
@@ -800,7 +889,9 @@
   }
   function render(d){
     lastData=d;
-    $("gen").textContent = "Updated "+new Date(d.generated).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" · reads and writes the vault directly";
+    $("gen").textContent = "updated "+new Date(d.generated).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+    $("skillsCount").textContent = Object.values(d.skills||{}).filter((s)=>s.queued).length
+      ? "a run is queued" : "on-demand";
     renderSkills(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox||0);
     renderHabits(d.habits);
@@ -816,19 +907,44 @@
     });
   }
 
-  // Tiny markdown renderer for the brief (### headings, - lists, --- rule, **bold**).
+  // Vault prose is Obsidian-flavoured, so a renderer that only knows **bold**
+  // leaks `_italics_`, `[[wikilinks]]` and `- [ ]` checkboxes as literal syntax
+  // into the brief — which is exactly what it was doing.
+  function mdInline(s){
+    return esc(s)
+      .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,"$2")          // [[note|alias]] -> alias
+      .replace(/\[\[([^\]]+)\]\]/g,"$1")                     // [[note]] -> note
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/`([^`]+)`/g,"<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+      .replace(/(^|[\s(])_([^_]+)_(?=[\s.,;:)!?]|$)/g,"$1<em>$2</em>")
+      .replace(/(^|[\s(])\*([^*]+)\*(?=[\s.,;:)!?]|$)/g,"$1<em>$2</em>")
+      .replace(/📅\s*(\d{4}-\d{2}-\d{2})/g,'<span class="pill">$1</span>')
+      .replace(/(^|\s)#([A-Za-z][A-Za-z0-9_-]*)/g,'$1<span class="pill">#$2</span>');
+  }
+  // Strip markdown to plain text — for summaries rendered into a bare element.
+  function mdPlain(s){
+    return (s||"").replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,(m,a,b)=>b||a)
+      .replace(/\*\*|__|[*_`]/g,"").trim();
+  }
   function mdToHtml(md){
     const lines=md.replace(/\r/g,"").split("\n"); let html="", inList=false;
-    const inline=(s)=>esc(s).replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    const close=()=>{ if(inList){ html+="</ul>"; inList=false; } };
     for(let raw of lines){
       const l=raw.trimEnd();
-      if(/^#{1,6}\s/.test(l)){ if(inList){html+="</ul>";inList=false;} html+="<h3>"+inline(l.replace(/^#{1,6}\s/,""))+"</h3>"; continue; }
-      if(/^---+$/.test(l)){ if(inList){html+="</ul>";inList=false;} html+="<hr>"; continue; }
-      if(/^[-*]\s+/.test(l)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+inline(l.replace(/^[-*]\s+/,""))+"</li>"; continue; }
-      if(!l.trim()){ if(inList){html+="</ul>";inList=false;} continue; }
-      if(inList){html+="</ul>";inList=false;} html+="<p>"+inline(l)+"</p>";
+      if(/^#{1,6}\s/.test(l)){ close(); html+="<h3>"+mdInline(l.replace(/^#{1,6}\s/,""))+"</h3>"; continue; }
+      if(/^(---+|\*\*\*+)$/.test(l)){ close(); html+="<hr>"; continue; }
+      // Checkbox lines are common in briefs; render the box, not the brackets.
+      const cb=l.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
+      if(cb){ if(!inList){html+="<ul>";inList=true;}
+        html+='<li class="md-task'+(cb[1]===" "?"":" done")+'"><span class="md-box">'+
+          (cb[1]===" "?"":"✓")+"</span>"+mdInline(cb[2])+"</li>"; continue; }
+      if(/^\s*[-*]\s+/.test(l)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+mdInline(l.replace(/^\s*[-*]\s+/,""))+"</li>"; continue; }
+      if(/^>\s?/.test(l)){ close(); html+="<blockquote>"+mdInline(l.replace(/^>\s?/,""))+"</blockquote>"; continue; }
+      if(!l.trim()){ close(); continue; }
+      close(); html+="<p>"+mdInline(l)+"</p>";
     }
-    if(inList) html+="</ul>";
+    close();
     return html;
   }
 
