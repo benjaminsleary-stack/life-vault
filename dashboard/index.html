@@ -203,6 +203,9 @@
   .src.work{ background:var(--a-work); }
   .src.personal{ background:var(--a-family); }
   .cal-warn{ font-size:12px; color:#e0b969; margin-top:8px; }
+  .cal-sync{ font-size:11.5px; color:var(--faint); margin-top:9px; padding-top:8px;
+    border-top:1px solid var(--line-row); }
+  .cal-sync .link{ font-size:11.5px; }
 
   /* Add-a-task, inline at the head of the list it writes to. It used to be a
      separate card, which spent a whole grid slot on a form. */
@@ -1241,12 +1244,32 @@
         rows.map((it)=>agendaRow(it,n)).join("")+"</div>";
     }).join("") : '<div class="muted">Nothing due or coming up in the next month.</div>';
 
-    // A calendar that quietly stopped syncing looks exactly like a free week.
-    const bad=(d.calendarSources||[]).filter((s)=>!s.ok);
+    // A calendar that quietly stopped syncing looks exactly like a free week,
+    // so both the failure and the freshness are stated rather than assumed.
+    const srcs=d.calendarSources||[];
+    const bad=srcs.filter((s)=>!s.ok);
     if(bad.length){
       $("agenda").insertAdjacentHTML("beforeend",
         '<div class="cal-warn">⚠ '+bad.map((s)=>esc(s.name)+" calendar unavailable").join(", ")+"</div>");
     }
+    const ok=srcs.filter((s)=>s.ok);
+    if(ok.length){
+      const oldest=Math.max(...ok.map((s)=>s.ageMs||0));
+      const mins=Math.floor(oldest/60000);
+      $("agenda").insertAdjacentHTML("beforeend",
+        '<div class="cal-sync">'+esc(ok.map((s)=>s.name).join(" + "))+" calendar · synced "+
+        (mins<1?"just now":mins+"m ago")+
+        ' · <button class="link" style="padding:0" onclick="refreshCalendar(this)">refresh</button></div>');
+    }
+  }
+  // Outlook regenerates the feed on every request, so the only thing between a
+  // change there and this screen is our own 15-minute cache. This skips it.
+  function refreshCalendar(btn){
+    btn.textContent="refreshing…"; btn.disabled=true;
+    req("/api/data?calendar=fresh&t="+Date.now())
+      .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
+      .then((d)=>{ render(d); toast("Calendar refreshed"); })
+      .catch(()=>toast("Couldn't refresh the calendar",true));
   }
   function agendaRow(it, n){
     if(it.kind==="event"){

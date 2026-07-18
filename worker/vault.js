@@ -428,22 +428,29 @@ async function addLesson(store, scope, text, verdict) {
 const CAL_TTL_MS = 15 * 60 * 1000;
 const calCache = new Map();                    // url -> { at, events }
 
-// The work feed is ~1MB and /api/data is polled every 60s. Fetching it every
-// time would be a megabyte a minute for a file that changes a few times a day.
-async function fetchCalendar(feed) {
+// The work feed is ~1MB and /api/data is polled every 60s, so it is cached for
+// CAL_TTL_MS. That cache is the ONLY thing standing between a change in Outlook
+// and this app: Exchange regenerates the published .ics per request (its
+// DTSTAMPs equal the fetch time), so the feed itself is never stale.
+//
+// It cannot be revalidated cheaply either — Microsoft returns no ETag,
+// Last-Modified or Cache-Control on this URL, so a conditional request is
+// impossible and every refresh is a full megabyte. Hence a TTL, and an explicit
+// bypass for when you have just added something and want to see it now.
+async function fetchCalendar(feed, force) {
   const hit = calCache.get(feed.url);
-  if (hit && Date.now() - hit.at < CAL_TTL_MS) return hit.events;
+  if (!force && hit && Date.now() - hit.at < CAL_TTL_MS) return hit;
   const r = await fetch(feed.url, {
     headers: { "User-Agent": "life-vault-dashboard" },
-    cf: { cacheTtl: 900, cacheEverything: true },
+    cf: force ? { cacheTtl: 0 } : { cacheTtl: 900, cacheEverything: true },
   });
-  if (!r.ok) throw new Error(`${feed.name}: HTTP ${r.status}`);
-  const events = parseICS(await r.text());
-  calCache.set(feed.url, { at: Date.now(), events });
-  return events;
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const entry = { at: Date.now(), events: parseICS(await r.text()) };
+  calCache.set(feed.url, entry);
+  return entry;
 }
 
-async function readCalendar(feeds, fromDay, toDay) {
+async function readCalendar(feeds, fromDay, toDay, force) {
   if (!feeds || !feeds.length) return { events: [], sources: [] };
   const events = [];
   const sources = [];
@@ -451,11 +458,11 @@ async function readCalendar(feeds, fromDay, toDay) {
   // says which source failed and still renders the rest.
   await Promise.all(feeds.map(async (feed) => {
     try {
-      const parsed = await fetchCalendar(feed);
+      const { events: parsed, at } = await fetchCalendar(feed, force);
       for (const occ of expandEvents(parsed, fromDay, toDay)) {
         events.push({ ...occ, source: feed.name });
       }
-      sources.push({ name: feed.name, ok: true });
+      sources.push({ name: feed.name, ok: true, fetched: new Date(at).toISOString(), ageMs: Date.now() - at });
     } catch (e) {
       sources.push({ name: feed.name, ok: false, error: String((e && e.message) || e) });
     }
@@ -472,7 +479,7 @@ async function readCalendar(feeds, fromDay, toDay) {
 // How far the agenda looks. Matches the dashboard's own horizon.
 const AGENDA_DAYS = 31;
 
-async function buildData(store, feeds) {
+async function buildData(store, feeds, forceCalendar) {
   const tasksFile = await store.readFile("tasks.md");
   const horizon = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" })
     .format(new Date(Date.now() + AGENDA_DAYS * 864e5));
@@ -485,7 +492,7 @@ async function buildData(store, feeds) {
     readInbox(store),
     readHabits(store),
     readLessons(store),
-    readCalendar(feeds, today(), horizon),
+    readCalendar(feeds, today(), horizon, forceCalendar),
   ]);
   return {
     generated: new Date().toISOString(),
@@ -780,7 +787,12 @@ export function createApi(rawStore, hooks = {}) {
 
   return async function handle(method, path, params, payload) {
     if (method === "GET") {
-      if (path === "/api/data") return { status: 200, body: await buildData(store, feeds) };
+      if (path === "/api/data") {
+        // ?calendar=fresh bypasses the feed cache, for when you have just added
+        // a meeting and do not want to wait out the TTL.
+        const force = params.get("calendar") === "fresh";
+        return { status: 200, body: await buildData(store, feeds, force) };
+      }
       if (path === "/api/health") return { status: 200, body: await health(store) };
       if (path === "/api/person") {
         const p = await readPerson(store, params.get("slug") || "");
