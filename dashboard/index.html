@@ -182,6 +182,16 @@
   .occ:last-child{ border-bottom:0; }
   .occ .d{ color:var(--accent-text); font-variant-numeric:tabular-nums; font-size:12.5px; min-width:52px; }
   .occ .in{ color:var(--faint); font-size:12px; margin-left:auto; }
+  .ent.tappable{ cursor:pointer; align-items:center; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
+  .ent.tappable:hover, .ent.tappable:focus-visible{ background:var(--bg1); outline:none; }
+  .ent.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
+  .ent .chev{ margin-left:auto; color:var(--faint); font-size:17px; flex:none; }
+
+  /* Person sheet */
+  .frag{ display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
+  .frag:last-child{ border-bottom:0; }
+  .frag .fdate{ flex:none; min-width:52px; color:var(--accent-text); font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .person-add{ display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
 
   /* Habits */
   .habit{ background:var(--bg1); border:1px solid var(--line-row); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
@@ -814,13 +824,78 @@
     $("briefName").textContent = b ? b.name.replace(/\.md$/,"") : "—";
     $("brief").innerHTML = b ? mdToHtml(b.text) : '<div class="muted">—</div>';
   }
+  // People are the point of the vault, so this card is a way in, not a poster.
+  // Each row opens the person; the meta line carries the one fact a glance can
+  // act on — how long since anything was written down about them.
   function renderPeople(people){
+    const withOcc=(p)=>{
+      const o=(lastData&&lastData.occasions||[]).filter((x)=>x.who===p.slug)[0];
+      return o||null;
+    };
+    const sorted=[...people].sort((a,b)=>{
+      const oa=withOcc(a), ob=withOcc(b);
+      if(oa&&!ob) return -1; if(ob&&!oa) return 1;
+      if(oa&&ob&&oa.date!==ob.date) return oa.date.localeCompare(ob.date);
+      return (b.silentDays||0)-(a.silentDays||0);
+    });
     $("pplCount").textContent = people.length;
-    $("ppl").innerHTML = people.length ? people.slice(0,6).map((p)=>
-      '<div class="ent"><div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
-      '<div><div class="e-name">'+esc(p.name)+"</div>"+
-      '<div class="e-sum">'+esc(mdPlain(p.summary))+"</div></div></div>"
-    ).join("") : '<div class="muted">—</div>';
+    $("ppl").innerHTML = sorted.length ? sorted.map((p)=>{
+      const occ=withOcc(p);
+      const meta = occ ? '<span style="color:var(--accent-text)">'+esc(occ.text)+" · "+fmtDate(occ.date).replace(/^\w+\s/,"")+"</span>"
+        : p.silentDays==null ? '<span style="color:var(--faint)">nothing captured yet</span>'
+        : p.silentDays>21 ? '<span style="color:var(--yellow)">quiet for '+p.silentDays+" days</span>"
+        : "last noted "+(p.silentDays===0?"today":p.silentDays+"d ago");
+      return '<div class="ent tappable" data-person="'+esc(p.slug)+'" tabindex="0" role="button">'+
+        '<div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
+        '<div style="min-width:0"><div class="e-name">'+esc(p.name)+"</div>"+
+        '<div class="e-sum">'+meta+"</div></div>"+
+        '<span class="chev">›</span></div>';
+    }).join("") : '<div class="muted">No people notes yet.</div>';
+  }
+  $("ppl").addEventListener("click",(e)=>{
+    const row=e.target.closest("[data-person]"); if(row) openPerson(row.dataset.person);
+  });
+  $("ppl").addEventListener("keydown",(e)=>{
+    if(e.key!=="Enter"&&e.key!==" ") return;
+    const row=e.target.closest("[data-person]"); if(row){ e.preventDefault(); openPerson(row.dataset.person); }
+  });
+
+  // The person sheet: summary, what's coming up, and every dated fragment —
+  // the fragments verbatim, with their capture dates, because they are the
+  // truth and the summary is only a convenience (golden rule 2).
+  let curPerson=null;
+  async function openPerson(slug){
+    openPanel("…", '<div class="muted">Loading…</div>');
+    try{
+      const r=await req("/api/person?slug="+encodeURIComponent(slug));
+      if(!r.ok) throw new Error();
+      const p=await r.json(); curPerson=p;
+      let html="";
+      if(p.summary) html+='<p style="color:var(--text2)">'+mdInline(p.summary)+"</p>";
+      if(p.occasions.length){
+        html+="<h3>Coming up</h3>"+p.occasions.map((o)=>
+          '<div class="occ"><span class="d">'+fmtDate(o.date).replace(/^\w+\s/,"")+"</span><span>"+
+          mdInline(o.text)+"</span></div>").join("");
+      }
+      html+='<h3>Add a note</h3><div class="person-add">'+
+        '<textarea id="pnote" placeholder="What just happened? Saved as a dated fragment."></textarea>'+
+        '<button class="btn primary" onclick="addFragment()">Save to '+esc(p.name)+"</button></div>";
+      html+="<h3>Log <span style='color:var(--faint);font-weight:400'>"+p.log.length+" fragments</span></h3>";
+      html+= p.log.length ? p.log.map((f)=>
+        '<div class="frag"><span class="fdate">'+fmtDate(f.date).replace(/^\w+\s/,"")+
+        "</span><span>"+mdInline(f.text)+"</span></div>").join("")
+        : '<div class="muted">Nothing captured about '+esc(p.name)+" yet.</div>";
+      $("modalName").textContent=p.name;
+      $("modalBody").innerHTML=html;
+    }catch(e){ $("modalBody").innerHTML='<div class="muted">Couldn\'t load this person.</div>'; }
+  }
+  function addFragment(){
+    const el=$("pnote"); const text=(el&&el.value||"").trim();
+    if(!text||!curPerson) return;
+    el.disabled=true;
+    req("/api/append",{method:"POST",body:JSON.stringify({person:curPerson.slug,text})})
+      .then((r)=>{ if(!r.ok) throw new Error(); toast("Saved to "+curPerson.name); openPerson(curPerson.slug); load(); })
+      .catch(()=>{ el.disabled=false; toast("Failed",true); });
   }
   // Agenda = occasions + due tasks in the next 7 days, merged and dated.
   function renderAgenda(d){
