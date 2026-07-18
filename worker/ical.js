@@ -45,15 +45,25 @@ function ianaZone(tzid) {
   catch { return DEFAULT_TZ; }
 }
 
+// Constructing an Intl.DateTimeFormat is expensive — hundreds of microseconds —
+// and expanding a year of recurrences calls into these tens of thousands of
+// times. Memoised, since a Worker's CPU budget is measured in milliseconds.
+const DTF_CACHE = new Map();
+function dtf(zone, opts, key) {
+  const k = zone + "|" + key;
+  let f = DTF_CACHE.get(k);
+  if (!f) { f = new Intl.DateTimeFormat("en-US", { timeZone: zone, hour12: false, ...opts }); DTF_CACHE.set(k, f); }
+  return f;
+}
+
 // Offset of `zone` from UTC at a given instant, in ms.
 function zoneOffset(utcMs, zone) {
-  const dtf = new Intl.DateTimeFormat("en-US", {
-    timeZone: zone, hour12: false,
+  const f = dtf(zone, {
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
-  });
+  }, "full");
   const p = {};
-  for (const part of dtf.formatToParts(new Date(utcMs))) {
+  for (const part of f.formatToParts(new Date(utcMs))) {
     if (part.type !== "literal") p[part.type] = part.value;
   }
   const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
@@ -247,16 +257,15 @@ function occurrences(ev, from, to) {
 }
 
 function localParts(ms, zone) {
-  const dtf = new Intl.DateTimeFormat("en-US", {
-    timeZone: zone, hour12: false,
+  const f = dtf(zone, {
     year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
-  });
+  }, "parts");
   const p = {};
-  for (const part of dtf.formatToParts(new Date(ms))) if (part.type !== "literal") p[part.type] = part.value;
+  for (const part of f.formatToParts(new Date(ms))) if (part.type !== "literal") p[part.type] = part.value;
   return { y: +p.year, mo: +p.month, d: +p.day, h: +p.hour % 24, mi: +p.minute };
 }
 function dayOfWeek(ms, zone) {
-  const s = new Intl.DateTimeFormat("en-US", { timeZone: zone, weekday: "short" }).format(new Date(ms));
+  const s = dtf(zone, { weekday: "short" }, "wd").format(new Date(ms));
   return { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[s];
 }
 

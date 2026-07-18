@@ -458,11 +458,18 @@ async function readCalendar(feeds, fromDay, toDay, force) {
   // says which source failed and still renders the rest.
   await Promise.all(feeds.map(async (feed) => {
     try {
-      const { events: parsed, at } = await fetchCalendar(feed, force);
-      for (const occ of expandEvents(parsed, fromDay, toDay)) {
-        events.push({ ...occ, source: feed.name });
+      const entry = await fetchCalendar(feed, force);
+      // Expanding recurrences costs real CPU, and a Worker's budget is measured
+      // in milliseconds — so the expanded window is memoised alongside the
+      // parse. Without this every poll re-expanded the whole calendar and the
+      // steady-state cost of a cache HIT was still tens of milliseconds.
+      const key = `${fromDay}|${toDay}`;
+      if (entry.window !== key) {
+        entry.expanded = expandEvents(entry.events, fromDay, toDay).map((o) => ({ ...o, source: feed.name }));
+        entry.window = key;
       }
-      sources.push({ name: feed.name, ok: true, fetched: new Date(at).toISOString(), ageMs: Date.now() - at });
+      for (const occ of entry.expanded) events.push(occ);
+      sources.push({ name: feed.name, ok: true, fetched: new Date(entry.at).toISOString(), ageMs: Date.now() - entry.at });
     } catch (e) {
       sources.push({ name: feed.name, ok: false, error: String((e && e.message) || e) });
     }
