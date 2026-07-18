@@ -2,7 +2,7 @@
 type: digest
 name: Weekly Interests — 2026-W29
 tags: [interests]
-updated: 2026-07-16
+updated: 2026-07-18
 ---
 
 # Weekly Interests — 2026-W29
@@ -23,3 +23,11 @@ First run of this scout — a couple of items are a few weeks old but genuinely 
 ## Gigs near Cambridge
 
 Nothing that's a genuinely strong fit this week. Closest match, with a caveat on genre: **Faithless** (with Leftfield DJ set, Tricky, Phil Hartnoll) play Audley End House & Gardens, Saffron Walden — Sunday 9 August 2026. Electronic pioneers rather than synthwave/ambient, so a loose fit, but real, dated, and ~15 miles from Cambridge. [Ents24](https://www.ents24.com/saffron-walden-events/audley-end-house-and-gardens/faithless/7392194)
+
+## Update — 2026-07-18
+
+Re-run two days after the first pass. Music and gigs: nothing new worth adding — same picks as above still stand.
+
+**Film**, not covered last time:
+- **Dune: Part Three** — new full trailer dropped 8 July 2026; confirmed cinema release 18 December 2026, closing Villeneuve's trilogy (adapted from *Dune Messiah*), with Timothée Chalamet, Zendaya, Florence Pugh returning and Robert Pattinson joining the cast. [FirstShowing.net](https://www.firstshowing.net/2026/dark-powerful-full-trailer-for-villeneuves-dune-part-three-sequel/) · [Deadline](https://deadline.com/2026/07/dune-part-3-trailer-character-posters-1236756805/)
+- **Blade Runner 2099** — Amazon Prime Video's limited series sequel to *Blade Runner 2049*, starring Michelle Yeoh, is confirmed for a 2026 premiere window (exact date still unannounced). Set 50 years after the 2017 film. [Deadline](https://deadline.com/2025/08/blade-runner-2099-premiere-window-2026-prime-video-1236495769/)
