@@ -321,7 +321,14 @@
     transition:.2s; pointer-events:none; z-index:50; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .toast.err{ background:var(--red); color:#2a0f0d; }
-  .foot{ color:var(--faint); font-size:12px; text-align:center; margin-top:6px; }
+  .toast{ display:flex; align-items:center; gap:12px; pointer-events:auto; }
+  .toast:not(.show){ pointer-events:none; }
+  .toast-act{ background:rgba(0,0,0,.18); border:none; color:inherit; font:inherit; font-weight:700;
+    font-size:13px; border-radius:14px; padding:4px 12px; cursor:pointer; }
+  .toast-act:hover{ background:rgba(0,0,0,.3); }
+  .outbox{ background:rgba(217,164,65,.14); border:1px solid color-mix(in srgb,var(--yellow) 45%,var(--line-key));
+    color:#e0b969; border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .outbox:hover{ border-color:var(--yellow); }
 
   /* Skeleton shimmer while a JS-filled container is still empty. */
   .skel:empty{ display:block; min-height:56px; border-radius:8px;
@@ -452,11 +459,13 @@
       </button>
       <span class="sys-updated" id="gen">—</span>
       <button class="sys-refresh" id="refreshBtn" onclick="load(true)" title="Refresh now" aria-label="Refresh">↻</button>
+      <button class="outbox hidden" id="outbox" onclick="flushOutbox()"></button>
     </div>
 
     <nav class="jump">
-      <a href="#sec-today">Today</a>
-      <a href="#sec-skills">Skills</a>
+      <a href="#sec-today">Tasks</a>
+      <a href="#sec-brief">Brief</a>
+      <a href="#sec-skills">Routines</a>
       <a href="#sec-people">People</a>
     </nav>
 
@@ -502,7 +511,7 @@
       <div id="skills" class="skel"></div>
     </div>
 
-    <div class="card c-brief">
+    <div class="card c-brief" id="sec-brief">
       <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span></div>
       <div class="md" id="brief"><div class="muted">—</div></div>
     </div>
@@ -581,7 +590,25 @@
   // Vault dates are Europe/London days — toISOString() is UTC and rolls a day
   // early between 23:00 and midnight in summer.
   function localToday(){ return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date()); }
-  function toast(m, err){ const t=$("toast"); t.textContent=m; t.classList.toggle("err",!!err); t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
+  let toastTimer=null;
+  function toast(m, err){ showToast(m, err, null, null); }
+  // A toast that can carry one action. Used for undo, because "Removed" with no
+  // way back is a worse answer than a confirm dialog nobody reads.
+  function showToast(m, err, label, fn){
+    const t=$("toast");
+    t.innerHTML='<span></span>';
+    t.firstChild.textContent=m;
+    t.classList.toggle("err",!!err);
+    if(label && fn){
+      const b=document.createElement("button");
+      b.className="toast-act"; b.textContent=label;
+      b.onclick=()=>{ t.classList.remove("show"); fn(); };
+      t.appendChild(b);
+    }
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.remove("show"), label?6000:1600);
+  }
 
   // --- gate -----------------------------------------------------------------
   function showGate(msg){
@@ -666,8 +693,45 @@
     return req(path,{ method:"POST", body:JSON.stringify(body) })
       .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
       .then(()=>{ toast(msg); load(); })
-      .catch(()=>toast("Failed",true));
+      .catch(()=>{ queueWrite(path, body); });
   }
+
+  // --- outbox ---------------------------------------------------------------
+  // This runs on a phone, and a phone loses signal mid-thought. A capture that
+  // fails to send is exactly the thing the vault's first golden rule says must
+  // never be lost, so writes that can't reach the Worker are held on-device and
+  // replayed. Only the writes where replay is safe: appends and queued runs.
+  // Toggles and edits are deliberately excluded — replaying a stale toggle
+  // against a file someone else has since changed flips the wrong thing.
+  const REPLAYABLE = ["/api/capture","/api/task","/api/append","/api/run","/api/lesson"];
+  let outbox = [];
+  try { outbox = JSON.parse(localStorage.getItem("lv_outbox") || "[]"); } catch {}
+  function saveOutbox(){ localStorage.setItem("lv_outbox", JSON.stringify(outbox)); renderOutbox(); }
+  function queueWrite(path, body){
+    if(!REPLAYABLE.includes(path)){ toast("Failed — not saved", true); return; }
+    outbox.push({ path, body, at:Date.now() });
+    saveOutbox();
+    toast("Saved on this device — will send when back online");
+  }
+  function renderOutbox(){
+    const el=$("outbox");
+    if(!outbox.length){ el.classList.add("hidden"); return; }
+    el.classList.remove("hidden");
+    el.textContent = outbox.length+" unsent "+(outbox.length===1?"change":"changes")+" — tap to retry";
+  }
+  async function flushOutbox(){
+    if(!outbox.length || !navigator.onLine) return;
+    const pending=[...outbox];
+    for(const item of pending){
+      try{
+        const r=await req(item.path,{method:"POST",body:JSON.stringify(item.body)});
+        if(!r.ok) return;                       // still down; keep the rest queued
+        outbox=outbox.filter((x)=>x!==item); saveOutbox();
+      }catch(e){ return; }
+    }
+    if(!outbox.length){ toast("Sent everything that was waiting"); load(); }
+  }
+  window.addEventListener("online", flushOutbox);
   function setStatus(ok){
     $("statusPill").classList.toggle("off",!ok);
     $("statusText").textContent = ok ? "live on the vault" : "disconnected";
@@ -908,6 +972,16 @@
   $("brief").addEventListener("click", briefActions);
   $("modalBody").addEventListener("click", briefActions);
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+  // The checkbox is a div with role=checkbox, so it has to answer to the
+  // keyboard the way a real one does.
+  document.addEventListener("keydown",(e)=>{
+    if(e.key!==" " && e.key!=="Enter") return;
+    const chk=e.target.closest(".check[role=checkbox]");
+    if(!chk) return;
+    e.preventDefault();
+    const row=chk.closest(".task");
+    if(row) toggle(row.dataset.id);
+  });
   let showAll=false;
   function toggleShowAll(){ showAll=!showAll; if(lastData) renderTasks(lastData.tasks); }
   function renderTasks(tasks){
@@ -986,10 +1060,17 @@
   }
   function removeTask(){
     if(!curTask) return;
-    const id=curTask.id, text=curTask.text;
+    const t=curTask;
     closeModal();
-    postOK("/api/delete",{id})
-      .then(()=>{ toast("Removed — archived"); load(); })
+    postOK("/api/delete",{id:t.id})
+      .then(()=>{
+        load();
+        showToast("Removed — archived", false, "Undo", ()=>{
+          postOK("/api/task",{text:t.text,due:t.due,tag:t.area,priority:t.priority})
+            .then(()=>{ toast("Restored"); load(); })
+            .catch(()=>toast("Couldn't restore",true));
+        });
+      })
       .catch(()=>{ toast("Failed",true); load(); });
   }
   // The API answers 200 {ok:false} when it accepted the request but matched
@@ -1493,6 +1574,7 @@
   // --- boot -----------------------------------------------------------------
   if(DEV || (API && TOKEN)){
     $("gate").classList.add("hidden"); $("app").classList.remove("hidden");
+    renderOutbox(); flushOutbox();
     load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
   else { showGate(); }
 </script>
