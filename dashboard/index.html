@@ -212,9 +212,24 @@
   .addrow{ display:flex; gap:8px; margin-bottom:8px; }
   .addrow input{ flex:1; min-width:0; }
   .addbtn{ flex:0 0 auto; min-width:0; padding:11px 16px; }
-  .addmeta{ display:none; gap:8px; margin-bottom:10px; }
+  .addmeta{ display:none; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
   .addmeta.show{ display:flex; }
-  .addmeta>*{ flex:1; min-width:0; }
+  .addmeta>*{ flex:1; min-width:110px; }
+  #tbulk{ margin-bottom:9px; min-height:120px; font-size:14px; line-height:1.5; }
+  #bulkToggle{ margin-bottom:6px; }
+
+  /* Projects */
+  .proj{ background:var(--bg1); border:1px solid var(--line-row); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; cursor:pointer; }
+  .proj:last-child{ margin-bottom:0; }
+  .proj:hover, .proj:focus-visible{ border-color:var(--accent); outline:none; }
+  .proj-head{ display:flex; align-items:baseline; gap:8px; }
+  .proj-name{ flex:1; font-weight:600; font-size:14.5px; }
+  .proj-count{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .proj-bar{ height:4px; border-radius:2px; background:var(--line-row); margin-top:8px; overflow:hidden; }
+  .proj-bar span{ display:block; height:100%; background:var(--green); }
+  .proj-sum{ font-size:12.5px; color:var(--muted); margin-top:6px; }
+  .tcat.proj-cat{ --hue:var(--accent); }
 
   /* Task detail sheet */
   .tfield{ margin-bottom:12px; }
@@ -490,6 +505,8 @@
         <input type="text" id="ttext" placeholder="Add a task…" onkeydown="if(event.key==='Enter')doAddTask()" />
         <button class="btn primary addbtn" onclick="doAddTask()" aria-label="Add task">＋</button>
       </div>
+      <textarea id="tbulk" class="hidden" rows="6"
+        placeholder="One per line — paste a whole list.&#10;Fix the porch light&#10;Bleed the radiators&#10;Order loft insulation"></textarea>
       <div class="addmeta" id="addMeta">
         <input type="date" id="tdue" aria-label="Due date" />
         <select id="ttag" aria-label="Area">
@@ -497,7 +514,12 @@
           <option>family</option><option>house</option><option>work</option>
           <option>health</option><option>interests</option><option>admin</option>
         </select>
+        <select id="tproj" aria-label="Project"><option value="">no project</option></select>
       </div>
+      <div class="addmeta" id="bulkActions">
+        <button class="btn primary" onclick="doAddBulk()">Add all</button>
+      </div>
+      <button class="link" id="bulkToggle" onclick="toggleBulk()">Add many…</button>
       <div id="tasksTop" class="skel"></div>
       <div id="tasksAll" class="hidden"></div>
       <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
@@ -506,6 +528,11 @@
       <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next 2 weeks</span></div>
       <div id="agenda" class="skel"></div>
     </div>
+    <div class="card c-projects">
+      <div class="section-head"><p class="label">Projects</p><span class="count" id="projCount"></span></div>
+      <div id="projects" class="skel"></div>
+    </div>
+
     <div class="card c-capture">
       <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
       <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
@@ -748,6 +775,31 @@
   // card isn't two-thirds empty form the rest of the time.
   $("ttext").addEventListener("focus",()=>$("addMeta").classList.add("show"));
   $("ttext").addEventListener("input",()=>$("addMeta").classList.toggle("show", true));
+
+  // Bulk add. Twenty house jobs entered one at a time is twenty taps and twenty
+  // commits; the whole point is that a pasted list becomes one write.
+  let bulkMode=false;
+  function toggleBulk(){
+    bulkMode=!bulkMode;
+    $("tbulk").classList.toggle("hidden",!bulkMode);
+    $("bulkActions").classList.toggle("show",bulkMode);
+    document.querySelector(".addrow").classList.toggle("hidden",bulkMode);
+    $("addMeta").classList.toggle("show",bulkMode);
+    $("bulkToggle").textContent = bulkMode ? "Add one at a time" : "Add many…";
+    if(bulkMode) $("tbulk").focus();
+  }
+  function doAddBulk(){
+    const el=$("tbulk");
+    const lines=el.value.split("\n").map((s)=>s.trim()).filter(Boolean);
+    if(!lines.length) return;
+    const due=$("tdue").value, tag=$("ttag").value, project=$("tproj").value;
+    postOK("/api/tasks",{lines,due,tag,project})
+      .then((r)=>{
+        el.value=""; $("tdue").value=""; toggleBulk(); load();
+        toast(r.skipped ? `Added ${r.added} · skipped ${r.skipped} already there` : `Added ${r.added} tasks`);
+      })
+      .catch(()=>toast("Couldn't add those",true));
+  }
   function doAddTask(){
     const t=$("ttext"); if(!t.value.trim())return;
     const text=t.value.trim(), due=$("tdue").value, tag=$("ttag").value;
@@ -1004,10 +1056,24 @@
       $("showAllBtn").textContent = "Show all ("+openFO.length+")";
       $("showAllBtn").style.display = openFO.length>rows.length ? "" : "none"; return; }
     all.classList.remove("hidden"); $("showAllBtn").textContent="Show less";
-    const byArea={}; const other=[];
-    openFO.forEach((t)=>{ const a=(t.tags||[]).find((g)=>AREAS.includes(g));
-      if(a){ (byArea[a]=byArea[a]||[]).push(t); } else other.push(t); });
+    // Group by project first where one exists — a 20-job house backlog reads as
+    // a project, not as twenty loose #house items — then by area for the rest.
+    const byProj={}, byArea={}, other=[];
+    const projName=(slug)=>{
+      const p=(lastData&&lastData.projects||[]).find((x)=>x.slug===slug);
+      return p ? (p.name||slug) : slug;
+    };
+    openFO.forEach((t)=>{
+      if(t.project){ (byProj[t.project]=byProj[t.project]||[]).push(t); return; }
+      const a=(t.tags||[]).find((g)=>AREAS.includes(g));
+      if(a){ (byArea[a]=byArea[a]||[]).push(t); } else other.push(t);
+    });
     let html="";
+    Object.keys(byProj).sort().forEach((slug)=>{
+      html+='<div class="tcat proj-cat">'+esc(projName(slug))+
+        ' <span style="color:var(--faint)">'+byProj[slug].length+'</span></div>'+
+        '<div class="tgroup" data-proj="'+esc(slug)+'">'+byProj[slug].map((t)=>taskRow(t,true)).join("")+"</div>";
+    });
     AREAS.forEach((a)=>{ if(!byArea[a]) return;
       html+='<div class="tcat '+a+'">'+a+' <span style="color:var(--faint)">'+byArea[a].length+'</span></div>'+
         '<div class="tgroup" data-area="'+a+'">'+byArea[a].map((t)=>taskRow(t,true)).join("")+'</div>'; });
@@ -1364,6 +1430,59 @@
       .catch(()=>{ toast("Failed",true); load(); });
   });
 
+  // Projects. The API has always returned these and the app rendered them
+  // nowhere — three project notes sitting in the vault, invisible. A project is
+  // only useful here if it says how much of it is left, so it counts the tasks
+  // that link to it and opens to the list.
+  function renderProjects(projects){
+    projects=projects||[];
+    const el=$("projects");
+    el.classList.remove("skel");
+    if(!projects.length){ el.innerHTML='<div class="muted">No project notes yet.</div>'; $("projCount").textContent=""; return; }
+    const open=projects.reduce((n,p)=>n+(p.openTasks||0),0);
+    $("projCount").textContent = open ? open+" open" : "";
+    el.innerHTML = projects.map((p)=>{
+      const total=(p.openTasks||0)+(p.doneTasks||0);
+      const pct = total ? Math.round(100*(p.doneTasks||0)/total) : 0;
+      return '<div class="proj tappable" data-proj="'+esc(p.slug)+'" tabindex="0" role="button">'+
+        '<div class="proj-head"><span class="proj-name">'+esc(p.name||p.slug)+"</span>"+
+        '<span class="proj-count">'+(total?((p.openTasks||0)+" open"):"no tasks")+"</span></div>"+
+        (total?'<div class="proj-bar"><span style="width:'+pct+'%"></span></div>':"")+
+        (p.summary?'<div class="proj-sum">'+esc(mdPlain(p.summary))+"</div>":"")+
+        "</div>";
+    }).join("");
+  }
+  $("projects").addEventListener("click",(e)=>{
+    const row=e.target.closest("[data-proj]"); if(row) openProject(row.dataset.proj);
+  });
+  $("projects").addEventListener("keydown",(e)=>{
+    if(e.key!=="Enter"&&e.key!==" ") return;
+    const row=e.target.closest("[data-proj]"); if(row){ e.preventDefault(); openProject(row.dataset.proj); }
+  });
+  function openProject(slug){
+    const p=(lastData&&lastData.projects||[]).find((x)=>x.slug===slug); if(!p) return;
+    const mine=(lastData.tasks||[]).filter((t)=>t.project===slug);
+    const open=mine.filter((t)=>!t.done), done=mine.filter((t)=>t.done);
+    let html="";
+    if(p.summary) html+='<p style="color:var(--text2)">'+mdInline(p.summary)+"</p>";
+    html+="<h3>Open <span style='color:var(--faint);font-weight:400'>"+open.length+"</span></h3>";
+    html+= open.length ? open.map((t)=>taskRow(t,false)).join("")
+      : '<div class="muted">Nothing open for this project.</div>';
+    if(done.length) html+="<h3>Done <span style='color:var(--faint);font-weight:400'>"+done.length+"</span></h3>"+
+      done.slice(-8).map((t)=>taskRow(t,false)).join("");
+    html+='<hr><p class="muted">Tasks join a project by a <code>[['+esc(slug)+']]</code> link in '+
+      "<code>tasks.md</code> — one list, still the single source of truth.</p>";
+    openPanel(p.name||slug, html);
+  }
+  // Keep the bulk-add project picker in step with the vault.
+  function fillProjectPicker(projects){
+    const sel=$("tproj"); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">no project</option>'+
+      (projects||[]).map((p)=>'<option value="'+esc(p.slug)+'">'+esc(p.name||p.slug)+"</option>").join("");
+    sel.value=cur;
+  }
+
   // A capture used to disappear the moment you saved it — the only trace was a
   // count in the corner. You could not tell whether the thing you dictated
   // actually landed, or what was still sitting unfiled. Now the card shows the
@@ -1434,6 +1553,7 @@
     renderSkills(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
     renderHabits(d.habits); renderAsk(d);
+    renderProjects(d.projects); fillProjectPicker(d.projects);
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};
     Object.keys(awaiting).forEach((name)=>{

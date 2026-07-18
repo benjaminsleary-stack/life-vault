@@ -95,9 +95,14 @@ export function parseTasks(text) {
     const due = dueM ? dueM[1] : null;
     const doneM = body.match(DONE_RE);
     const tags = [...body.matchAll(TAG_RE)].map((x) => x[1]);
+    // A task belongs to a project by wikilink, not by tag — the area tag list is
+    // closed (CLAUDE.md), so "#project/house-retrofit" would be inventing one.
+    // [[house-retrofit]] is how the vault already expresses "refers to".
+    const links = [...body.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)].map((m) => m[1].trim());
     out.push({
       id: tl.id,
       text: taskLabel(body),
+      links,
       done: checked,
       due,
       completed: doneM ? doneM[1] : null,
@@ -501,10 +506,28 @@ async function buildData(store, feeds, forceCalendar) {
     readLessons(store),
     readCalendar(feeds, today(), horizon, forceCalendar),
   ]);
+  const tasks = tasksFile ? parseTasks(tasksFile.text) : [];
+  // Resolve each task's [[wikilinks]] against the projects that actually exist,
+  // so a link to a note that isn't a project doesn't invent one.
+  const bySlug = new Map();
+  for (const p of projects) {
+    bySlug.set(p.slug.toLowerCase(), p.slug);
+    if (p.name) bySlug.set(slugify(p.name), p.slug);
+  }
+  for (const t of tasks) {
+    t.project = (t.links || []).map((l) => bySlug.get(slugify(l)) || bySlug.get(l.toLowerCase()))
+      .find(Boolean) || null;
+  }
+  for (const p of projects) {
+    const mine = tasks.filter((t) => t.project === p.slug);
+    p.openTasks = mine.filter((t) => !t.done).length;
+    p.doneTasks = mine.filter((t) => t.done).length;
+  }
+
   return {
     generated: new Date().toISOString(),
     today: today(),
-    tasks: tasksFile ? parseTasks(tasksFile.text) : [],
+    tasks,
     projects,
     people,
     occasions,
@@ -540,22 +563,60 @@ async function capture(store, text) {
   return true;
 }
 
-function taskLine(text, due, tag, priority) {
+function taskLine(text, due, tag, priority, project) {
   let line = `- [ ] ${text}`;
+  if (project) line += ` [[${String(project).trim()}]]`;
   if (tag) { tag = String(tag).replace(/^#/, "").trim(); if (tag) line += ` #${tag}`; }
   if (priority) line += " ⏫";
   if (due && /^\d{4}-\d{2}-\d{2}$/.test(String(due).trim())) line += ` 📅 ${String(due).trim()}`;
   return line;
 }
 
-async function addTask(store, text, due, tag, priority) {
+async function addTask(store, text, due, tag, priority, project) {
   text = (text || "").trim();
   if (!text) return false;
   const cur = await store.readFile("tasks.md");
   const base = cur ? cur.text.replace(/\n+$/, "") : "# Tasks";
-  await store.putFile("tasks.md", base + "\n" + taskLine(text, due, tag, priority) + "\n",
+  await store.putFile("tasks.md", base + "\n" + taskLine(text, due, tag, priority, project) + "\n",
     "dashboard: add task", cur && cur.sha);
   return true;
+}
+
+/**
+ * Add many tasks in ONE write.
+ *
+ * The point is the single commit. Twenty tasks added one at a time is twenty
+ * GitHub round-trips, each re-reading and re-writing tasks.md — slow, and every
+ * one of them a chance to collide with a routine writing the same file. It also
+ * means twenty commits in the vault history for one action.
+ *
+ * Already-present open tasks are skipped, so re-pasting a list you have partly
+ * entered does not duplicate it.
+ */
+async function addTasks(store, lines, due, tag, project) {
+  const wanted = (Array.isArray(lines) ? lines : String(lines || "").split("\n"))
+    .map((l) => String(l || "").replace(/^\s*[-*]\s*\[[ xX]\]\s*/, "").replace(/^\s*[-*]\s+/, "").trim())
+    .filter(Boolean)
+    .slice(0, 200);                       // a runaway paste is not a feature
+  if (!wanted.length) return { added: 0, skipped: 0 };
+
+  const cur = await store.readFile("tasks.md");
+  const text = cur ? cur.text : "# Tasks";
+  const existing = new Set(parseTasks(text).filter((t) => !t.done).map((t) => coreText(t.text)));
+
+  const fresh = [];
+  let skipped = 0;
+  for (const t of wanted) {
+    const key = coreText(t);
+    if (existing.has(key)) { skipped++; continue; }
+    existing.add(key);                    // also de-dupes within the paste itself
+    fresh.push(taskLine(t, due, tag, false, project));
+  }
+  if (!fresh.length) return { added: 0, skipped };
+
+  await store.putFile("tasks.md", text.replace(/\n+$/, "") + "\n" + fresh.join("\n") + "\n",
+    `dashboard: add ${fresh.length} tasks`, cur && cur.sha);
+  return { added: fresh.length, skipped };
 }
 
 // Shared read-modify-write over one task line. `fn(body, m)` returns the new
@@ -844,7 +905,11 @@ export function createApi(rawStore, hooks = {}) {
       let ok;
       switch (path) {
         case "/api/capture":    ok = await capture(store, p.text); break;
-        case "/api/task":       ok = await addTask(store, p.text, p.due, p.tag, p.priority); break;
+        case "/api/task":       ok = await addTask(store, p.text, p.due, p.tag, p.priority, p.project); break;
+        case "/api/tasks": {
+          const r = await addTasks(store, p.lines, p.due, p.tag, p.project);
+          return { status: 200, body: { ok: r.added > 0, ...r } };
+        }
         case "/api/toggle":     ok = await toggleTask(store, p.id); break;
         case "/api/priority":   ok = await setPriority(store, p.id); break;
         case "/api/edit":       ok = await editTask(store, p.id, p.fields || {}); break;
