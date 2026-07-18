@@ -176,8 +176,12 @@
   .wx-cond{ font-size:13px; color:var(--muted); margin-top:2px; }
   .wx-hl{ font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
   .wx-hl b{ color:var(--text); font-weight:600; }
-  .wx-chart{ width:100%; margin-top:12px; }
+  .wx-chart{ width:100%; margin-top:12px; position:relative; touch-action:none; }
   .wx-chart svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .wx-tip{ position:absolute; top:-4px; background:var(--surface-2); border:1px solid var(--line-key);
+    color:var(--text); font-size:11px; padding:3px 8px; border-radius:6px; pointer-events:none; opacity:0;
+    transition:opacity .12s; white-space:nowrap; font-variant-numeric:tabular-nums; z-index:2; }
+  .wx-aq{ margin-top:8px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .wx-axis{ fill:var(--faint); font-size:8px; font-family:var(--ui); }
 
   /* Desktop: deliberate bento arrangement — tasks is the tall hero on the
@@ -393,7 +397,7 @@
     </div>
 
     <div class="card c-weather">
-      <div class="section-head"><p class="label">Weather</p><span class="count">Cambridge</span></div>
+      <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
       <div id="weatherBody" class="skel"></div>
     </div>
 
@@ -869,7 +873,8 @@
   }
 
   // --- weather (Open-Meteo, no key needed) ---------------------------------
-  const WX={ lat:52.2053, lon:0.1218 };   // Cambridge, UK
+  const WX={ lat:52.2053, lon:0.1218, place:"Cambridge" };   // fallback
+  let wxData=null;
   function wmo(c){
     if(c===0) return ["☀️","Clear"];
     if(c<=2) return ["🌤️","Partly cloudy"];
@@ -882,16 +887,48 @@
     if(c<=86) return ["🌨️","Snow showers"];
     return ["⛈️","Thunderstorm"];
   }
+  // European AQI bands → label + colour.
+  function aqiBand(v){
+    if(v==null) return ["—","var(--muted)"];
+    if(v<=20) return ["good","var(--green)"];
+    if(v<=40) return ["fair","var(--green)"];
+    if(v<=60) return ["moderate","var(--yellow)"];
+    if(v<=80) return ["poor","var(--red)"];
+    return ["very poor","var(--red)"];
+  }
+  // Live location: cached → geolocation (once) → Cambridge fallback (null).
+  async function getCoords(){
+    const c=localStorage.getItem("lv_geo");
+    if(c){ try{ return JSON.parse(c); }catch{} }
+    if(navigator.geolocation){
+      try{
+        const p=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:6000,maximumAge:36e5}));
+        const o={lat:+p.coords.latitude.toFixed(3), lon:+p.coords.longitude.toFixed(3)};
+        localStorage.setItem("lv_geo",JSON.stringify(o)); return o;
+      }catch(e){}
+    }
+    return null;
+  }
+  async function placeName(lat,lon){
+    try{ const r=await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+lat+"&longitude="+lon+"&localityLanguage=en");
+      const j=await r.json(); return j.city||j.locality||j.principalSubdivision||"Local"; }catch{ return "Local"; }
+  }
   async function loadWeather(){
     try{
-      const u="https://api.open-meteo.com/v1/forecast?latitude="+WX.lat+"&longitude="+WX.lon+
-        "&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability"+
-        "&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FLondon&forecast_days=1";
-      const r=await fetch(u); if(!r.ok) throw new Error();
-      renderWeather(await r.json());
+      const c=await getCoords();
+      if(c){ WX.lat=c.lat; WX.lon=c.lon; WX.place=null; }
+      const base="latitude="+WX.lat+"&longitude="+WX.lon+"&timezone=Europe%2FLondon";
+      const wxU="https://api.open-meteo.com/v1/forecast?"+base+"&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min&forecast_days=1";
+      const aqU="https://air-quality-api.open-meteo.com/v1/air-quality?"+base+"&current=european_aqi,pm2_5";
+      const [wr,ar]=await Promise.all([fetch(wxU), fetch(aqU).catch(()=>null)]);
+      if(!wr.ok) throw new Error();
+      const wj=await wr.json(); const aj=(ar&&ar.ok)?await ar.json():null;
+      renderWeather(wj, aj);
+      if(WX.place){ $("wxPlace").textContent=WX.place; }
+      else placeName(WX.lat,WX.lon).then((n)=>{ if($("wxPlace")) $("wxPlace").textContent=n; });
     }catch(e){ $("weatherBody").innerHTML='<div class="muted">Weather unavailable.</div>'; }
   }
-  function renderWeather(d){
+  function renderWeather(d, aq){
     const cur=d.current, day=d.daily, h=d.hourly;
     const [em,txt]=wmo(cur.weather_code);
     const hi=Math.round(day.temperature_2m_max[0]), lo=Math.round(day.temperature_2m_min[0]);
@@ -900,6 +937,7 @@
     const mn=Math.min(...temps), mx=Math.max(...temps), span=(mx-mn)||1;
     const xs=(i)=> left+i*((right-left)/23);
     const ys=(t)=> padT+(1-(t-mn)/span)*(H-padT-padB);
+    wxData={ temps, precs, times, W, left, right };   // for the hover tooltip
     let line="", area="M "+xs(0).toFixed(1)+" "+ys(temps[0]).toFixed(1);
     temps.forEach((t,i)=>{ const x=xs(i).toFixed(1),y=ys(t).toFixed(1); line+=(i?" L ":"M ")+x+" "+y; if(i) area+=" L "+x+" "+y; });
     area+=" L "+xs(23).toFixed(1)+" "+(H-padB)+" L "+xs(0).toFixed(1)+" "+(H-padB)+" Z";
@@ -911,14 +949,34 @@
     const nh=Math.max(0,Math.min(23,new Date().getHours()));
     const marker='<line x1="'+xs(nh).toFixed(1)+'" y1="'+padT+'" x2="'+xs(nh).toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--line-key)" stroke-dasharray="2 2"/>'+
       '<circle cx="'+xs(nh).toFixed(1)+'" cy="'+ys(temps[nh]).toFixed(1)+'" r="3" fill="var(--accent)"/>';
+    const aqi=(aq&&aq.current)?aq.current.european_aqi:null, pm=(aq&&aq.current)?aq.current.pm2_5:null;
+    const [band,col]=aqiBand(aqi);
+    const aqHtml = aqi!=null ? '<div class="wx-aq">Air <b style="color:'+col+'">'+band+'</b> · AQI '+Math.round(aqi)+(pm!=null?' · PM2.5 '+Math.round(pm):'')+'</div>' : '';
     $("weatherBody").innerHTML =
       '<div class="wx-top"><div class="wx-now"><span class="wx-emoji">'+em+'</span>'+
       '<div><span class="wx-temp">'+Math.round(cur.temperature_2m)+'°</span><div class="wx-cond">'+txt+'</div></div></div>'+
-      '<div class="wx-hl"><b>'+hi+'°</b> / '+lo+'°<div>high / low</div></div></div>'+
+      '<div class="wx-hl"><b>'+hi+'°</b> / '+lo+'°<div>high / low</div></div></div>'+ aqHtml +
       '<div class="wx-chart"><svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+
       bars+'<path d="'+area+'" fill="var(--accent)" opacity="0.10"/>'+
       '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
-      marker+labels+'</svg></div>';
+      marker+labels+'</svg><div class="wx-tip" id="wxTip"></div></div>';
+    const chart=$("weatherBody").querySelector(".wx-chart");
+    chart.addEventListener("pointermove", wxHover);
+    chart.addEventListener("pointerleave", ()=>{ const t=$("wxTip"); if(t) t.style.opacity=0; });
+  }
+  // Hover/drag on the chart → tooltip for the nearest hour.
+  function wxHover(e){
+    if(!wxData) return;
+    const chart=e.currentTarget, r=chart.getBoundingClientRect();
+    const px=e.clientX-r.left;
+    const vbX=(px/r.width)*wxData.W;
+    let i=Math.round((vbX-wxData.left)/((wxData.right-wxData.left)/23));
+    i=Math.max(0,Math.min(23,i));
+    const tip=$("wxTip"); if(!tip) return;
+    tip.innerHTML=wxData.times[i].slice(11,16)+" · <b>"+Math.round(wxData.temps[i])+"°</b> · "+(wxData.precs[i]||0)+"% rain";
+    tip.style.opacity=1;
+    const w=tip.offsetWidth||70;
+    tip.style.left=Math.max(0,Math.min(r.width-w, px-w/2))+"px";
   }
 
   // --- boot -----------------------------------------------------------------
