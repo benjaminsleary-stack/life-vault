@@ -15,7 +15,12 @@
  * That is the whole point of the split: the parsing rules for tasks.md,
  * habits.md and people/*.md exist ONCE. The previous local Python server drifted
  * three features behind the Worker because the rules were written twice.
+ *
+ * Subscribed .ics calendar feeds are passed in as `hooks.calendars`, since their
+ * URLs are credentials and belong in the host's secret store, never here.
  */
+
+import { parseICS, expandEvents } from "./ical.js";
 
 /* -------------------------------------------------------- markdown parsing */
 
@@ -414,11 +419,64 @@ async function addLesson(store, scope, text, verdict) {
   return true;
 }
 
+/* ---------------------------------------------------------------- calendar */
+// Subscribed .ics feeds (work Outlook, personal Google). Read-only: the vault
+// is the source of truth for tasks and occasions, the calendar is not, so
+// nothing here writes back. The app turns an event into a task or a note
+// instead, which lands in the vault where it belongs.
+
+const CAL_TTL_MS = 15 * 60 * 1000;
+const calCache = new Map();                    // url -> { at, events }
+
+// The work feed is ~1MB and /api/data is polled every 60s. Fetching it every
+// time would be a megabyte a minute for a file that changes a few times a day.
+async function fetchCalendar(feed) {
+  const hit = calCache.get(feed.url);
+  if (hit && Date.now() - hit.at < CAL_TTL_MS) return hit.events;
+  const r = await fetch(feed.url, {
+    headers: { "User-Agent": "life-vault-dashboard" },
+    cf: { cacheTtl: 900, cacheEverything: true },
+  });
+  if (!r.ok) throw new Error(`${feed.name}: HTTP ${r.status}`);
+  const events = parseICS(await r.text());
+  calCache.set(feed.url, { at: Date.now(), events });
+  return events;
+}
+
+async function readCalendar(feeds, fromDay, toDay) {
+  if (!feeds || !feeds.length) return { events: [], sources: [] };
+  const events = [];
+  const sources = [];
+  // One broken feed must not take the whole dashboard down with it — the app
+  // says which source failed and still renders the rest.
+  await Promise.all(feeds.map(async (feed) => {
+    try {
+      const parsed = await fetchCalendar(feed);
+      for (const occ of expandEvents(parsed, fromDay, toDay)) {
+        events.push({ ...occ, source: feed.name });
+      }
+      sources.push({ name: feed.name, ok: true });
+    } catch (e) {
+      sources.push({ name: feed.name, ok: false, error: String((e && e.message) || e) });
+    }
+  }));
+  events.sort((a, b) =>
+    a.date.localeCompare(b.date) ||
+    (a.allDay === b.allDay ? String(a.time).localeCompare(String(b.time)) : (a.allDay ? -1 : 1))
+  );
+  return { events, sources };
+}
+
 /* -------------------------------------------------------------- assembly */
 
-async function buildData(store) {
+// How far the agenda looks. Matches the dashboard's own horizon.
+const AGENDA_DAYS = 31;
+
+async function buildData(store, feeds) {
   const tasksFile = await store.readFile("tasks.md");
-  const [projects, people, occasions, brief, skills, inbox, habits, lessons] = await Promise.all([
+  const horizon = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" })
+    .format(new Date(Date.now() + AGENDA_DAYS * 864e5));
+  const [projects, people, occasions, brief, skills, inbox, habits, lessons, calendar] = await Promise.all([
     readEntities(store, "projects"),
     readEntities(store, "people"),
     readOccasions(store),
@@ -427,6 +485,7 @@ async function buildData(store) {
     readInbox(store),
     readHabits(store),
     readLessons(store),
+    readCalendar(feeds, today(), horizon),
   ]);
   return {
     generated: new Date().toISOString(),
@@ -441,6 +500,8 @@ async function buildData(store) {
     habits,
     lessons: lessons.slice(0, 20),
     lessonCount: lessons.length,
+    calendar: calendar.events,
+    calendarSources: calendar.sources,
   };
 }
 
@@ -703,6 +764,7 @@ async function health(store) {
  * Returns { status, body } — the host turns that into its own Response type.
  */
 export function createApi(rawStore, hooks = {}) {
+  const feeds = hooks.calendars || [];
   // Normalise line endings once, at the boundary. Every parser here anchors on
   // `$`, and JS treats \r as a line terminator that `.` will not match — so a
   // single CRLF file makes tasks.md and habits.md silently parse to nothing.
@@ -718,7 +780,7 @@ export function createApi(rawStore, hooks = {}) {
 
   return async function handle(method, path, params, payload) {
     if (method === "GET") {
-      if (path === "/api/data") return { status: 200, body: await buildData(store) };
+      if (path === "/api/data") return { status: 200, body: await buildData(store, feeds) };
       if (path === "/api/health") return { status: 200, body: await health(store) };
       if (path === "/api/person") {
         const p = await readPerson(store, params.get("slug") || "");

@@ -171,6 +171,14 @@ export default {
 
     const store = githubStore(env);
     const handle = createApi(store, {
+      // Subscribed calendars. A private .ics URL is a credential — anyone
+      // holding it can read the calendar — so these are Worker secrets:
+      //   npx wrangler secret put CAL_WORK
+      //   npx wrangler secret put CAL_PERSONAL
+      calendars: [
+        env.CAL_WORK && { name: "work", url: env.CAL_WORK },
+        env.CAL_PERSONAL && { name: "personal", url: env.CAL_PERSONAL },
+      ].filter(Boolean),
       pushKey: () => env.VAPID_PUBLIC_KEY || "",
       // Push lives in the host, not the vault layer — it is the one thing the
       // local dev server has no business doing.

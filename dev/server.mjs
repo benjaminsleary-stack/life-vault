@@ -18,6 +18,7 @@
 
 import { createServer } from "node:http";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { join, dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApi } from "../worker/vault.js";
@@ -63,7 +64,26 @@ const store = {
   },
 };
 
-const handle = createApi(store, { pushKey: () => "" });
+/* ------------------------------------------------------------- calendars */
+// Feed URLs are credentials, so they live in .env (gitignored), never in the
+// repo. Deployed, the same values are Worker secrets.
+function loadEnvFile() {
+  try {
+    for (const line of readFileSync(join(ROOT, ".env"), "utf8").split(/\r?\n/)) {
+      if (/^\s*#/.test(line)) continue;
+      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/i);
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
+    }
+  } catch { /* no .env is fine */ }
+}
+loadEnvFile();
+
+const calendars = [
+  process.env.CAL_WORK && { name: "work", url: process.env.CAL_WORK },
+  process.env.CAL_PERSONAL && { name: "personal", url: process.env.CAL_PERSONAL },
+].filter(Boolean);
+
+const handle = createApi(store, { calendars, pushKey: () => "" });
 
 /* -------------------------------------------------------------- http shell */
 

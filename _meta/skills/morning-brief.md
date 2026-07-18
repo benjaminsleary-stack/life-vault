@@ -7,8 +7,11 @@ Compose today's briefing note and deliver it to the phone. Read `CLAUDE.md`.
    anti-nag rule: an overdue item may appear in at most **3 consecutive** morning
    briefs (track a `⏳<n>` counter you increment in `tasks.md`); on the 4th, drop it
    from the brief and add ` #stale` so the weekly review can prompt "decide or delete".
-2. **Calendar** — run `python scripts/fetch-ics.py` (env `ICS_URL`); list today's
-   events (time + title).
+2. **Calendar** — run `node scripts/fetch-calendar.mjs` (env `CAL_WORK`,
+   `CAL_PERSONAL`); list today's events as time + title, labelled by which
+   calendar they came from. If a source reports `ok: false`, say so in the brief
+   rather than printing an empty calendar — a feed that stopped syncing looks
+   exactly like a free day.
 3. **Email** — run the `email-digest` skill; include its list.
 4. **One relationship item** — run `charlotte-surfacer`; include its single item (or
    nothing if it has none).

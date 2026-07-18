@@ -5,7 +5,8 @@ A light end-of-day note. Read `CLAUDE.md`.
 ## Steps
 1. Run `file-inbox` first (clear anything captured during the day).
 2. Compose `digests/<today>-evening.md`:
-   - **Tomorrow** — tomorrow's calendar from `scripts/fetch-ics.py`.
+   - **Tomorrow** — tomorrow's calendar from `node scripts/fetch-calendar.mjs 2`
+     (use the entries whose `when` is `tomorrow`), labelled by calendar.
    - **Filed today** — one line on what `file-inbox` routed (counts + notable items).
    - **## Charlotte** — surface anything captured or logged about Charlotte today
      (from today's filed inbox and the recent `## Log` fragments in her people note),

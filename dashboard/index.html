@@ -191,6 +191,19 @@
   .occ.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
   .task.flash{ background:rgba(217,138,99,.14); border-radius:8px; }
 
+  /* Agenda, grouped by day — with a work calendar in it a flat dated list
+     stops working, because there are five things on a Monday. */
+  .aday{ margin-bottom:11px; }
+  .aday:last-child{ margin-bottom:0; }
+  .aday-h{ font-size:11px; text-transform:uppercase; letter-spacing:.14em; font-weight:700;
+    color:var(--faint); margin:0 0 3px; }
+  .aday-h.now{ color:var(--accent-text); }
+  .occ.ev .d{ color:var(--text2); }
+  .src{ width:6px; height:6px; border-radius:2px; flex:none; background:var(--muted); }
+  .src.work{ background:var(--a-work); }
+  .src.personal{ background:var(--a-family); }
+  .cal-warn{ font-size:12px; color:#e0b969; margin-top:8px; }
+
   /* Add-a-task, inline at the head of the list it writes to. It used to be a
      separate card, which spent a whole grid slot on a form. */
   .addrow{ display:flex; gap:8px; margin-bottom:8px; }
@@ -532,7 +545,7 @@
         <div id="ppl" class="skel"></div>
       </div>
       <div class="card c-agenda">
-        <div class="section-head"><p class="label">Agenda</p><span class="count">next month</span></div>
+        <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next month</span></div>
         <div id="agenda" class="skel"></div>
       </div>
     </div>
@@ -1207,21 +1220,75 @@
       items.push({date:o.date,text:o.text,kind:"occasion",who:o.who}); });
     (d.tasks||[]).forEach((t)=>{ if(!t.done && t.due && t.due>=today && t.due<=horizon)
       items.push({date:t.due,text:t.text,kind:"task",id:t.id}); });
-    items.sort((a,b)=>a.date.localeCompare(b.date));
-    $("agenda").innerHTML = items.length ? items.map((it)=>{
-      const days=Math.round((new Date(it.date)-new Date(today))/864e5);
-      const inTxt = days<=0?"today":(days===1?"tomorrow":"in "+days+"d");
-      const attr = it.kind==="task" ? 'data-task="'+esc(it.id)+'"' : 'data-person="'+esc(it.who||"")+'"';
-      const mark = it.kind==="task" ? '<span style="color:var(--faint)" title="Task">✓</span>'
-        : '<span style="color:var(--a-family)" title="Occasion">◆</span>';
-      return '<div class="occ tappable" '+attr+' tabindex="0" role="button">'+
-        '<span class="d">'+fmtDate(it.date).replace(/^\w+\s/,"")+'</span>'+mark+
-        '<span>'+esc(it.text)+'</span><span class="in">'+inTxt+'</span></div>';
+    (d.calendar||[]).forEach((e,i)=>{ items.push({date:e.date,text:e.title,kind:"event",
+      time:e.time,allDay:e.allDay,minutes:e.minutes,location:e.location,source:e.source,idx:i}); });
+
+    // Group by day. A flat dated list works for a handful of occasions; with a
+    // work calendar in it there are five things on a Monday and the day is the
+    // unit you actually think in.
+    const byDay={};
+    items.forEach((it)=>{ (byDay[it.date]=byDay[it.date]||[]).push(it); });
+    const days=Object.keys(byDay).sort();
+    const rank=(x)=> x.kind==="event" ? (x.allDay?0:1) : x.kind==="occasion"?2:3;
+    const count=(d.calendar||[]).filter((e)=>e.date===today).length;
+    $("agendaCount").textContent = count ? count+" today" : "next month";
+
+    $("agenda").innerHTML = days.length ? days.map((day)=>{
+      const n=Math.round((new Date(day)-new Date(today))/864e5);
+      const label = n<=0?"Today" : n===1?"Tomorrow" : fmtDate(day);
+      const rows=byDay[day].sort((a,b)=>rank(a)-rank(b)||String(a.time||"").localeCompare(String(b.time||"")));
+      return '<div class="aday"><div class="aday-h'+(n<=0?" now":"")+'">'+esc(label)+"</div>"+
+        rows.map((it)=>agendaRow(it,n)).join("")+"</div>";
     }).join("") : '<div class="muted">Nothing due or coming up in the next month.</div>';
+
+    // A calendar that quietly stopped syncing looks exactly like a free week.
+    const bad=(d.calendarSources||[]).filter((s)=>!s.ok);
+    if(bad.length){
+      $("agenda").insertAdjacentHTML("beforeend",
+        '<div class="cal-warn">⚠ '+bad.map((s)=>esc(s.name)+" calendar unavailable").join(", ")+"</div>");
+    }
+  }
+  function agendaRow(it, n){
+    if(it.kind==="event"){
+      const when = it.allDay ? "all-day" : it.time;
+      const dur = it.minutes ? (it.minutes>=60?Math.round(it.minutes/60*10)/10+"h":it.minutes+"m") : "";
+      return '<div class="occ tappable ev" data-event="'+it.idx+'" tabindex="0" role="button">'+
+        '<span class="d">'+esc(when)+'</span>'+
+        '<span class="src '+esc(it.source)+'" title="'+esc(it.source)+' calendar"></span>'+
+        '<span>'+esc(it.text)+'</span><span class="in">'+esc(dur)+'</span></div>';
+    }
+    const attr = it.kind==="task" ? 'data-task="'+esc(it.id)+'"' : 'data-person="'+esc(it.who||"")+'"';
+    const mark = it.kind==="task" ? '<span style="color:var(--faint)" title="Task due">✓</span>'
+      : '<span style="color:var(--a-family)" title="Occasion">◆</span>';
+    return '<div class="occ tappable" '+attr+' tabindex="0" role="button">'+
+      '<span class="d">'+(it.kind==="task"?"due":"")+'</span>'+mark+
+      '<span>'+esc(it.text)+'</span></div>';
+  }
+  // A work calendar is read-only here — the vault is the source of truth, not
+  // Outlook — so an event offers the two things worth doing with it instead.
+  function openEvent(idx){
+    const e=(lastData&&lastData.calendar||[])[idx]; if(!e) return;
+    const when = e.allDay ? "All day" : e.time+(e.minutes?" · "+(e.minutes>=60?Math.round(e.minutes/60*10)/10+"h":e.minutes+"m"):"");
+    openPanel(e.title,
+      '<p><b>'+esc(fmtDate(e.date))+"</b> · "+esc(when)+"</p>"+
+      (e.location?'<p class="muted">'+esc(e.location)+"</p>":"")+
+      '<p class="muted">From your '+esc(e.source)+" calendar — read-only here.</p><hr>"+
+      '<div class="row"><button class="btn primary" onclick="eventToTask('+idx+')">Add a task for this</button>'+
+      '<button class="btn" onclick="eventToCapture('+idx+')">Capture a note</button></div>');
+  }
+  function eventToTask(idx){
+    const e=lastData.calendar[idx]; closeModal();
+    postOK("/api/task",{text:e.title,due:e.date,tag:e.source==="work"?"work":""})
+      .then(()=>{ toast("Task added"); load(); }).catch(()=>toast("Failed",true));
+  }
+  function eventToCapture(idx){
+    const e=lastData.calendar[idx]; closeModal();
+    post("/api/capture",{text:e.date+" "+(e.time||"all-day")+" — "+e.title},"Captured to inbox");
   }
   $("agenda").addEventListener("click",(e)=>{
     const row=e.target.closest(".occ"); if(!row) return;
-    if(row.dataset.person) openPerson(row.dataset.person);
+    if(row.dataset.event!==undefined) openEvent(+row.dataset.event);
+    else if(row.dataset.person) openPerson(row.dataset.person);
     else if(row.dataset.task) focusTask(row.dataset.task);
   });
   // Jump to a task in the list and flash it, rather than dead-ending.

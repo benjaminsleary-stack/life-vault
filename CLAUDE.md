@@ -44,7 +44,7 @@ Read this before touching anything. Conventions here are binding.
 | `_meta/index.md` | map-of-content; refreshed by the morning routine | `file-inbox` |
 | `_meta/hot-cache.md` | recent-context digest; a cheap stand-in for embeddings | each run |
 | `_meta/skills/` | the skill prompt files themselves | humans |
-| `scripts/` | fetch-mail, fetch-ics, notify, bridge | humans |
+| `scripts/` | fetch-mail, fetch-calendar, notify, bridge | humans |
 
 ## Areas & linking (the ordered network)
 

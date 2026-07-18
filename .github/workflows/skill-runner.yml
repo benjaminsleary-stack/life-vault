@@ -53,6 +53,8 @@ jobs:
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
           ICS_URL: ${{ secrets.ICS_URL }}
+          CAL_WORK: ${{ secrets.CAL_WORK }}
+          CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
         run: |
           set -uo pipefail
           # Yield to the desktop watcher, if any: wait briefly then re-pull so
