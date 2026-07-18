@@ -10,3 +10,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Plan new kitchen in extension #house
 - [x] Ask mum to look after boy's from 11th December for 1 week. #family 📅 2026-07-16 ✅ 2026-07-16
 - [ ] Reply to dad about him coming to visit #family 📅 2026-07-18
+- [ ] Give Charlotte her self referral forms #family 📅 2026-07-18
