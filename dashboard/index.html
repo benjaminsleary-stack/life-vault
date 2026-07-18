@@ -451,9 +451,12 @@
     { name:"interest-scout",    label:"Discover", desc:"Weekly discover feed for your interests" },
     { name:"ask",               label:"Ask",      desc:"Answers from the vault (use the Ask box)", noRun:true },
   ];
+  // Served from localhost = the dev server (dev/server.mjs), which mounts the
+  // same API on the same origin and needs no unlock token.
+  const DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
   // The Worker URL is fixed, so default it — you only ever enter the token.
   const DEFAULT_API = "https://life-vault.benvault.workers.dev";
-  let API = localStorage.getItem("lv_api") || DEFAULT_API;
+  let API = DEV ? "" : (localStorage.getItem("lv_api") || DEFAULT_API);
   let TOKEN = localStorage.getItem("lv_token") || "";
   let lastData = null;
   // skill -> the .when seen when queued, to detect a fresh completion and
@@ -980,7 +983,9 @@
   }
 
   // --- boot -----------------------------------------------------------------
-  if(API && TOKEN){ load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
+  if(DEV || (API && TOKEN)){
+    $("gate").classList.add("hidden"); $("app").classList.remove("hidden");
+    load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
   else { showGate(); }
 </script>
 </body>
