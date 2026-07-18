@@ -96,6 +96,27 @@ Action executes the skill and writes its status, and the dashboard shows it.
 
 ---
 
+### 6. Push notifications (optional — brief ready / ask answered / skill failed)
+Generate a VAPID key pair once (any machine with Node):
+```
+npx web-push generate-vapid-keys
+```
+Add them to the Worker:
+```
+cd worker
+npx wrangler secret put VAPID_PUBLIC_KEY    # the Public Key line
+npx wrangler secret put VAPID_PRIVATE_KEY   # the Private Key line
+npx wrangler secret put VAPID_SUBJECT       # e.g. mailto:you@example.com
+npx wrangler deploy
+```
+And two GitHub Actions secrets so runs can trigger the push:
+- `WORKER_URL` = `https://life-vault.<subdomain>.workers.dev`
+- `UNLOCK_TOKEN` = the same unlock token the dashboard uses
+
+Then on each device: open the dashboard → tap **🔔 Alerts** → allow.
+Subscriptions are stored in `_meta/push-subs.json` in the vault (private repo);
+dead subscriptions are pruned automatically.
+
 ## Everyday use
 Nothing to start. Open the installed app; it reads the current vault and every
 change is a commit. Skills run in the cloud on tap or on their schedule.

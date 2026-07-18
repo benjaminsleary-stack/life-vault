@@ -20,7 +20,10 @@
  *   ALLOW_ORIGIN   the Pages origin allowed by CORS (default "*")
  */
 
+import { sendPush } from "./push.js";
+
 const API = "https://api.github.com";
+const SUBS_PATH = "_meta/push-subs.json";
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -268,6 +271,98 @@ async function readSkills(env) {
   return status;
 }
 
+/* ------------------------------------------------------------------- habits */
+// habits.md: "## <Habit>" sections with "- [ ]" sub-items and a "(day:: date)"
+// marker. The checkboxes represent TODAY: when the marker is stale the file is
+// lazily reset on the next toggle, and reads report everything unchecked.
+// Completions are also appended to habits-log.md — append-only history that
+// streaks are derived from (golden rule: never rewrite the log).
+
+function parseHabits(text) {
+  const dayM = text.match(/\(day::\s*(\d{4}-\d{2}-\d{2})\)/);
+  const stale = !dayM || dayM[1] !== today();
+  const habits = [];
+  let cur = null;
+  for (const line of text.split("\n")) {
+    const h = line.match(/^##\s+(.+?)\s*$/);
+    if (h) { cur = { name: h[1], items: [] }; habits.push(cur); continue; }
+    const m = line.match(TASK_RE);
+    if (m && cur) cur.items.push({ text: m[3].trim(), done: !stale && m[2].toLowerCase() === "x" });
+  }
+  return habits.filter((h) => h.items.length);
+}
+
+// Streak: consecutive days (ending today or yesterday) with at least one
+// logged completion for the habit.
+function habitStreaks(logText) {
+  const byHabit = {};
+  for (const m of logText.matchAll(/^- (\d{4}-\d{2}-\d{2}) — ([^/\n]+?) \//gm)) {
+    (byHabit[m[2].trim()] = byHabit[m[2].trim()] || new Set()).add(m[1]);
+  }
+  const streaks = {};
+  const dayMs = 864e5;
+  const t = new Date(today() + "T12:00:00Z").getTime();
+  for (const [name, days] of Object.entries(byHabit)) {
+    let streak = 0;
+    let d = days.has(today()) ? t : t - dayMs;   // may start counting from yesterday
+    while (days.has(new Date(d).toISOString().slice(0, 10))) { streak++; d -= dayMs; }
+    streaks[name] = streak;
+  }
+  return streaks;
+}
+
+async function readHabits(env) {
+  const file = await readFile(env, "habits.md");
+  if (!file) return [];
+  const habits = parseHabits(file.text);
+  if (!habits.length) return [];
+  const log = await readFile(env, "habits-log.md");
+  const streaks = log ? habitStreaks(log.text) : {};
+  return habits.map((h) => ({ ...h, streak: streaks[h.name] || 0 }));
+}
+
+// Toggle one habit sub-item for today. Resets the whole file first if the
+// day marker is stale, and appends completions to habits-log.md.
+async function toggleHabit(env, habit, item) {
+  habit = String(habit || "").trim();
+  item = String(item || "").trim();
+  if (!habit || !item) return false;
+  const cur = await readFile(env, "habits.md");
+  if (!cur) return false;
+  let lines = cur.text.split("\n");
+  const dayM = cur.text.match(/\(day::\s*(\d{4}-\d{2}-\d{2})\)/);
+  if (!dayM || dayM[1] !== today()) {
+    lines = lines.map((l) => l.replace(/^(\s*)- \[[xX]\]/, "$1- [ ]"));
+    const marker = `(day:: ${today()})`;
+    const mi = lines.findIndex((l) => /\(day::\s*\d{4}-\d{2}-\d{2}\)/.test(l));
+    if (mi >= 0) lines[mi] = lines[mi].replace(/\(day::\s*\d{4}-\d{2}-\d{2}\)/, marker);
+    else lines.splice(1, 0, "", marker);
+  }
+  let inSection = false, toggledOn = null;
+  for (let i = 0; i < lines.length; i++) {
+    const h = lines[i].match(/^##\s+(.+?)\s*$/);
+    if (h) { inSection = h[1] === habit; continue; }
+    if (!inSection) continue;
+    const m = lines[i].match(TASK_RE);
+    if (!m || m[3].trim() !== item) continue;
+    const nowDone = m[2] === " ";
+    lines[i] = `${m[1]}- [${nowDone ? "x" : " "}] ${m[3]}`;
+    toggledOn = nowDone;
+    break;
+  }
+  if (toggledOn === null) return false;
+  await putFile(env, "habits.md", lines.join("\n"), "dashboard: habit", cur.sha);
+  if (toggledOn) {
+    const log = await readFile(env, "habits-log.md");
+    const entry = `- ${today()} — ${habit} / ${item}`;
+    const base = log ? log.text.replace(/\s*$/, "") : "# Habits log";
+    if (!base.includes(entry)) {
+      await putFile(env, "habits-log.md", base + "\n" + entry + "\n", "dashboard: habit log", log && log.sha);
+    }
+  }
+  return true;
+}
+
 // Count raw, unfiled captures sitting in inbox/ (excludes _archive / _runs).
 async function inboxCount(env) {
   const files = await listDir(env, "inbox");
@@ -276,13 +371,14 @@ async function inboxCount(env) {
 
 async function buildData(env) {
   const tasksFile = await readFile(env, "tasks.md");
-  const [projects, people, occasions, brief, skills, inbox] = await Promise.all([
+  const [projects, people, occasions, brief, skills, inbox, habits] = await Promise.all([
     readEntities(env, "projects"),
     readEntities(env, "people"),
     readOccasions(env),
     latestBrief(env),
     readSkills(env),
     inboxCount(env),
+    readHabits(env),
   ]);
   return {
     generated: new Date().toISOString(),
@@ -293,6 +389,7 @@ async function buildData(env) {
     brief,
     skills,
     inbox,
+    habits,
   };
 }
 
@@ -419,6 +516,42 @@ async function appendFragment(env, person, text) {
   return true;
 }
 
+/* ---------------------------------------------------------------- web push */
+
+async function readSubs(env) {
+  const f = await readFile(env, SUBS_PATH);
+  if (!f) return { subs: [], sha: undefined };
+  try { return { subs: JSON.parse(f.text), sha: f.sha }; }
+  catch { return { subs: [], sha: f.sha }; }
+}
+
+async function pushSubscribe(env, sub) {
+  if (!sub || !sub.endpoint || !sub.keys) return false;
+  const { subs, sha } = await readSubs(env);
+  if (!subs.some((s) => s.endpoint === sub.endpoint)) {
+    subs.push({ endpoint: sub.endpoint, keys: sub.keys });
+    await putFile(env, SUBS_PATH, JSON.stringify(subs, null, 2) + "\n", "dashboard: push subscribe", sha);
+  }
+  return true;
+}
+
+async function notify(env, payload) {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return false;
+  const { subs, sha } = await readSubs(env);
+  if (!subs.length) return true;
+  const dead = await sendPush(env, subs, {
+    title: String(payload.title || "Life-Vault"),
+    body: String(payload.body || ""),
+    tag: String(payload.tag || "life-vault"),
+    url: String(payload.url || "/"),
+  });
+  if (dead.length) {
+    const alive = subs.filter((s) => !dead.includes(s.endpoint));
+    await putFile(env, SUBS_PATH, JSON.stringify(alive, null, 2) + "\n", "dashboard: prune push subs", sha);
+  }
+  return true;
+}
+
 /* ------------------------------------------------------------------ routing */
 
 export default {
@@ -432,6 +565,9 @@ export default {
     try {
       if (req.method === "GET" && path === "/api/data") {
         return json(await buildData(env), env);
+      }
+      if (req.method === "GET" && path === "/api/push-key") {
+        return json({ key: env.VAPID_PUBLIC_KEY || "" }, env);
       }
       if (req.method === "GET" && path === "/api/file") {
         const p = url.searchParams.get("path") || "";
@@ -453,6 +589,9 @@ export default {
         else if (path === "/api/reorder") ok = await reorderTasks(env, payload.ids);
         else if (path === "/api/run") ok = await queueRun(env, payload.skill, payload.input);
         else if (path === "/api/append") ok = await appendFragment(env, payload.person, payload.text);
+        else if (path === "/api/habit") ok = await toggleHabit(env, payload.habit, payload.item);
+        else if (path === "/api/push-subscribe") ok = await pushSubscribe(env, payload.subscription || payload);
+        else if (path === "/api/notify") ok = await notify(env, payload);
         else return json({ error: "not found" }, env, 404);
         return json({ ok }, env);
       }

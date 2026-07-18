@@ -46,6 +46,8 @@ jobs:
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
         run: |
           set -uo pipefail
           case "${{ github.event.schedule }}" in
@@ -63,6 +65,8 @@ jobs:
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
         run: |
           set -uo pipefail
           shopt -s nullglob
