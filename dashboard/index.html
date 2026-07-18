@@ -242,6 +242,21 @@
   .litem.on .lchk{ background:var(--green); border-color:var(--green); color:#14200f; }
   .litem.on{ color:var(--muted); text-decoration:line-through; }
 
+  /* Habit editor */
+  .hedit{ background:var(--bg1); border:1px solid var(--line-row); border-radius:10px;
+    padding:11px 12px; margin-bottom:10px; }
+  .hedit-head{ display:flex; align-items:center; gap:7px; margin-bottom:7px; }
+  .hedit-name{ flex:1; font-weight:600; font-size:14.5px; }
+  .hedit-item{ display:flex; align-items:center; gap:8px; padding:5px 0; font-size:14px;
+    border-bottom:1px solid var(--line-row); }
+  .hedit-item:last-of-type{ border-bottom:0; }
+  .hedit-item span{ flex:1; }
+  .mini{ background:var(--surface-2); border:1px solid var(--line-key); color:var(--muted);
+    border-radius:7px; font:inherit; font-size:12px; padding:4px 9px; cursor:pointer; flex:none; }
+  .mini:hover{ border-color:var(--accent); color:var(--text); }
+  .mini.danger{ border-color:color-mix(in srgb,var(--red) 40%,var(--line-key)); color:#e29b96; }
+  .mini.danger:hover{ border-color:var(--red); }
+
   /* Task detail sheet */
   .tfield{ margin-bottom:12px; }
   .tfield label{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
@@ -566,6 +581,7 @@
     <div class="card c-habits">
       <div class="section-head"><p class="label">Habits</p><span class="count" id="habitPct"></span></div>
       <div id="habits" class="skel"></div>
+      <button class="link" onclick="editHabits()" style="margin-top:8px">Edit habits</button>
     </div>
     <div class="card c-weather">
       <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
@@ -911,7 +927,15 @@
       let line='<span style="color:var(--faint)">not run yet</span>';
       let outs="";
       const hasOut = !!(st && st.outputs && st.outputs.length);
-      if(st){
+      // A queued run is the state you are most likely to be staring at, and it
+      // was invisible: the Run button said "Queued" for 1.4 seconds and then
+      // reverted, so a run waiting on GitHub Actions looked identical to one
+      // that was never requested.
+      if(st && st.queued){
+        const mins=Math.max(0,Math.round((Date.now()-new Date(st.queued+"Z").getTime())/60000));
+        line='<span class="running"></span> queued '+(mins<1?"just now":mins+"m ago");
+      }
+      else if(st){
         const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
         line=mark+" ran "+fmtWhen(st.when);
         // A failure that won't say why sends you to the Actions log to find out.
@@ -920,7 +944,7 @@
         if(hasOut && st.outputs.length>1){
           // data-path (not an inline onclick) so quotes/parens in a filename
           // can't break out of the handler — the delegated listener reads it back.
-          outs='<div class="s-out">'+st.outputs.map((p)=>
+          outs+='<div class="s-out">'+st.outputs.map((p)=>
             '📄 <a data-path="'+esc(p)+'">'+esc(p.split("/").pop())+"</a>").join("")+"</div>";
         }
       }
@@ -1446,6 +1470,75 @@
       .then((r)=>{ if(!r.ok) throw new Error(); })
       .catch(()=>{ toast("Failed",true); load(); });
   });
+
+  // Editing the habit list. Until now the app could tick a habit but never add
+  // or retire one, so changing what you track meant opening Obsidian — the card
+  // was interactive about today and read-only about the thing itself.
+  function editHabits(){
+    const habits=(lastData&&lastData.habits)||[];
+    const q=(s)=>esc(s).replace(/'/g,"&#39;");
+    let html = habits.map((h)=>
+      '<div class="hedit"><div class="hedit-head"><span class="hedit-name">'+esc(h.name)+"</span>"+
+        '<button class="mini" data-rename="'+q(h.name)+'">Rename</button>'+
+        '<button class="mini danger" data-retire="'+q(h.name)+'">Retire</button>'+
+      "</div>"+
+      h.items.map((i)=>
+        '<div class="hedit-item"><span>'+esc(i.text)+"</span>"+
+        '<button class="mini" data-h="'+q(h.name)+'" data-i="'+q(i.text)+'">✕</button></div>').join("")+
+      '<div class="row" style="margin-top:6px"><input type="text" placeholder="Add a step…" '+
+        'data-addto="'+q(h.name)+'" onkeydown="if(event.key===\'Enter\')addHabitStep(this)" />'+
+        '<button class="btn" data-addbtn="1">Add</button></div>'+
+      "</div>").join("");
+    if(!habits.length) html='<p class="muted">No habits yet.</p>';
+    html+='<hr><div class="row"><input type="text" id="newHabit" placeholder="New habit, e.g. Morning routine" '+
+      'onkeydown="if(event.key===\'Enter\')addHabitGroup()" />'+
+      '<button class="btn primary" onclick="addHabitGroup()">Add habit</button></div>'+
+      '<p class="muted" style="margin-top:10px">Retiring a habit stops the tracking. Your streak history in '+
+      "<code>habits-log.md</code> is kept — it is append-only.</p>";
+    openPanel("Habits", html);
+  }
+  function reopenHabits(){ return load().then(()=>editHabits()); }
+  // Delegated, so quotes in a habit name can't break an inline handler.
+  $("modalBody").addEventListener("click",(e)=>{
+    const add=e.target.closest("button[data-addbtn]");
+    if(add){ addHabitStep(add.previousElementSibling); return; }
+    const rm=e.target.closest("button[data-h][data-i]");
+    if(rm){
+      postOK("/api/habit/item/remove",{habit:rm.dataset.h,item:rm.dataset.i})
+        .then(()=>{ toast("Removed"); reopenHabits(); }).catch(()=>toast("Failed",true));
+      return;
+    }
+    const ren=e.target.closest("button[data-rename]");
+    if(ren){
+      const habit=ren.dataset.rename;
+      const name=prompt("Rename habit", habit);
+      if(name && name.trim() && name.trim()!==habit){
+        postOK("/api/habit/rename",{habit,name:name.trim()})
+          .then(()=>{ toast("Renamed"); reopenHabits(); }).catch(()=>toast("Failed",true));
+      }
+      return;
+    }
+    const ret=e.target.closest("button[data-retire]");
+    if(ret){
+      const habit=ret.dataset.retire;
+      if(confirm('Retire "'+habit+'"?\n\nIt stops appearing. Your logged history is kept.')){
+        postOK("/api/habit/group/remove",{habit})
+          .then(()=>{ toast("Retired"); reopenHabits(); }).catch(()=>toast("Failed",true));
+      }
+    }
+  });
+  function addHabitStep(input){
+    if(!input) return;
+    const text=(input.value||"").trim(); if(!text) return;
+    postOK("/api/habit/item",{habit:input.dataset.addto,text})
+      .then(()=>{ toast("Added"); reopenHabits(); }).catch(()=>toast("Failed",true));
+  }
+  function addHabitGroup(){
+    const el=$("newHabit"); const name=(el&&el.value||"").trim(); if(!name) return;
+    postOK("/api/habit/group",{name})
+      .then(()=>{ toast("Habit added"); reopenHabits(); })
+      .catch(()=>toast("Couldn't add — does it already exist?",true));
+  }
 
   // Lists — shopping and the like. Kept out of tasks.md deliberately: a
   // shopping list is consumed in one trip and then meaningless, and in the task

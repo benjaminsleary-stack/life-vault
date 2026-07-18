@@ -370,6 +370,107 @@ async function toggleHabit(store, habit, item) {
   return true;
 }
 
+/* ------------------------------------------------- editing the habit list */
+// habits.md was hand-edited only: the app could tick a habit but never add,
+// rename or retire one, so changing what you track meant opening Obsidian.
+//
+// Removing a habit or an item never touches habits-log.md. The log is
+// append-only history (golden rule 1) — retiring a habit stops the tracking,
+// it does not unmake the fortnight you did it.
+
+const HABITS_HEAD = "# Habits\n";
+
+async function habitsFile(store) {
+  const cur = await store.readFile("habits.md");
+  if (cur) return cur;
+  return { text: `${HABITS_HEAD}\n(day:: ${today()})\n`, sha: undefined };
+}
+
+async function addHabitGroup(store, name) {
+  name = String(name || "").trim().replace(/^#+\s*/, "");
+  if (!name) return false;
+  const cur = await habitsFile(store);
+  if (new RegExp(`^##\\s+${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m").test(cur.text)) return false;
+  const body = cur.text.replace(/\s*$/, "") + `\n\n## ${name}\n`;
+  await store.putFile("habits.md", body, `dashboard: add habit ${name}`, cur.sha);
+  return true;
+}
+
+async function addHabitItem(store, habit, text) {
+  habit = String(habit || "").trim();
+  text = String(text || "").trim();
+  if (!habit || !text) return false;
+  const cur = await store.readFile("habits.md");
+  if (!cur) return false;
+  const lines = cur.text.split("\n");
+  let inSection = false, insertAt = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const h = lines[i].match(/^##\s+(.+?)\s*$/);
+    if (h) {
+      if (inSection) break;                      // next section starts: insert above it
+      inSection = h[1] === habit;
+      if (inSection) insertAt = i + 1;
+      continue;
+    }
+    if (inSection && TASK_RE.test(lines[i])) insertAt = i + 1;
+  }
+  if (insertAt < 0) return false;
+  lines.splice(insertAt, 0, `- [ ] ${text}`);
+  await store.putFile("habits.md", lines.join("\n"), `dashboard: add habit item`, cur.sha);
+  return true;
+}
+
+async function removeHabitItem(store, habit, item) {
+  habit = String(habit || "").trim();
+  item = String(item || "").trim();
+  if (!habit || !item) return false;
+  const cur = await store.readFile("habits.md");
+  if (!cur) return false;
+  const lines = cur.text.split("\n");
+  let inSection = false;
+  for (let i = 0; i < lines.length; i++) {
+    const h = lines[i].match(/^##\s+(.+?)\s*$/);
+    if (h) { inSection = h[1] === habit; continue; }
+    if (!inSection) continue;
+    const m = lines[i].match(TASK_RE);
+    if (!m || m[3].trim() !== item) continue;
+    lines.splice(i, 1);
+    await store.putFile("habits.md", lines.join("\n"), "dashboard: remove habit item", cur.sha);
+    return true;
+  }
+  return false;
+}
+
+async function removeHabitGroup(store, habit) {
+  habit = String(habit || "").trim();
+  if (!habit) return false;
+  const cur = await store.readFile("habits.md");
+  if (!cur) return false;
+  const lines = cur.text.split("\n");
+  const start = lines.findIndex((l) => (l.match(/^##\s+(.+?)\s*$/) || [])[1] === habit);
+  if (start < 0) return false;
+  let end = start + 1;
+  while (end < lines.length && !/^##\s+/.test(lines[end])) end++;
+  lines.splice(start, end - start);
+  await store.putFile("habits.md", lines.join("\n").replace(/\n{3,}/g, "\n\n"),
+    `dashboard: retire habit ${habit}`, cur.sha);
+  return true;
+}
+
+async function renameHabitGroup(store, habit, name) {
+  habit = String(habit || "").trim();
+  name = String(name || "").trim().replace(/^#+\s*/, "");
+  if (!habit || !name || habit === name) return false;
+  const cur = await store.readFile("habits.md");
+  if (!cur) return false;
+  const lines = cur.text.split("\n");
+  const i = lines.findIndex((l) => (l.match(/^##\s+(.+?)\s*$/) || [])[1] === habit);
+  if (i < 0) return false;
+  lines[i] = `## ${name}`;
+  await store.putFile("habits.md", lines.join("\n"), `dashboard: rename habit`, cur.sha);
+  return true;
+}
+
 /* ------------------------------------------------------------------- inbox */
 
 // Raw, unfiled captures sitting in inbox/ (excludes _archive / _runs). The
@@ -1081,6 +1182,11 @@ export function createApi(rawStore, hooks = {}) {
         case "/api/run":        ok = await queueRun(store, p.skill, p.input); break;
         case "/api/append":     ok = await appendFragment(store, p.person, p.text); break;
         case "/api/habit":      ok = await toggleHabit(store, p.habit, p.item); break;
+        case "/api/habit/group":       ok = await addHabitGroup(store, p.name); break;
+        case "/api/habit/item":        ok = await addHabitItem(store, p.habit, p.text); break;
+        case "/api/habit/item/remove": ok = await removeHabitItem(store, p.habit, p.item); break;
+        case "/api/habit/group/remove":ok = await removeHabitGroup(store, p.habit); break;
+        case "/api/habit/rename":      ok = await renameHabitGroup(store, p.habit, p.name); break;
         case "/api/lesson":     ok = await addLesson(store, p.scope, p.text, p.verdict); break;
         case "/api/list/toggle": ok = await toggleListItem(store, p.list, p.item); break;
         case "/api/list/new":    ok = await createList(store, p.name); break;

@@ -143,6 +143,8 @@ recording the completion date. Example capture: `done: ordered the washing machi
 
 For each file in `inbox/` (oldest first): **archive the raw file first**, then route:
 - mentions a known person → append a dated fragment to that `people/*.md`
+- several items in one capture (`list - a, b, c`, or one per line) → split them:
+  errands/shopping into a `type: list` note; durable jobs into one checkbox each
 - clearly a task (has an action + optional date) → add an inline checkbox to `tasks.md`
 - about a project → append to the `projects/*.md`
 - `done:` prefix → tick the matching task
