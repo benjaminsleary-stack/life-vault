@@ -530,17 +530,37 @@ async function rescheduleTask(store, id, due) {
   });
 }
 
-// Retitle: keep every stamp and tag, replace only the human text.
-async function retitleTask(store, id, text) {
-  text = String(text || "").trim();
-  if (!text) return false;
+/**
+ * Edit title, due date and area in ONE write.
+ *
+ * This has to be atomic, and not for performance: a task's id is a hash of its
+ * text, so the moment a retitle lands the id the caller holds is stale and any
+ * follow-up reschedule silently matches nothing. Three sequential calls looked
+ * like they worked and quietly dropped two thirds of the edit.
+ *
+ * Fields absent from the payload are left alone; `due: null` clears the date.
+ */
+async function editTask(store, id, fields) {
+  const has = (k) => Object.prototype.hasOwnProperty.call(fields, k);
+  if (has("due") && fields.due && !/^\d{4}-\d{2}-\d{2}$/.test(String(fields.due))) return false;
+  const tag = has("tag") ? String(fields.tag || "").replace(/^#/, "").trim() : null;
+  if (tag && !AREAS.includes(tag)) return false;
+
   return editTaskLine(store, id, "dashboard: edit task", (body) => {
-    const stamps = [];
-    const dueM = body.match(DUE_RE); if (dueM) stamps.push(dueM[0]);
-    const doneM = body.match(DONE_RE); if (doneM) stamps.push(doneM[0]);
-    const tags = [...body.matchAll(TAG_RE)].map((x) => `#${x[1]}`);
-    const pri = HIGH_RE.test(body) ? ["⏫"] : [];
-    return [text, ...tags, ...pri, ...stamps].join(" ");
+    const title = has("text") && String(fields.text).trim()
+      ? String(fields.text).trim()
+      : taskLabel(body);
+    const dueM = body.match(DUE_RE);
+    const due = has("due") ? fields.due : (dueM ? dueM[1] : null);
+    const doneM = body.match(DONE_RE);
+    // Keep any non-area tags the vault or a skill put there.
+    const keptTags = [...body.matchAll(TAG_RE)].map((x) => x[1]).filter((t) => !AREAS.includes(t));
+    const area = has("tag") ? (tag ? [tag] : []) : [...body.matchAll(TAG_RE)].map((x) => x[1]).filter((t) => AREAS.includes(t));
+    const parts = [title, ...area.map((t) => `#${t}`), ...keptTags.map((t) => `#${t}`)];
+    if (HIGH_RE.test(body)) parts.push("⏫");
+    if (due) parts.push(`📅 ${due}`);
+    if (doneM) parts.push(doneM[0]);
+    return parts.join(" ");
   });
 }
 
@@ -724,8 +744,8 @@ export function createApi(rawStore, hooks = {}) {
         case "/api/task":       ok = await addTask(store, p.text, p.due, p.tag, p.priority); break;
         case "/api/toggle":     ok = await toggleTask(store, p.id); break;
         case "/api/priority":   ok = await setPriority(store, p.id); break;
+        case "/api/edit":       ok = await editTask(store, p.id, p.fields || {}); break;
         case "/api/reschedule": ok = await rescheduleTask(store, p.id, p.due || null); break;
-        case "/api/retitle":    ok = await retitleTask(store, p.id, p.text); break;
         case "/api/delete":     ok = await deleteTask(store, p.id); break;
         case "/api/reorder":    ok = await reorderTasks(store, p.ids); break;
         case "/api/run":        ok = await queueRun(store, p.skill, p.input); break;

@@ -191,6 +191,28 @@
   .occ.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
   .task.flash{ background:rgba(217,138,99,.14); border-radius:8px; }
 
+  /* Add-a-task, inline at the head of the list it writes to. It used to be a
+     separate card, which spent a whole grid slot on a form. */
+  .addrow{ display:flex; gap:8px; margin-bottom:8px; }
+  .addrow input{ flex:1; min-width:0; }
+  .addbtn{ flex:0 0 auto; min-width:0; padding:11px 16px; }
+  .addmeta{ display:none; gap:8px; margin-bottom:10px; }
+  .addmeta.show{ display:flex; }
+  .addmeta>*{ flex:1; min-width:0; }
+
+  /* Task detail sheet */
+  .tfield{ margin-bottom:12px; }
+  .tfield label{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin-bottom:5px; font-weight:600; }
+  .quick{ display:flex; gap:6px; flex-wrap:wrap; margin-top:7px; }
+  .quick button{ background:var(--surface-2); border:1px solid var(--line-key); color:var(--muted);
+    border-radius:999px; font:inherit; font-size:12.5px; padding:5px 11px; cursor:pointer; }
+  .quick button:hover{ border-color:var(--accent); color:var(--text); }
+  .danger{ background:none; border:1px solid color-mix(in srgb,var(--red) 45%,var(--line-key)); color:#e29b96; }
+  .danger:hover{ border-color:var(--red); }
+  .t-title.tap{ cursor:pointer; }
+  .t-title.tap:hover{ color:var(--accent-text); }
+
   /* Person sheet */
   .frag{ display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
   .frag:last-child{ border-bottom:0; }
@@ -242,16 +264,16 @@
       grid-template-columns:1.15fr 1fr 1fr;
       grid-template-areas:
         "tasks  capture weather"
-        "tasks  ask     weather"
+        "tasks  ask     brief"
         "tasks  skills  brief"
-        "add    skills  brief"
+        "habits skills  brief"
         "habits people  agenda";
     }
     .cards .card{ margin-bottom:0; }
     .c-tasks{ grid-area:tasks; } .c-capture{ grid-area:capture; }
     .c-weather{ grid-area:weather; } .c-ask{ grid-area:ask; }
     .c-skills{ grid-area:skills; } .c-brief{ grid-area:brief; }
-    .c-add{ grid-area:add; } .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
+    .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
     .c-habits{ grid-area:habits; }
     .cards > .grid2{ display:contents; }
   }
@@ -433,6 +455,18 @@
 
     <div class="card c-tasks" id="sec-today">
       <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount"></span></div>
+      <div class="addrow">
+        <input type="text" id="ttext" placeholder="Add a task…" onkeydown="if(event.key==='Enter')doAddTask()" />
+        <button class="btn primary addbtn" onclick="doAddTask()" aria-label="Add task">＋</button>
+      </div>
+      <div class="addmeta" id="addMeta">
+        <input type="date" id="tdue" aria-label="Due date" />
+        <select id="ttag" aria-label="Area">
+          <option value="">#area…</option>
+          <option>family</option><option>house</option><option>work</option>
+          <option>health</option><option>interests</option><option>admin</option>
+        </select>
+      </div>
       <div id="tasksTop" class="skel"></div>
       <div id="tasksAll" class="hidden"></div>
       <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
@@ -441,20 +475,6 @@
     <div class="card c-skills" id="sec-skills">
       <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span></div>
       <div id="skills" class="skel"></div>
-    </div>
-
-    <div class="card c-add">
-      <div class="section-head"><p class="label">Add task</p><span class="count">→ tasks.md</span></div>
-      <input type="text" id="ttext" placeholder="What needs doing" />
-      <div class="row">
-        <input type="date" id="tdue" />
-        <select id="ttag">
-          <option value="">#area…</option>
-          <option>family</option><option>house</option><option>work</option>
-          <option>health</option><option>interests</option><option>admin</option>
-        </select>
-      </div>
-      <div class="row"><button class="btn primary" onclick="doAddTask()">Add to task list</button></div>
     </div>
 
     <div class="card c-brief">
@@ -630,6 +650,10 @@
 
   // --- actions --------------------------------------------------------------
   function doCapture(){ const e=$("cap"); if(!e.value.trim())return; post("/api/capture",{text:e.value},"Captured to inbox").then(()=>e.value=""); }
+  // The due/area row only appears once you're actually adding something, so the
+  // card isn't two-thirds empty form the rest of the time.
+  $("ttext").addEventListener("focus",()=>$("addMeta").classList.add("show"));
+  $("ttext").addEventListener("input",()=>$("addMeta").classList.toggle("show", true));
   function doAddTask(){
     const t=$("ttext"); if(!t.value.trim())return;
     const text=t.value.trim(), due=$("tdue").value, tag=$("ttag").value;
@@ -640,7 +664,7 @@
         due:due||null, tags:tag?[tag]:[], overdue: !!(due && due<=todayStr) });
       render(lastData);
     }
-    t.value=""; $("tdue").value=""; $("ttag").value="";
+    t.value=""; $("tdue").value=""; $("ttag").value=""; $("addMeta").classList.remove("show");
     req("/api/task",{method:"POST",body:JSON.stringify({text,due,tag})})
       .then((r)=>{ if(!r.ok) throw new Error(); toast("Task added"); })
       .catch(()=>{ toast("Failed",true); load(); });
@@ -691,15 +715,26 @@
   function taskRow(t, draggable){
     return '<div class="task'+(t.done?" done":"")+(t.priority?" pri":"")+'" data-id="'+t.id+'">'+
       (draggable?'<span class="drag" onpointerdown="dragStart(event)" title="Drag to reorder">⠿</span>':'')+
-      '<div class="check'+(t.done?" on":"")+'" onclick="toggle(\''+t.id+'\')">'+(t.done?"✓":"")+"</div>"+
-      '<div class="t-body"><span class="t-title">'+esc(t.text)+"</span>"+duePill(t)+"</div>"+
-      '<button class="pstar'+(t.priority?" on":"")+'" onclick="togglePriority(\''+t.id+'\')" title="Mark priority">⏫</button>'+
+      '<div class="check'+(t.done?" on":"")+'" onclick="toggle(\''+t.id+'\')" role="checkbox" tabindex="0" '+
+        'aria-checked="'+(t.done?"true":"false")+'" aria-label="'+esc(t.text)+'">'+(t.done?"✓":"")+"</div>"+
+      '<div class="t-body"><span class="t-title tap" data-open="'+t.id+'" title="Edit, reschedule or remove">'+
+        esc(t.text)+"</span>"+duePill(t)+"</div>"+
+      '<button class="pstar'+(t.priority?" on":"")+'" onclick="togglePriority(\''+t.id+'\')" '+
+        'title="Mark priority" aria-label="Mark priority">⏫</button>'+
       "</div>";
   }
-  // Open tasks ordered priority-first, then by the vault's file order.
-  function orderedOpen(tasks){
+  // What the short list should show is what today actually asks of you:
+  // anything overdue, anything due today, then flagged priorities. A flat
+  // "first three in file order" was arbitrary — it could show three someday
+  // items while an overdue one sat out of sight behind "Show all".
+  function topTasks(tasks){
     const open=(tasks||[]).filter((t)=>!t.done);
-    return open.map((t,i)=>({t,i})).sort((a,b)=>(b.t.priority?1:0)-(a.t.priority?1:0)||a.i-b.i).map((x)=>x.t);
+    const rank=(t)=> t.overdue?0 : t.today?1 : t.priority?2 : 3;
+    const idx=new Map(open.map((t,i)=>[t.id,i]));
+    const sorted=[...open].sort((a,b)=>rank(a)-rank(b)||idx.get(a.id)-idx.get(b.id));
+    const live=sorted.filter((t)=>rank(t)<3);
+    // If nothing is pressing, still show a few so the card is never blank.
+    return { rows: live.length?live.slice(0,6):sorted.slice(0,3), pressing: live.length };
   }
   function fmtWhen(iso){
     if(!iso) return "";
@@ -852,14 +887,16 @@
   function toggleShowAll(){ showAll=!showAll; if(lastData) renderTasks(lastData.tasks); }
   function renderTasks(tasks){
     const openFO=(tasks||[]).filter((t)=>!t.done);     // file order (drag-controlled)
-    const top=orderedOpen(tasks).slice(0,3);           // priority-first for the top
-    $("taskCount").textContent = openFO.length+" open";
-    $("tasksTop").innerHTML = top.length ? top.map((t)=>taskRow(t,false)).join("")
-      : '<div class="muted">No open tasks.</div>';
+    const { rows, pressing } = topTasks(tasks);
+    const over=openFO.filter((t)=>t.overdue).length;
+    $("taskCount").textContent = over ? over+" overdue · "+openFO.length+" open" : openFO.length+" open";
+    $("tasksTop").innerHTML = rows.length
+      ? (pressing?"":'<div class="tcat">next up</div>')+rows.map((t)=>taskRow(t,false)).join("")
+      : '<div class="muted">Nothing open. Add one above.</div>';
     const all=$("tasksAll");
     if(!showAll){ all.classList.add("hidden");
-      $("showAllBtn").textContent = openFO.length>3 ? "Show all ("+openFO.length+")" : "Show all";
-      $("showAllBtn").style.display = openFO.length ? "" : "none"; return; }
+      $("showAllBtn").textContent = "Show all ("+openFO.length+")";
+      $("showAllBtn").style.display = openFO.length>rows.length ? "" : "none"; return; }
     all.classList.remove("hidden"); $("showAllBtn").textContent="Show less";
     const byArea={}; const other=[];
     openFO.forEach((t)=>{ const a=(t.tags||[]).find((g)=>AREAS.includes(g));
@@ -871,6 +908,73 @@
     if(other.length) html+='<div class="tcat">other</div><div class="tgroup" data-area="">'+other.map((t)=>taskRow(t,true)).join("")+'</div>';
     all.innerHTML = html;
   }
+  // Tapping a task's title opens it. Until now a task could only be ticked or
+  // starred — a typo was permanent, a slipped date could not be moved, and the
+  // only way to remove something was to edit tasks.md by hand.
+  document.addEventListener("click",(e)=>{
+    const el=e.target.closest(".t-title[data-open]");
+    if(el) openTask(el.dataset.open);
+  });
+  let curTask=null;
+  function openTask(id){
+    const t=(lastData&&lastData.tasks||[]).find((x)=>String(x.id)===String(id));
+    if(!t) return;
+    curTask=t;
+    const areaOpts=['<option value="">no area</option>'].concat(
+      AREAS.map((a)=>'<option'+(t.area===a?" selected":"")+">"+a+"</option>")).join("");
+    openPanel("Task",
+      '<div class="tfield"><label for="etext">Task</label>'+
+        '<input type="text" id="etext" value="'+esc(t.text)+'" /></div>'+
+      '<div class="tfield"><label for="edue">Due</label>'+
+        '<input type="date" id="edue" value="'+esc(t.due||"")+'" />'+
+        '<div class="quick">'+
+          '<button onclick="quickDue(0)">Today</button>'+
+          '<button onclick="quickDue(1)">Tomorrow</button>'+
+          '<button onclick="quickDue(7)">Next week</button>'+
+          '<button onclick="quickDue(null)">No date</button>'+
+        "</div></div>"+
+      '<div class="tfield"><label for="earea">Area</label><select id="earea">'+areaOpts+"</select></div>"+
+      '<div class="row"><button class="btn primary" onclick="saveTask()">Save</button>'+
+        '<button class="btn danger" onclick="removeTask()">Remove</button></div>'+
+      '<p class="muted" style="margin-top:10px">Removing archives the line to '+
+        "<code>notes/deleted-tasks.md</code> — nothing is ever deleted outright.</p>");
+  }
+  function quickDue(days){
+    const el=$("edue");
+    if(days===null){ el.value=""; return; }
+    el.value=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+days*864e5));
+  }
+  async function saveTask(){
+    if(!curTask) return;
+    const text=$("etext").value.trim(), due=$("edue").value||null, area=$("earea").value;
+    const id=curTask.id;
+    // One call: the id is a hash of the title, so a retitle invalidates it and
+    // any follow-up edit would match nothing.
+    const fields={};
+    if(text && text!==curTask.text) fields.text=text;
+    if(due!==(curTask.due||null)) fields.due=due;
+    if(area!==(curTask.area||"")) fields.tag=area;
+    closeModal();
+    if(!Object.keys(fields).length) return;
+    try{ await postOK("/api/edit",{id,fields}); toast("Task updated"); load(); }
+    catch(e){ toast("Couldn't save",true); load(); }
+  }
+  function removeTask(){
+    if(!curTask) return;
+    const id=curTask.id, text=curTask.text;
+    closeModal();
+    postOK("/api/delete",{id})
+      .then(()=>{ toast("Removed — archived"); load(); })
+      .catch(()=>{ toast("Failed",true); load(); });
+  }
+  // The API answers 200 {ok:false} when it accepted the request but matched
+  // nothing — a silent no-op the UI used to report as success.
+  function postOK(path, body){
+    return req(path,{method:"POST",body:JSON.stringify(body)})
+      .then((r)=>{ if(!r.ok) throw new Error(path); return r.json(); })
+      .then((j)=>{ if(j && j.ok===false) throw new Error(path+" no-op"); return j; });
+  }
+
   // --- priority + drag-reorder ---------------------------------------------
   function togglePriority(id){
     if(lastData){ const t=(lastData.tasks||[]).find((x)=>String(x.id)===String(id)); if(t){ t.priority=!t.priority; renderTasks(lastData.tasks); } }
