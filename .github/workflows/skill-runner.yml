@@ -52,6 +52,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
+          ICS_URL: ${{ secrets.ICS_URL }}
         run: |
           set -uo pipefail
           # Yield to the desktop watcher, if any: wait briefly then re-pull so

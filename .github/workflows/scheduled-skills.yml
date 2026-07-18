@@ -48,6 +48,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
+          ICS_URL: ${{ secrets.ICS_URL }}
         run: |
           set -uo pipefail
           case "${{ github.event.schedule }}" in
@@ -67,6 +68,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
+          ICS_URL: ${{ secrets.ICS_URL }}
         run: |
           set -uo pipefail
           shopt -s nullglob
