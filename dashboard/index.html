@@ -231,6 +231,17 @@
   .proj-sum{ font-size:12.5px; color:var(--muted); margin-top:6px; }
   .tcat.proj-cat{ --hue:var(--accent); }
 
+  /* List sheet — sized for one-handed use in a shop, not for a desk. */
+  .llist{ display:flex; flex-direction:column; gap:2px; }
+  .llist.done-part{ margin-top:12px; padding-top:10px; border-top:1px solid var(--line-row); opacity:.65; }
+  .litem{ display:flex; align-items:center; gap:12px; padding:12px 10px; border-radius:10px;
+    background:var(--bg1); border:1px solid var(--line-row); cursor:pointer; font-size:15.5px; }
+  .litem:hover{ border-color:var(--accent); }
+  .litem .lchk{ width:24px; height:24px; flex:none; border-radius:7px; border:1.5px solid var(--line-key);
+    background:var(--surface); display:grid; place-items:center; font-size:13px; color:transparent; }
+  .litem.on .lchk{ background:var(--green); border-color:var(--green); color:#14200f; }
+  .litem.on{ color:var(--muted); text-decoration:line-through; }
+
   /* Task detail sheet */
   .tfield{ margin-bottom:12px; }
   .tfield label{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
@@ -528,6 +539,12 @@
       <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next 2 weeks</span></div>
       <div id="agenda" class="skel"></div>
     </div>
+    <div class="card c-lists">
+      <div class="section-head"><p class="label">Lists</p><span class="count" id="listCount"></span></div>
+      <div id="lists" class="skel"></div>
+      <button class="link" onclick="newList()" style="margin-top:8px">＋ New list</button>
+    </div>
+
     <div class="card c-projects">
       <div class="section-head"><p class="label">Projects</p><span class="count" id="projCount"></span></div>
       <div id="projects" class="skel"></div>
@@ -1430,6 +1447,82 @@
       .catch(()=>{ toast("Failed",true); load(); });
   });
 
+  // Lists — shopping and the like. Kept out of tasks.md deliberately: a
+  // shopping list is consumed in one trip and then meaningless, and in the task
+  // list it becomes permanent noise that drags twenty items through every view.
+  function renderLists(lists){
+    lists=lists||[];
+    const el=$("lists");
+    el.classList.remove("skel");
+    const open=lists.reduce((n,l)=>n+l.open,0);
+    $("listCount").textContent = lists.length ? (open?open+" to get":"all done") : "";
+    if(!lists.length){ el.innerHTML='<div class="muted">No lists yet. A list is a note with '+
+      "<code>type: list</code> — make one below.</div>"; return; }
+    el.innerHTML = lists.map((l)=>
+      '<div class="proj tappable" data-list="'+esc(l.slug)+'" tabindex="0" role="button">'+
+      '<div class="proj-head"><span class="proj-name">'+esc(l.name)+"</span>"+
+      '<span class="proj-count">'+(l.open?l.open+" to get":(l.done?"all done":"empty"))+"</span></div>"+
+      (l.items.length?'<div class="proj-bar"><span style="width:'+
+        Math.round(100*l.done/l.items.length)+'%"></span></div>':"")+
+      "</div>").join("");
+  }
+  $("lists").addEventListener("click",(e)=>{
+    const row=e.target.closest("[data-list]"); if(row) openList(row.dataset.list);
+  });
+  $("lists").addEventListener("keydown",(e)=>{
+    if(e.key!=="Enter"&&e.key!==" ") return;
+    const row=e.target.closest("[data-list]"); if(row){ e.preventDefault(); openList(row.dataset.list); }
+  });
+
+  // The list sheet is the one screen meant to be used one-handed in a shop:
+  // big rows, tick as you go, and the ticked ones drop to the bottom.
+  let curList=null;
+  function openList(slug){
+    const l=(lastData&&lastData.lists||[]).find((x)=>x.slug===slug); if(!l) return;
+    curList=slug;
+    const open=l.items.filter((i)=>!i.done), done=l.items.filter((i)=>i.done);
+    const row=(i)=>'<div class="litem'+(i.done?" on":"")+'" data-item="'+esc(i.text)+'">'+
+      '<span class="lchk">✓</span><span>'+esc(i.text)+"</span></div>";
+    let html='<div class="llist">'+(open.length?open.map(row).join(""):'<div class="muted">Nothing left to get.</div>')+"</div>";
+    if(done.length) html+='<div class="llist done-part">'+done.map(row).join("")+"</div>";
+    html+='<div class="person-add" style="margin-top:14px">'+
+      '<textarea id="litems" rows="3" placeholder="Add items — one per line"></textarea>'+
+      '<div class="row"><button class="btn primary" onclick="addToList()">Add</button>'+
+      (done.length?'<button class="btn" onclick="clearList()">Clear '+done.length+" ticked</button>":"")+
+      "</div></div>";
+    openPanel(l.name, html);
+  }
+  $("modalBody").addEventListener("click",(e)=>{
+    const it=e.target.closest(".litem"); if(!it||!curList) return;
+    it.classList.toggle("on");                                   // optimistic
+    req("/api/list/toggle",{method:"POST",body:JSON.stringify({list:curList,item:it.dataset.item})})
+      .then((r)=>{ if(!r.ok) throw new Error(); return load(); })
+      .catch(()=>{ it.classList.toggle("on"); toast("Failed",true); });
+  });
+  function addToList(){
+    const el=$("litems"); const lines=el.value.split("\n").map((s)=>s.trim()).filter(Boolean);
+    if(!lines.length||!curList) return;
+    postOK("/api/list/add",{list:curList,lines})
+      .then((r)=>{ toast("Added "+r.added); return load(); })
+      .then(()=>openList(curList))
+      .catch(()=>toast("Couldn't add",true));
+  }
+  function clearList(){
+    if(!curList) return;
+    const slug=curList;
+    postOK("/api/list/clear",{list:slug})
+      .then((r)=>{ toast("Cleared "+r.cleared); return load(); })
+      .then(()=>openList(slug))
+      .catch(()=>toast("Couldn't clear",true));
+  }
+  function newList(){
+    const name=prompt("Name the list (e.g. Shopping)");
+    if(!name||!name.trim()) return;
+    postOK("/api/list/new",{name:name.trim()})
+      .then(()=>{ toast("List created"); return load(); })
+      .catch(()=>toast("Couldn't create — does a note with that name exist?",true));
+  }
+
   // Projects. The API has always returned these and the app rendered them
   // nowhere — three project notes sitting in the vault, invisible. A project is
   // only useful here if it says how much of it is left, so it counts the tasks
@@ -1553,7 +1646,7 @@
     renderSkills(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
     renderHabits(d.habits); renderAsk(d);
-    renderProjects(d.projects); fillProjectPicker(d.projects);
+    renderProjects(d.projects); fillProjectPicker(d.projects); renderLists(d.lists);
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};
     Object.keys(awaiting).forEach((name)=>{

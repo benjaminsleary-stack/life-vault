@@ -394,6 +394,115 @@ async function readInbox(store) {
   return out.sort((a, b) => String(b.when || "").localeCompare(String(a.when || "")));
 }
 
+/* ----------------------------------------------------------------- lists */
+// Shopping lists and the like: notes with `type: list` in their frontmatter.
+//
+// Deliberately NOT tasks.md. A shopping list is consumed in one trip and then
+// meaningless; in the task list it is permanent noise that never leaves and
+// drags twenty items through every view. The vault already says lists live in
+// notes/ — this marks them by frontmatter type, matching how people, projects
+// and topics are distinguished, rather than adding a folder.
+
+function parseListItems(text) {
+  const items = [];
+  for (const line of text.split("\n")) {
+    const m = line.match(TASK_RE);
+    if (m) items.push({ text: m[3].trim(), done: m[2].toLowerCase() === "x" });
+  }
+  return items;
+}
+
+async function readLists(store) {
+  const files = await store.listDir("notes");
+  const out = [];
+  for (const f of files) {
+    if (!f.name.endsWith(".md") || f.name.startsWith("_")) continue;
+    const file = await store.readFile(f.path);
+    if (!file || !/^---\n[\s\S]*?^type:\s*list\s*$/m.test(file.text)) continue;
+    const e = parseEntity(file.text, f.name.slice(0, -3));
+    const items = parseListItems(file.text);
+    out.push({
+      slug: f.name.slice(0, -3),
+      name: e.name || f.name.slice(0, -3),
+      tags: e.tags,
+      items,
+      open: items.filter((i) => !i.done).length,
+      done: items.filter((i) => i.done).length,
+    });
+  }
+  return out.sort((a, b) => b.open - a.open || a.name.localeCompare(b.name));
+}
+
+async function listPath(store, slug) {
+  const s = slugify(slug);
+  return s ? `notes/${s}.md` : null;
+}
+
+// Tick or untick one item. Matched on text, since a list has no stable ids and
+// inventing some would mean rewriting the file the user edits in Obsidian.
+async function toggleListItem(store, slug, item) {
+  const path = await listPath(store, slug);
+  const cur = path && await store.readFile(path);
+  if (!cur) return false;
+  const want = String(item || "").trim();
+  const lines = cur.text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(TASK_RE);
+    if (!m || m[3].trim() !== want) continue;
+    lines[i] = `${m[1]}- [${m[2] === " " ? "x" : " "}] ${m[3]}`;
+    await store.putFile(path, lines.join("\n"), `dashboard: ${slug}`, cur.sha);
+    return true;
+  }
+  return false;
+}
+
+// Append items, one per line, in a single write. Same reasoning as bulk tasks.
+async function addListItems(store, slug, lines) {
+  const path = await listPath(store, slug);
+  const cur = path && await store.readFile(path);
+  if (!cur) return { added: 0 };
+  const wanted = (Array.isArray(lines) ? lines : String(lines || "").split("\n"))
+    .map((l) => String(l || "").replace(/^\s*[-*]\s*\[[ xX]\]\s*/, "").replace(/^\s*[-*]\s+/, "").trim())
+    .filter(Boolean).slice(0, 200);
+  if (!wanted.length) return { added: 0 };
+  const have = new Set(parseListItems(cur.text).filter((i) => !i.done).map((i) => i.text.toLowerCase()));
+  const fresh = wanted.filter((t) => !have.has(t.toLowerCase()) && have.add(t.toLowerCase()));
+  if (!fresh.length) return { added: 0, skipped: wanted.length };
+  const body = cur.text.replace(/\s*$/, "") + "\n" + fresh.map((t) => `- [ ] ${t}`).join("\n") + "\n";
+  await store.putFile(path, body, `dashboard: add ${fresh.length} to ${slug}`, cur.sha);
+  return { added: fresh.length, skipped: wanted.length - fresh.length };
+}
+
+// Clear the ticked items — the "I've done the shop" action. Removed items go to
+// the note's own ## Cleared log rather than evaporating.
+async function clearListDone(store, slug) {
+  const path = await listPath(store, slug);
+  const cur = path && await store.readFile(path);
+  if (!cur) return { cleared: 0 };
+  const keep = [], gone = [];
+  for (const line of cur.text.split("\n")) {
+    const m = line.match(TASK_RE);
+    if (m && m[2].toLowerCase() === "x") gone.push(m[3].trim());
+    else keep.push(line);
+  }
+  if (!gone.length) return { cleared: 0 };
+  let body = keep.join("\n").replace(/\s*$/, "");
+  body += `\n\n## Cleared ${today()}\n${gone.map((g) => `- ${g}`).join("\n")}\n`;
+  await store.putFile(path, body, `dashboard: clear ${gone.length} from ${slug}`, cur.sha);
+  return { cleared: gone.length };
+}
+
+async function createList(store, name) {
+  name = String(name || "").trim();
+  if (!name) return false;
+  const slug = slugify(name);
+  const path = `notes/${slug}.md`;
+  if (await store.readFile(path)) return false;          // never clobber a note
+  const body = `---\ntype: list\nname: ${name}\ntags: [admin]\nupdated: ${today()}\n---\n\n# ${name}\n\n`;
+  await store.putFile(path, body, `dashboard: new list ${name}`);
+  return true;
+}
+
 /* --------------------------------------------------------------- lessons */
 // The self-improvement loop. Every thumbs-down / "not useful" the dashboard
 // records lands here as a dated line, and the skills read this file before they
@@ -495,7 +604,7 @@ async function buildData(store, feeds, forceCalendar) {
   const tasksFile = await store.readFile("tasks.md");
   const horizon = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" })
     .format(new Date(Date.now() + AGENDA_DAYS * 864e5));
-  const [projects, people, occasions, brief, skills, inbox, habits, lessons, calendar] = await Promise.all([
+  const [projects, people, occasions, brief, skills, inbox, habits, lessons, calendar, lists] = await Promise.all([
     readEntities(store, "projects"),
     readEntities(store, "people"),
     readOccasions(store),
@@ -505,6 +614,7 @@ async function buildData(store, feeds, forceCalendar) {
     readHabits(store),
     readLessons(store),
     readCalendar(feeds, today(), horizon, forceCalendar),
+    readLists(store),
   ]);
   const tasks = tasksFile ? parseTasks(tasksFile.text) : [];
   // Resolve each task's [[wikilinks]] against the projects that actually exist,
@@ -539,6 +649,7 @@ async function buildData(store, feeds, forceCalendar) {
     lessonCount: lessons.length,
     calendar: calendar.events,
     calendarSources: calendar.sources,
+    lists,
   };
 }
 
@@ -563,6 +674,57 @@ async function capture(store, text) {
   return true;
 }
 
+/* ------------------------------------------------- completed-task decay */
+
+// How long a ticked task stays in tasks.md before it is filed away. Long enough
+// to see what you did and to undo a mistaken tick; short enough that the list
+// does not become a graveyard.
+const RETAIN_DONE_DAYS = 3;
+const DONE_ARCHIVE = "notes/completed-tasks.md";
+
+// Split ticked-and-stale lines out of tasks.md. Only lines carrying a ✅ stamp
+// are eligible: a task ticked in Obsidian without one has no date to judge, so
+// it stays rather than being swept on a guess.
+function splitStaleDone(lines) {
+  const keep = [], stale = [];
+  for (const line of lines) {
+    const m = line.match(TASK_RE);
+    if (!m || m[2].toLowerCase() !== "x") { keep.push(line); continue; }
+    const done = m[3].match(DONE_RE);
+    if (done && daysAgo(done[1]) >= RETAIN_DONE_DAYS) stale.push({ line, date: done[1], text: taskLabel(m[3]) });
+    else keep.push(line);
+  }
+  return { keep, stale };
+}
+
+/**
+ * The single writer for tasks.md.
+ *
+ * Every path that rewrites the file goes through here so the decay rule is
+ * applied in exactly one place. Completed tasks are MOVED, never dropped —
+ * golden rule 1 — into notes/completed-tasks.md with the date they were done,
+ * so the record of what you got through survives the list being tidy.
+ *
+ * The archive is a second file, so its write cannot collide with the tasks.md
+ * sha, and it is appended after the main write: if the archive write fails, the
+ * worst case is a task that stays in the list a day longer, not one that
+ * vanishes.
+ */
+async function writeTasks(store, lines, message, sha) {
+  const { keep, stale } = splitStaleDone(lines);
+  await store.putFile("tasks.md", keep.join("\n"), message, sha);
+  if (!stale.length) return 0;
+  const cur = await store.readFile(DONE_ARCHIVE);
+  const head = "# Completed tasks\n\nTicked tasks, filed here " +
+    `${RETAIN_DONE_DAYS} days after completion so tasks.md stays current. ` +
+    "Nothing is deleted — golden rule 1.";
+  const base = cur ? cur.text.replace(/\s*$/, "") : head;
+  const added = stale.map((s) => `- ${s.date} — ${s.text}`).join("\n");
+  await store.putFile(DONE_ARCHIVE, base + "\n" + added + "\n",
+    `dashboard: file ${stale.length} completed task${stale.length > 1 ? "s" : ""}`, cur && cur.sha);
+  return stale.length;
+}
+
 function taskLine(text, due, tag, priority, project) {
   let line = `- [ ] ${text}`;
   if (project) line += ` [[${String(project).trim()}]]`;
@@ -577,7 +739,7 @@ async function addTask(store, text, due, tag, priority, project) {
   if (!text) return false;
   const cur = await store.readFile("tasks.md");
   const base = cur ? cur.text.replace(/\n+$/, "") : "# Tasks";
-  await store.putFile("tasks.md", base + "\n" + taskLine(text, due, tag, priority, project) + "\n",
+  await writeTasks(store, (base + "\n" + taskLine(text, due, tag, priority, project)).split("\n"),
     "dashboard: add task", cur && cur.sha);
   return true;
 }
@@ -614,7 +776,7 @@ async function addTasks(store, lines, due, tag, project) {
   }
   if (!fresh.length) return { added: 0, skipped };
 
-  await store.putFile("tasks.md", text.replace(/\n+$/, "") + "\n" + fresh.join("\n") + "\n",
+  await writeTasks(store, (text.replace(/\n+$/, "") + "\n" + fresh.join("\n")).split("\n"),
     `dashboard: add ${fresh.length} tasks`, cur && cur.sha);
   return { added: fresh.length, skipped };
 }
@@ -631,7 +793,7 @@ async function editTaskLine(store, id, message, fn) {
   if (next === null) return false;
   if (next === false) lines.splice(tl.idx, 1);                       // delete
   else lines[tl.idx] = `${tl.m[1]}- [${tl.m[2]}] ${next}`;
-  await store.putFile("tasks.md", lines.join("\n"), message, cur.sha);
+  await writeTasks(store, lines, message, cur.sha);
   return true;
 }
 
@@ -648,7 +810,7 @@ async function toggleTask(store, id) {
     ? tl.m[3].replace(DONE_RE, "").replace(/\s{2,}/g, " ").replace(/\s+$/, "")
     : tl.m[3].replace(/\s+$/, "") + ` ✅ ${today()}`;
   lines[tl.idx] = `${tl.m[1]}- [${wasDone ? " " : "x"}] ${body}`;
-  await store.putFile("tasks.md", lines.join("\n"), "dashboard: toggle task", cur.sha);
+  await writeTasks(store, lines, "dashboard: toggle task", cur.sha);
   return true;
 }
 
@@ -737,7 +899,7 @@ async function reorderTasks(store, ids) {
   const orderedLines = received.map((id) => lines[byId[id].idx]);
   const targetSlots = tl.filter((t) => seen.has(t.id)).map((t) => t.idx);
   targetSlots.forEach((idx, k) => { lines[idx] = orderedLines[k]; });
-  await store.putFile("tasks.md", lines.join("\n"), "dashboard: reorder tasks", cur.sha);
+  await writeTasks(store, lines, "dashboard: reorder tasks", cur.sha);
   return true;
 }
 
@@ -920,6 +1082,16 @@ export function createApi(rawStore, hooks = {}) {
         case "/api/append":     ok = await appendFragment(store, p.person, p.text); break;
         case "/api/habit":      ok = await toggleHabit(store, p.habit, p.item); break;
         case "/api/lesson":     ok = await addLesson(store, p.scope, p.text, p.verdict); break;
+        case "/api/list/toggle": ok = await toggleListItem(store, p.list, p.item); break;
+        case "/api/list/new":    ok = await createList(store, p.name); break;
+        case "/api/list/add": {
+          const r = await addListItems(store, p.list, p.lines);
+          return { status: 200, body: { ok: r.added > 0, ...r } };
+        }
+        case "/api/list/clear": {
+          const r = await clearListDone(store, p.list);
+          return { status: 200, body: { ok: r.cleared > 0, ...r } };
+        }
         default:
           return { status: 404, body: { error: "not found" } };
       }

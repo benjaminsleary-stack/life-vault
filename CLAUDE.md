@@ -124,6 +124,15 @@ Inline Obsidian-Tasks checkboxes, nowhere else:
 `📅 YYYY-MM-DD` = due date. `#tag` = domain/area. The Tasks plugin renders the
 global list; the morning brief pulls "due/overdue" per rule 3.
 
+A task joins a project by a `[[wikilink]]`, never by a new tag — the area list
+is closed. Ticked tasks stay for **3 days**, then move to
+`notes/completed-tasks.md` with their completion date (moved, never deleted).
+
+**Lists** (shopping and the like) are NOT tasks: they are notes carrying
+`type: list` in frontmatter, with `- [ ]` items. A shopping list in `tasks.md`
+is permanent noise that never leaves. Cleared items append to a dated
+`## Cleared` section in the note rather than disappearing.
+
 ## The `done:` capture convention
 
 A capture whose text starts with `done:` is an instruction, not a note — the
