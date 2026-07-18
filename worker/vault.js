@@ -392,14 +392,14 @@ async function readLessons(store) {
   const f = await store.readFile(LESSONS_PATH);
   if (!f) return [];
   const out = [];
-  for (const m of f.text.matchAll(/^- (\d{4}-\d{2}-\d{2}) — \[([^\]]+)\] (.+)$/gm)) {
-    out.push({ date: m[1], scope: m[2], text: m[3].trim() });
+  for (const m of f.text.matchAll(/^- (\d{4}-\d{2}-\d{2}) — \[([^\]]+)\] (more like|less like|note): (.+)$/gm)) {
+    out.push({ date: m[1], scope: m[2], verdict: m[3], text: m[4].trim() });
   }
   return out.reverse();
 }
 
 async function addLesson(store, scope, text, verdict) {
-  scope = String(scope || "general").trim().slice(0, 40);
+  scope = String(scope || "general").trim().slice(0, 80);
   text = String(text || "").trim();
   if (!text) return false;
   const cur = await store.readFile(LESSONS_PATH);

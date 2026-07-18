@@ -331,10 +331,22 @@
   .modal-body{ padding:14px 18px 16px; }
   .modal-reply{ border-top:1px solid var(--line); padding:12px 16px 16px; display:flex; flex-direction:column; gap:8px; }
   .modal-reply textarea{ min-height:52px; }
-  .save-advice{ margin-left:8px; background:var(--surface-2); border:1px solid var(--line-key); color:var(--accent-text);
-    border-radius:6px; font:inherit; font-size:12px; padding:2px 9px; cursor:pointer; vertical-align:1px; }
-  .save-advice:hover{ border-color:var(--accent); }
-  .save-advice:disabled{ opacity:.6; cursor:default; }
+  /* Per-line actions on a brief. Quiet until you look at the line, so the
+     brief still reads as prose rather than a control panel. */
+  .li-acts{ display:inline-flex; gap:2px; margin-left:7px; vertical-align:1px; opacity:0; transition:opacity .15s; }
+  li:hover .li-acts, li:focus-within .li-acts{ opacity:1; }
+  @media (hover:none){ .li-acts{ opacity:.75; } }
+  .li-acts button{ background:var(--surface-2); border:1px solid var(--line-key); color:var(--muted);
+    border-radius:6px; font:inherit; font-size:11.5px; line-height:1; padding:3px 6px; cursor:pointer; }
+  .li-acts button:hover{ border-color:var(--accent); color:var(--text); }
+  .li-acts button:disabled{ opacity:.6; cursor:default; }
+  .li-acts button.on{ border-color:var(--accent); background:rgba(217,138,99,.16); color:var(--accent-text); }
+
+  /* What the system has been taught */
+  .lesson{ display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--line-row); font-size:13.5px; }
+  .lesson:last-child{ border-bottom:0; }
+  .lesson .ldate{ flex:none; min-width:52px; color:var(--faint); font-size:12px; font-variant-numeric:tabular-nums; }
+  .lesson .lscope{ color:var(--faint); font-size:12px; }
 
   /* Unlock gate */
   .gate{ position:fixed; inset:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); display:grid; place-items:center; padding:20px; z-index:100; }
@@ -592,6 +604,16 @@
         '<p class="muted">Nothing has picked these up. Start the desktop watcher, or check the '+
         'skill-runner workflow on GitHub.</p>';
     }
+    // Feedback that vanishes is feedback nobody gives twice. Show it back.
+    const ls=(lastData&&lastData.lessons)||[];
+    html+="<h3>What it's learned <span style='color:var(--faint);font-weight:400'>"+
+      ((lastData&&lastData.lessonCount)||0)+"</span></h3>";
+    html+= ls.length ? ls.map((l)=>
+      '<div class="lesson"><span class="ldate">'+fmtDate(l.date).replace(/^\w+\s/,"")+"</span>"+
+      '<span>'+(l.verdict==="less like"?"👎 ":l.verdict==="more like"?"👍 ":"")+esc(l.text)+
+      '<div class="lscope">'+esc(l.scope)+"</div></span></div>").join("")
+      : '<p class="muted">Nothing yet. The 👍 / 👎 on each brief line writes a dated lesson to '+
+        '<code>_meta/lessons.md</code>, which the skills read before they generate.</p>';
     html+='<hr><p><button class="btn" onclick="signOut()">Disconnect this device</button></p>';
     openPanel("System", html);
   }
@@ -729,7 +751,8 @@
     $("modalBack").classList.add("show");
     req("/api/file?path="+encodeURIComponent(path))
       .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
-      .then((d)=>{ $("modalBody").innerHTML=mdToHtml(d.text); decorateAdvice(); })
+      .then((d)=>{ $("modalBody").innerHTML=mdToHtml(d.text);
+        decorateBrief($("modalBody"), path.split("/").pop().replace(/\.md$/,"")); })
       .catch(()=> $("modalBody").innerHTML='<div class="muted">Couldn\'t load this file.</div>');
   }
   function closeModal(){ $("modalBack").classList.remove("show"); }
@@ -749,26 +772,81 @@
       .catch(()=>toast("Failed",true));
     closeModal();
   }
-  // Add a "Save" to each item under an ## Advice heading → append to Charlotte.
-  function decorateAdvice(){
-    const body=$("modalBody");
-    const h=[...body.querySelectorAll("h3")].find((x)=>/advice/i.test(x.textContent));
-    const ul=h && h.nextElementSibling;
-    if(!ul || ul.tagName!=="UL") return;
-    [...ul.querySelectorAll("li")].forEach((li)=>{
-      const text=li.textContent.trim();
-      const btn=document.createElement("button");
-      btn.className="save-advice"; btn.textContent="＋ Save";
-      btn.onclick=()=>saveAdvice(text, btn);
-      li.appendChild(document.createTextNode(" ")); li.appendChild(btn);
+  // A brief is the app's main output, and it was pure read-only text: you could
+  // be told "reply to dad today" and had no way to turn that into anything.
+  // Every line now carries the three things you actually want to do with it —
+  // make it a task, save it to the person it's about, or tell the system it was
+  // useless so the next one is better.
+  //
+  // That last one is the whole self-improvement loop: a thumbs-down appends a
+  // dated line to _meta/lessons.md, which the skills read before they generate.
+  const PERSON_HEAD = /^(?:for|about)\s+(.+?)\s*$/i;
+  function decorateBrief(root, scope){
+    let section = "", person = "";
+    [...root.children].forEach((el) => {
+      if (el.tagName === "H3") {
+        section = el.textContent.trim();
+        const pm = section.match(PERSON_HEAD);
+        person = pm ? pm[1] : "";
+        return;
+      }
+      if (el.tagName !== "UL") return;
+      [...el.querySelectorAll("li")].forEach((li) => {
+        const text = li.textContent.trim();
+        // Skills emit "—" as a placeholder for an empty section. It is not a
+        // line you can do anything with.
+        if (!text || text === "—") { li.remove(); return; }
+        const bar = document.createElement("span");
+        bar.className = "li-acts";
+        bar.innerHTML =
+          '<button data-a="task" title="Make this a task">＋</button>' +
+          (person ? '<button data-a="save" title="Save to ' + esc(person) + '">👤</button>' : "") +
+          '<button data-a="up" title="More like this">👍</button>' +
+          '<button data-a="down" title="Less like this — teaches the brief">👎</button>';
+        bar.dataset.text = text;
+        bar.dataset.person = person;
+        bar.dataset.scope = scope + (section ? " · " + section : "");
+        li.appendChild(bar);
+      });
+      // A heading whose list is now empty is noise; drop the pair.
+      if (!el.querySelector("li")) {
+        const prev = el.previousElementSibling;
+        if (prev && prev.tagName === "H3") prev.remove();
+        el.remove();
+      }
     });
   }
-  function saveAdvice(text, btn){
-    btn.disabled=true; btn.textContent="Saving…";
-    req("/api/append",{method:"POST",body:JSON.stringify({person:"Charlotte",text})})
-      .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="Saved ✓"; toast("Saved to Charlotte"); })
-      .catch(()=>{ btn.disabled=false; btn.textContent="＋ Save"; toast("Failed",true); });
+  // One handler for both the inline brief card and the file sheet.
+  function briefActions(e){
+    const btn=e.target.closest(".li-acts button"); if(!btn) return;
+    const bar=btn.parentElement, text=bar.dataset.text, act=btn.dataset.a;
+    if(act==="task"){
+      btn.disabled=true;
+      req("/api/task",{method:"POST",body:JSON.stringify({text})})
+        .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="✓"; toast("Added to tasks"); load(); })
+        .catch(()=>{ btn.disabled=false; toast("Failed",true); });
+      return;
+    }
+    if(act==="save"){
+      btn.disabled=true;
+      req("/api/append",{method:"POST",body:JSON.stringify({person:bar.dataset.person,text})})
+        .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="✓"; toast("Saved to "+bar.dataset.person); })
+        .catch(()=>{ btn.disabled=false; toast("Failed",true); });
+      return;
+    }
+    teach(bar.dataset.scope, text, act, btn);
   }
+  // The Karpathy loop, made concrete: your verdict becomes a written lesson.
+  function teach(scope, text, verdict, btn){
+    [...btn.parentElement.querySelectorAll("button")].forEach((b)=>b.classList.remove("on"));
+    btn.classList.add("on");
+    req("/api/lesson",{method:"POST",body:JSON.stringify({scope,text,verdict})})
+      .then((r)=>{ if(!r.ok) throw new Error();
+        toast(verdict==="up"?"Noted — more like that":"Noted — less like that"); load(); })
+      .catch(()=>{ btn.classList.remove("on"); toast("Failed",true); });
+  }
+  $("brief").addEventListener("click", briefActions);
+  $("modalBody").addEventListener("click", briefActions);
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
   let showAll=false;
   function toggleShowAll(){ showAll=!showAll; if(lastData) renderTasks(lastData.tasks); }
@@ -826,7 +904,9 @@
   }
   function renderBrief(b){
     $("briefName").textContent = b ? b.name.replace(/\.md$/,"") : "—";
-    $("brief").innerHTML = b ? mdToHtml(b.text) : '<div class="muted">—</div>';
+    if(!b){ $("brief").innerHTML='<div class="muted">No brief yet — run Morning.</div>'; return; }
+    $("brief").innerHTML = mdToHtml(b.text);
+    decorateBrief($("brief"), b.name.replace(/\.md$/,""));
   }
   // People are the point of the vault, so this card is a way in, not a poster.
   // Each row opens the person; the meta line carries the one fact a glance can
