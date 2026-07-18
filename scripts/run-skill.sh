@@ -49,8 +49,28 @@ while IFS= read -r p; do
 done <<< "$outputs"
 arr+="]"
 
+# On failure, keep the last few lines of output IN the status file. Without
+# this a failed run records only that it failed, and the reason lives solely in
+# a GitHub Actions log you have to go and find — so the dashboard could say
+# "interest-scout failed" and nothing more. Silence must be loud (spec §5), and
+# a failure with no cause is most of the way back to silence.
+# Sanitise rather than escape. Getting backslashes and quotes safely through
+# sed/awk into a JSON string is fragile across platforms (GNU sed and the msys
+# sed disagree, and the escaping expression fails outright on Git Bash), and a
+# status file that is invalid JSON is worse than a terse one — the dashboard
+# silently skips any status it cannot parse. Strip the two characters that can
+# break the string; the message stays readable.
+err=""
+if [ "$ok" = false ]; then
+  err="$(printf '%s\n' "$out" | grep -vE '^[[:space:]]*$' | tail -n 3 \
+    | tr -d '\\"' | tr '\t\r' '  ' \
+    | awk '{printf "%s%s", sep, $0; sep=" | "}')"
+  err="${err:0:500}"
+fi
+
 mkdir -p inbox/_runs
-printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s}\n' "$skill" "$ok" "$when" "$arr" \
+printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s,"error":"%s"}\n' \
+  "$skill" "$ok" "$when" "$arr" "$err" \
   > "inbox/_runs/$skill.status"
 
 # Shout on failure (spec §5: silence must be loud), best-effort.

@@ -752,6 +752,19 @@ async function health(store) {
         : age === null ? "no timestamp" : age > everyDays ? `${age}d since last run` : "",
     });
   }
+  // Any skill whose LAST run failed, scheduled or not. Without this an
+  // on-demand skill could fail every time and health still read "all routines
+  // on schedule", because only the three cadenced ones were ever checked —
+  // which is what happened to file-inbox.
+  for (const [name, st] of Object.entries(skills)) {
+    if (EXPECTED[name] || !st.when || st.ok !== false) continue;
+    checks.push({ name, when: st.when, ok: false, why: "last run failed", error: st.error || "" });
+  }
+  for (const c of checks) {
+    const st = skills[c.name];
+    if (st && st.error && !c.error) c.error = st.error;
+  }
+
   // A trigger that has sat unclaimed for over 20 minutes means no runner is
   // listening — the single most useful thing this app can tell you.
   const stuck = [];
@@ -761,13 +774,20 @@ async function health(store) {
     if (mins > 20) stuck.push({ name, queued: st.queued, mins });
   }
   const failing = checks.filter((c) => !c.ok);
+  // "Overdue" and "errored" are different problems with different fixes, and
+  // calling both overdue sent exactly the wrong signal: interest-scout had run
+  // on schedule and crashed, and the app reported it as not having run.
+  const broke = failing.filter((c) => c.why === "last run failed");
+  const late = failing.filter((c) => c.why !== "last run failed");
+  const parts = [];
+  if (stuck.length) parts.push(`${stuck.length} run${stuck.length > 1 ? "s" : ""} queued with no runner`);
+  if (broke.length) parts.push(`${broke.map((f) => f.name).join(", ")} failed`);
+  if (late.length) parts.push(`${late.map((f) => f.name).join(", ")} overdue`);
   return {
     ok: !failing.length && !stuck.length,
     checks,
     stuck,
-    summary: stuck.length ? `${stuck.length} run${stuck.length > 1 ? "s" : ""} queued with no runner`
-      : failing.length ? `${failing.map((f) => f.name).join(", ")} overdue`
-      : "all routines on schedule",
+    summary: parts.length ? parts.join(" · ") : "all routines on schedule",
   };
 }
 

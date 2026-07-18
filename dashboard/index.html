@@ -376,6 +376,8 @@
   .s-out{ font-size:12px; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 10px; }
   .s-out a{ color:var(--accent-text); cursor:pointer; text-decoration:none; }
   .s-out a:hover{ text-decoration:underline; }
+  .s-err{ font-size:11.5px; color:#e29b96; margin-top:4px; line-height:1.35;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 
   /* File viewer modal (fades in; the sheet slides). */
   .modal-back{ position:fixed; inset:0; background:rgba(7,6,4,.6); backdrop-filter:blur(6px);
@@ -643,7 +645,6 @@
       if(manual) toast("Up to date");
     }catch(e){ setStatus(false); if(manual) toast("Couldn't reach the vault",true); }
     finally{ if(manual) setTimeout(()=>btn.classList.remove("spin"),400); }
-    loadHealth();
   }
 
   // --- is the agent loop alive? --------------------------------------------
@@ -670,7 +671,8 @@
     let html="<h3>Routines</h3>";
     html+=h.checks.map((c)=>
       '<div class="hrow"><span class="'+(c.ok?"tick":"cross")+'">'+(c.ok?"✓":"✗")+'</span>'+
-      '<span class="hname">'+esc(c.name)+'</span>'+
+      '<span class="hname">'+esc(c.name)+
+        (c.error?'<div class="s-err">'+esc(c.error)+"</div>":"")+'</span>'+
       '<span class="hwhy">'+esc(c.why || (c.when?fmtWhen(c.when):""))+'</span></div>').join("");
     if(h.stuck.length){
       html+="<h3>Waiting for a runner</h3>"+h.stuck.map((s)=>
@@ -843,6 +845,8 @@
       if(st){
         const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
         line=mark+" ran "+fmtWhen(st.when);
+        // A failure that won't say why sends you to the Actions log to find out.
+        if(st.ok===false && st.error) outs+='<div class="s-err" title="'+esc(st.error)+'">'+esc(st.error)+"</div>";
         // If a run produced more than one file, list the extras (Open covers the newest).
         if(hasOut && st.outputs.length>1){
           // data-path (not an inline onclick) so quotes/parens in a filename
@@ -1644,7 +1648,12 @@
   if(DEV || (API && TOKEN)){
     $("gate").classList.add("hidden"); $("app").classList.remove("hidden");
     renderOutbox(); flushOutbox();
-    load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); }
+    // Health is a 12ms call; /api/data can take five seconds on a cold calendar
+    // cache. Chaining health behind it left the chip reading "checking…" for the
+    // whole of a cold start — the one moment you most want to know the state.
+    load(); loadHealth();
+    setInterval(()=>{ load(); loadHealth(); }, 60000);
+    loadWeather(); setInterval(loadWeather, 1800000); }
   else { showGate(); }
 </script>
 </body>
