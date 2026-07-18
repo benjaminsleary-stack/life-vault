@@ -186,6 +186,10 @@
   .ent.tappable:hover, .ent.tappable:focus-visible{ background:var(--bg1); outline:none; }
   .ent.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
   .ent .chev{ margin-left:auto; color:var(--faint); font-size:17px; flex:none; }
+  .occ.tappable{ cursor:pointer; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
+  .occ.tappable:hover, .occ.tappable:focus-visible{ background:var(--bg1); outline:none; }
+  .occ.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
+  .task.flash{ background:rgba(217,138,99,.14); border-radius:8px; }
 
   /* Person sheet */
   .frag{ display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
@@ -462,7 +466,7 @@
         <div id="ppl" class="skel"></div>
       </div>
       <div class="card c-agenda">
-        <div class="section-head"><p class="label">Agenda</p><span class="count">next 7 days</span></div>
+        <div class="section-head"><p class="label">Agenda</p><span class="count">next month</span></div>
         <div id="agenda" class="skel"></div>
       </div>
     </div>
@@ -828,10 +832,12 @@
   // Each row opens the person; the meta line carries the one fact a glance can
   // act on — how long since anything was written down about them.
   function renderPeople(people){
-    const withOcc=(p)=>{
-      const o=(lastData&&lastData.occasions||[]).filter((x)=>x.who===p.slug)[0];
-      return o||null;
-    };
+    // An occasion only leads if it is near enough to act on. Milo's birthday in
+    // ten months is not more pressing than a friend nobody has noted in a month.
+    const SOON=45;
+    const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+SOON*864e5));
+    const withOcc=(p)=>
+      (lastData&&lastData.occasions||[]).find((x)=>x.who===p.slug && x.date<=horizon) || null;
     const sorted=[...people].sort((a,b)=>{
       const oa=withOcc(a), ob=withOcc(b);
       if(oa&&!ob) return -1; if(ob&&!oa) return 1;
@@ -897,20 +903,44 @@
       .then((r)=>{ if(!r.ok) throw new Error(); toast("Saved to "+curPerson.name); openPerson(curPerson.slug); load(); })
       .catch(()=>{ el.disabled=false; toast("Failed",true); });
   }
-  // Agenda = occasions + due tasks in the next 7 days, merged and dated.
+  // Agenda = occasions + due tasks, merged and dated. The window was 7 days,
+  // which showed "nothing" on a day with three anniversaries pending — a lead
+  // time of under a week is useless for anything you have to buy or book. It
+  // now looks a month out and says whose occasion it is, and every row goes
+  // somewhere: a task to its list, an occasion to that person.
+  const AGENDA_DAYS=31;
   function renderAgenda(d){
     const today=localToday();
-    const wk=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+7*864e5));
+    const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+AGENDA_DAYS*864e5));
     const items=[];
-    (d.occasions||[]).forEach((o)=>{ if(o.date>=today && o.date<=wk) items.push({date:o.date,text:o.text,kind:"occasion"}); });
-    (d.tasks||[]).forEach((t)=>{ if(!t.done && t.due && t.due>=today && t.due<=wk) items.push({date:t.due,text:t.text,kind:"task"}); });
+    (d.occasions||[]).forEach((o)=>{ if(o.date>=today && o.date<=horizon)
+      items.push({date:o.date,text:o.text,kind:"occasion",who:o.who}); });
+    (d.tasks||[]).forEach((t)=>{ if(!t.done && t.due && t.due>=today && t.due<=horizon)
+      items.push({date:t.due,text:t.text,kind:"task",id:t.id}); });
     items.sort((a,b)=>a.date.localeCompare(b.date));
     $("agenda").innerHTML = items.length ? items.map((it)=>{
       const days=Math.round((new Date(it.date)-new Date(today))/864e5);
       const inTxt = days<=0?"today":(days===1?"tomorrow":"in "+days+"d");
-      const mark = it.kind==="task" ? '<span style="color:var(--faint)">✓ </span>' : "";
-      return '<div class="occ"><span class="d">'+fmtDate(it.date).replace(/^\w+\s/,"")+'</span><span>'+mark+esc(it.text)+'</span><span class="in">'+inTxt+'</span></div>';
-    }).join("") : '<div class="muted">Nothing in the next 7 days.</div>';
+      const attr = it.kind==="task" ? 'data-task="'+esc(it.id)+'"' : 'data-person="'+esc(it.who||"")+'"';
+      const mark = it.kind==="task" ? '<span style="color:var(--faint)" title="Task">✓</span>'
+        : '<span style="color:var(--a-family)" title="Occasion">◆</span>';
+      return '<div class="occ tappable" '+attr+' tabindex="0" role="button">'+
+        '<span class="d">'+fmtDate(it.date).replace(/^\w+\s/,"")+'</span>'+mark+
+        '<span>'+esc(it.text)+'</span><span class="in">'+inTxt+'</span></div>';
+    }).join("") : '<div class="muted">Nothing due or coming up in the next month.</div>';
+  }
+  $("agenda").addEventListener("click",(e)=>{
+    const row=e.target.closest(".occ"); if(!row) return;
+    if(row.dataset.person) openPerson(row.dataset.person);
+    else if(row.dataset.task) focusTask(row.dataset.task);
+  });
+  // Jump to a task in the list and flash it, rather than dead-ending.
+  function focusTask(id){
+    if(!showAll){ showAll=true; if(lastData) renderTasks(lastData.tasks); }
+    const row=document.querySelector('.task[data-id="'+id+'"]');
+    if(!row) return;
+    row.scrollIntoView({block:"center",behavior:"smooth"});
+    row.classList.add("flash"); setTimeout(()=>row.classList.remove("flash"),1200);
   }
   // Habits: today's tick-offs with per-habit streaks (data from habits.md).
   function renderHabits(habits){
