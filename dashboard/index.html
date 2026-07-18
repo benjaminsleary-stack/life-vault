@@ -213,6 +213,23 @@
   .t-title.tap{ cursor:pointer; }
   .t-title.tap:hover{ color:var(--accent-text); }
 
+  /* Unfiled captures, shown back so a capture isn't a thing you have to trust. */
+  .cap-list{ margin-top:11px; border-top:1px solid var(--line-row); padding-top:9px; }
+  .cap{ display:flex; gap:9px; padding:5px 0; font-size:13px; }
+  .cap-when{ flex:none; color:var(--faint); font-size:12px; font-variant-numeric:tabular-nums; }
+  .cap-text{ color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cap-more{ color:var(--faint); font-size:12px; padding-top:4px; }
+
+  /* Ask: a question in flight, and the last answer kept reachable. */
+  .pending{ display:flex; align-items:center; gap:10px; margin-top:11px; background:var(--bg1);
+    border:1px solid var(--line-row); border-radius:10px; padding:9px 11px; }
+  .pending>div{ flex:1; min-width:0; }
+  .pq{ font-size:13.5px; }
+  .pmeta{ font-size:12px; color:var(--muted); margin-top:1px; }
+  .last-ans{ margin-top:10px; font-size:12.5px; color:var(--faint); }
+  .last-ans a{ color:var(--accent-text); cursor:pointer; }
+  .last-ans a:hover{ text-decoration:underline; }
+
   /* Person sheet */
   .frag{ display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
   .frag:last-child{ border-bottom:0; }
@@ -445,12 +462,14 @@
         <button class="btn mic hidden" id="micBtn" onclick="toggleMic()" title="Dictate">🎙 Rec</button>
         <button class="btn primary" onclick="doCapture()">Capture to inbox</button>
       </div>
+      <div id="inboxList"></div>
     </div>
 
     <div class="card c-ask">
-      <div class="section-head"><p class="label">Ask</p><span class="count">your vault</span></div>
+      <div class="section-head"><p class="label">Ask</p><span class="count" id="askState">your vault</span></div>
       <input type="text" id="askq" placeholder="e.g. what's open for the house?" onkeydown="if(event.key==='Enter')askVault()" />
       <div class="row"><button class="btn primary" onclick="askVault()">Ask</button></div>
+      <div id="askBody"></div>
     </div>
 
     <div class="card c-tasks" id="sec-today">
@@ -1159,11 +1178,19 @@
       .catch(()=>{ toast("Failed",true); load(); });
   });
 
-  // Inbox chip: unfiled captures + one-tap File.
-  function renderInbox(n){
-    const el=$("inboxChip");
-    if(n>0){ el.innerHTML = n+' waiting · <a class="link" style="padding:0" onclick="runFile()">File</a>'; }
-    else { el.textContent = "→ inbox/"; }
+  // A capture used to disappear the moment you saved it — the only trace was a
+  // count in the corner. You could not tell whether the thing you dictated
+  // actually landed, or what was still sitting unfiled. Now the card shows the
+  // captures themselves, with one tap to file them.
+  function renderInbox(items){
+    items=items||[];
+    const chip=$("inboxChip"), list=$("inboxList");
+    if(!items.length){ chip.textContent="→ inbox/"; list.innerHTML=""; return; }
+    chip.innerHTML = items.length+' unfiled · <a class="link" style="padding:0" onclick="runFile()">File now</a>';
+    list.innerHTML = '<div class="cap-list">'+items.slice(0,4).map((c)=>
+      '<div class="cap"><span class="cap-when">'+esc(fmtWhen(c.when))+'</span>'+
+      '<span class="cap-text">'+esc(c.text)+"</span></div>").join("")+
+      (items.length>4?'<div class="cap-more">+'+(items.length-4)+" more</div>":"")+"</div>";
   }
   function queueSkill(name, input, msg){
     awaiting[name]=(lastData&&lastData.skills&&lastData.skills[name])?lastData.skills[name].when:"queued"; saveAwaiting();
@@ -1172,24 +1199,62 @@
       .catch(()=>toast("Failed",true));
   }
   function runFile(){ queueSkill("file-inbox","","Filing…"); }
+
+  // Ask fired a question into the void: the box cleared, a toast flashed, and
+  // nothing else happened until an answer file appeared minutes later. If no
+  // runner was listening it never appeared and the app never said so.
+  let pendingAsk = null;
+  try { pendingAsk = JSON.parse(localStorage.getItem("lv_ask") || "null"); } catch {}
   function askVault(){
     const q=$("askq").value.trim(); if(!q) return;
-    $("askq").value=""; queueSkill("ask",q,"Asking…");   // its answer auto-opens when ready
+    $("askq").value="";
+    pendingAsk={ q, at:Date.now() };
+    localStorage.setItem("lv_ask", JSON.stringify(pendingAsk));
+    renderAsk(lastData);
+    queueSkill("ask",q,"Asking…");   // its answer auto-opens when ready
   }
+  function renderAsk(d){
+    const st=(d&&d.skills&&d.skills.ask)||null;
+    const body=$("askBody"), state=$("askState");
+    let html="";
+    if(pendingAsk){
+      const mins=Math.round((Date.now()-pendingAsk.at)/60000);
+      const stuck=lastHealth&&lastHealth.stuck.some((s)=>s.name==="ask");
+      state.textContent="waiting…";
+      html+='<div class="pending"><span class="running"></span>'+
+        '<div><div class="pq">'+esc(pendingAsk.q)+"</div>"+
+        '<div class="pmeta">'+(stuck?"no runner has picked this up — check System"
+          : mins<1?"just asked":"asked "+mins+"m ago")+"</div></div>"+
+        '<button class="link" onclick="cancelAsk()">Clear</button></div>';
+    } else {
+      state.textContent="your vault";
+    }
+    // The last answer stays reachable instead of being a modal you can only see once.
+    if(st && st.outputs && st.outputs.length){
+      html+='<div class="last-ans">Last answer · <a data-path="'+esc(st.outputs[0])+'">'+
+        esc(st.outputs[0].split("/").pop())+"</a> <span class='pmeta'>"+esc(fmtWhen(st.when))+"</span></div>";
+    }
+    body.innerHTML=html;
+  }
+  function cancelAsk(){ pendingAsk=null; localStorage.removeItem("lv_ask"); renderAsk(lastData); }
+  $("askBody").addEventListener("click",(e)=>{
+    const a=e.target.closest("[data-path]"); if(a) openFile(a.dataset.path);
+  });
   function render(d){
     lastData=d;
     $("gen").textContent = "updated "+new Date(d.generated).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
     $("skillsCount").textContent = Object.values(d.skills||{}).filter((s)=>s.queued).length
       ? "a run is queued" : "on-demand";
     renderSkills(d.skills); renderTasks(d.tasks);
-    renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox||0);
-    renderHabits(d.habits);
+    renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
+    renderHabits(d.habits); renderAsk(d);
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};
     Object.keys(awaiting).forEach((name)=>{
       const st=skills[name];
       if(st && st.when && st.when!==awaiting[name]){
         delete awaiting[name]; saveAwaiting();
+        if(name==="ask"){ pendingAsk=null; localStorage.removeItem("lv_ask"); renderAsk(d); }
         if(st.outputs && st.outputs.length){ toast(name+" done"); openFile(st.outputs[0]); }
         else toast(name+(st.ok===false?" failed":" ran"),st.ok===false);
       }

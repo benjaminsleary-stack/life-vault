@@ -372,13 +372,16 @@ async function readInbox(store) {
     if (!f.name.endsWith(".md") || f.name.startsWith("_")) continue;
     const file = await store.readFile(f.path);
     const text = file ? file.text.trim() : "";
+    // <ISO>-<rand>.md — match the stamp rather than slicing a fixed width, or
+    // the random suffix bleeds into the timestamp.
+    const m = f.name.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})(\d{2})(\d{2})/);
     out.push({
       path: f.path,
-      when: f.name.slice(0, 19).replace(/T(\d{2})(\d{2})(\d{2})/, "T$1:$2:$3"),
+      when: m ? `${m[1]}T${m[2]}:${m[3]}:${m[4]}` : null,
       text: text.length > 140 ? text.slice(0, 140) + "…" : text,
     });
   }
-  return out.sort((a, b) => b.when.localeCompare(a.when));
+  return out.sort((a, b) => String(b.when || "").localeCompare(String(a.when || "")));
 }
 
 /* --------------------------------------------------------------- lessons */
