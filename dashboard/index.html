@@ -50,6 +50,31 @@
   @keyframes breathe{ 0%,100%{opacity:.5; transform:scale(.85);} 50%{opacity:1; transform:scale(1);} }
   .sub{ color:var(--faint); font-size:13px; margin:6px 0 20px; font-variant-numeric:tabular-nums; }
 
+  /* System strip: is the agent loop actually alive, and when did we last hear
+     from it. Golden rule 5 — green ≠ done, so this states its evidence. */
+  .sysbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0 18px; }
+  .sys-chip{ display:inline-flex; align-items:center; gap:7px; background:var(--surface); cursor:pointer;
+    border:1px solid var(--line-key); border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px;
+    font-weight:600; color:var(--muted); }
+  .sys-chip:hover{ border-color:var(--accent); color:var(--text); }
+  .sys-chip .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:none; }
+  .sys-chip.warn{ color:#e0b969; border-color:color-mix(in srgb,var(--yellow) 45%,var(--line-key)); }
+  .sys-chip.warn .dot{ background:var(--yellow); }
+  .sys-chip.bad{ color:#e29b96; border-color:color-mix(in srgb,var(--red) 45%,var(--line-key)); }
+  .sys-chip.bad .dot{ background:var(--red); }
+  .sys-updated{ color:var(--faint); font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .sys-refresh{ background:none; border:none; color:var(--faint); font:inherit; font-size:14px; cursor:pointer;
+    padding:2px 6px; border-radius:6px; }
+  .sys-refresh:hover{ color:var(--accent-text); }
+  .sys-refresh.spin{ animation:spin .7s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* Health detail rows inside the system sheet. */
+  .hrow{ display:flex; align-items:baseline; gap:10px; padding:9px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
+  .hrow:last-child{ border-bottom:0; }
+  .hrow .hname{ flex:1; }
+  .hrow .hwhy{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+
   .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
     padding:15px 16px; margin-bottom:14px; }
   .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 12px; }
@@ -137,6 +162,15 @@
   .md strong{ color:var(--text); }
   .md hr{ border:none; border-top:1px solid var(--line); margin:12px 0; }
   .md p{ font-size:14px; margin:6px 0; }
+  .md em{ color:var(--text2); }
+  .md code{ font-size:12.5px; background:var(--bg1); border:1px solid var(--line-row); border-radius:5px; padding:1px 5px; }
+  .md a{ color:var(--accent-text); }
+  .md blockquote{ margin:8px 0; padding-left:11px; border-left:2px solid var(--line-key); color:var(--muted); font-size:14px; }
+  .md li.md-task{ list-style:none; margin-left:-18px; display:flex; gap:8px; align-items:flex-start; }
+  .md .md-box{ flex:none; width:15px; height:15px; margin-top:3px; border-radius:4px; border:1.5px solid var(--line-key);
+    background:var(--bg1); display:grid; place-items:center; font-size:10px; color:transparent; }
+  .md li.md-task.done .md-box{ background:var(--green); border-color:var(--green); color:#14200f; }
+  .md li.md-task.done{ color:var(--muted); }
 
   .ent{ display:flex; gap:11px; padding:9px 0; border-bottom:1px solid var(--line-row); }
   .ent:last-child{ border-bottom:0; }
@@ -148,6 +182,75 @@
   .occ:last-child{ border-bottom:0; }
   .occ .d{ color:var(--accent-text); font-variant-numeric:tabular-nums; font-size:12.5px; min-width:52px; }
   .occ .in{ color:var(--faint); font-size:12px; margin-left:auto; }
+  .ent.tappable{ cursor:pointer; align-items:center; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
+  .ent.tappable:hover, .ent.tappable:focus-visible{ background:var(--bg1); outline:none; }
+  .ent.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
+  .ent .chev{ margin-left:auto; color:var(--faint); font-size:17px; flex:none; }
+  .occ.tappable{ cursor:pointer; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
+  .occ.tappable:hover, .occ.tappable:focus-visible{ background:var(--bg1); outline:none; }
+  .occ.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
+  .task.flash{ background:rgba(217,138,99,.14); border-radius:8px; }
+
+  /* Agenda, grouped by day — with a work calendar in it a flat dated list
+     stops working, because there are five things on a Monday. */
+  .aday{ margin-bottom:11px; }
+  .aday:last-child{ margin-bottom:0; }
+  .aday-h{ font-size:11px; text-transform:uppercase; letter-spacing:.14em; font-weight:700;
+    color:var(--faint); margin:0 0 3px; }
+  .aday-h.now{ color:var(--accent-text); }
+  .occ.ev .d{ color:var(--text2); }
+  .src{ width:6px; height:6px; border-radius:2px; flex:none; background:var(--muted); }
+  .src.work{ background:var(--a-work); }
+  .src.personal{ background:var(--a-family); }
+  .cal-warn{ font-size:12px; color:#e0b969; margin-top:8px; }
+  .cal-sync{ font-size:11.5px; color:var(--faint); margin-top:9px; padding-top:8px;
+    border-top:1px solid var(--line-row); }
+  .cal-sync .link{ font-size:11.5px; }
+
+  /* Add-a-task, inline at the head of the list it writes to. It used to be a
+     separate card, which spent a whole grid slot on a form. */
+  .addrow{ display:flex; gap:8px; margin-bottom:8px; }
+  .addrow input{ flex:1; min-width:0; }
+  .addbtn{ flex:0 0 auto; min-width:0; padding:11px 16px; }
+  .addmeta{ display:none; gap:8px; margin-bottom:10px; }
+  .addmeta.show{ display:flex; }
+  .addmeta>*{ flex:1; min-width:0; }
+
+  /* Task detail sheet */
+  .tfield{ margin-bottom:12px; }
+  .tfield label{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin-bottom:5px; font-weight:600; }
+  .quick{ display:flex; gap:6px; flex-wrap:wrap; margin-top:7px; }
+  .quick button{ background:var(--surface-2); border:1px solid var(--line-key); color:var(--muted);
+    border-radius:999px; font:inherit; font-size:12.5px; padding:5px 11px; cursor:pointer; }
+  .quick button:hover{ border-color:var(--accent); color:var(--text); }
+  .danger{ background:none; border:1px solid color-mix(in srgb,var(--red) 45%,var(--line-key)); color:#e29b96; }
+  .danger:hover{ border-color:var(--red); }
+  .t-title.tap{ cursor:pointer; }
+  .t-title.tap:hover{ color:var(--accent-text); }
+
+  /* Unfiled captures, shown back so a capture isn't a thing you have to trust. */
+  .cap-list{ margin-top:11px; border-top:1px solid var(--line-row); padding-top:9px; }
+  .cap{ display:flex; gap:9px; padding:5px 0; font-size:13px; }
+  .cap-when{ flex:none; color:var(--faint); font-size:12px; font-variant-numeric:tabular-nums; }
+  .cap-text{ color:var(--text2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cap-more{ color:var(--faint); font-size:12px; padding-top:4px; }
+
+  /* Ask: a question in flight, and the last answer kept reachable. */
+  .pending{ display:flex; align-items:center; gap:10px; margin-top:11px; background:var(--bg1);
+    border:1px solid var(--line-row); border-radius:10px; padding:9px 11px; }
+  .pending>div{ flex:1; min-width:0; }
+  .pq{ font-size:13.5px; }
+  .pmeta{ font-size:12px; color:var(--muted); margin-top:1px; }
+  .last-ans{ margin-top:10px; font-size:12.5px; color:var(--faint); }
+  .last-ans a{ color:var(--accent-text); cursor:pointer; }
+  .last-ans a:hover{ text-decoration:underline; }
+
+  /* Person sheet */
+  .frag{ display:flex; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
+  .frag:last-child{ border-bottom:0; }
+  .frag .fdate{ flex:none; min-width:52px; color:var(--accent-text); font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .person-add{ display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
 
   /* Habits */
   .habit{ background:var(--bg1); border:1px solid var(--line-row); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
@@ -157,6 +260,10 @@
   .habit-name{ flex:1; font-weight:600; font-size:14.5px; }
   .habit-count{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .habit-streak{ font-size:12px; color:var(--honey); font-variant-numeric:tabular-nums; }
+  .hdots{ display:flex; gap:3px; margin-top:7px; }
+  .hdot{ width:100%; height:4px; border-radius:2px; background:var(--line-row); }
+  .hdot.on{ background:var(--green); }
+  .hdot.today{ box-shadow:0 0 0 1px var(--line-key); }
   .habit-items{ margin-top:7px; display:flex; flex-direction:column; gap:4px; }
   .habit-item{ display:flex; align-items:center; gap:9px; font-size:14px; cursor:pointer; color:var(--text2); }
   .habit-item .hchk{ width:18px; height:18px; flex:none; border-radius:5px; border:1.5px solid var(--line-key);
@@ -181,7 +288,9 @@
   .wx-tip{ position:absolute; top:-4px; background:var(--surface-2); border:1px solid var(--line-key);
     color:var(--text); font-size:11px; padding:3px 8px; border-radius:6px; pointer-events:none; opacity:0;
     transition:opacity .12s; white-space:nowrap; font-variant-numeric:tabular-nums; z-index:2; }
-  .wx-aq{ margin-top:8px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .wx-outlook{ margin-top:10px; font-size:13px; color:var(--text2); }
+  .wx-outlook b{ color:var(--text); font-weight:600; }
+  .wx-aq{ margin-top:6px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .wx-axis{ fill:var(--faint); font-size:8px; font-family:var(--ui); }
 
   /* Desktop: deliberate bento arrangement — tasks is the tall hero on the
@@ -194,16 +303,16 @@
       grid-template-columns:1.15fr 1fr 1fr;
       grid-template-areas:
         "tasks  capture weather"
-        "tasks  ask     weather"
+        "tasks  ask     brief"
         "tasks  skills  brief"
-        "add    skills  brief"
+        "habits skills  brief"
         "habits people  agenda";
     }
     .cards .card{ margin-bottom:0; }
     .c-tasks{ grid-area:tasks; } .c-capture{ grid-area:capture; }
     .c-weather{ grid-area:weather; } .c-ask{ grid-area:ask; }
     .c-skills{ grid-area:skills; } .c-brief{ grid-area:brief; }
-    .c-add{ grid-area:add; } .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
+    .c-people{ grid-area:people; } .c-agenda{ grid-area:agenda; }
     .c-habits{ grid-area:habits; }
     .cards > .grid2{ display:contents; }
   }
@@ -228,7 +337,14 @@
     transition:.2s; pointer-events:none; z-index:50; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .toast.err{ background:var(--red); color:#2a0f0d; }
-  .foot{ color:var(--faint); font-size:12px; text-align:center; margin-top:6px; }
+  .toast{ display:flex; align-items:center; gap:12px; pointer-events:auto; }
+  .toast:not(.show){ pointer-events:none; }
+  .toast-act{ background:rgba(0,0,0,.18); border:none; color:inherit; font:inherit; font-weight:700;
+    font-size:13px; border-radius:14px; padding:4px 12px; cursor:pointer; }
+  .toast-act:hover{ background:rgba(0,0,0,.3); }
+  .outbox{ background:rgba(217,164,65,.14); border:1px solid color-mix(in srgb,var(--yellow) 45%,var(--line-key));
+    color:#e0b969; border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .outbox:hover{ border-color:var(--yellow); }
 
   /* Skeleton shimmer while a JS-filled container is still empty. */
   .skel:empty{ display:block; min-height:56px; border-radius:8px;
@@ -283,10 +399,22 @@
   .modal-body{ padding:14px 18px 16px; }
   .modal-reply{ border-top:1px solid var(--line); padding:12px 16px 16px; display:flex; flex-direction:column; gap:8px; }
   .modal-reply textarea{ min-height:52px; }
-  .save-advice{ margin-left:8px; background:var(--surface-2); border:1px solid var(--line-key); color:var(--accent-text);
-    border-radius:6px; font:inherit; font-size:12px; padding:2px 9px; cursor:pointer; vertical-align:1px; }
-  .save-advice:hover{ border-color:var(--accent); }
-  .save-advice:disabled{ opacity:.6; cursor:default; }
+  /* Per-line actions on a brief. Quiet until you look at the line, so the
+     brief still reads as prose rather than a control panel. */
+  .li-acts{ display:inline-flex; gap:2px; margin-left:7px; vertical-align:1px; opacity:0; transition:opacity .15s; }
+  li:hover .li-acts, li:focus-within .li-acts{ opacity:1; }
+  @media (hover:none){ .li-acts{ opacity:.75; } }
+  .li-acts button{ background:var(--surface-2); border:1px solid var(--line-key); color:var(--muted);
+    border-radius:6px; font:inherit; font-size:11.5px; line-height:1; padding:3px 6px; cursor:pointer; }
+  .li-acts button:hover{ border-color:var(--accent); color:var(--text); }
+  .li-acts button:disabled{ opacity:.6; cursor:default; }
+  .li-acts button.on{ border-color:var(--accent); background:rgba(217,138,99,.16); color:var(--accent-text); }
+
+  /* What the system has been taught */
+  .lesson{ display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--line-row); font-size:13.5px; }
+  .lesson:last-child{ border-bottom:0; }
+  .lesson .ldate{ flex:none; min-width:52px; color:var(--faint); font-size:12px; font-variant-numeric:tabular-nums; }
+  .lesson .lscope{ color:var(--faint); font-size:12px; }
 
   /* Unlock gate */
   .gate{ position:fixed; inset:0; background:linear-gradient(180deg,var(--bg1),var(--bg2)); display:grid; place-items:center; padding:20px; z-index:100; }
@@ -338,14 +466,22 @@
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
         <button class="alerts-btn hidden" id="alertsBtn" onclick="enableAlerts()" title="Get a push when a brief or answer is ready">🔔 Alerts</button>
-        <span class="status-pill" id="statusPill" onclick="signOut()" title="Tap to disconnect"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
+        <span class="status-pill" id="statusPill" onclick="openHealth()" title="Connection and routine health"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
       </div>
     </div>
-    <div class="sub" id="gen">reads and writes the vault markdown directly</div>
+    <div class="sysbar">
+      <button class="sys-chip" id="sysHealth" onclick="openHealth()" title="Are the routines actually running?">
+        <span class="dot"></span><span id="sysHealthText">checking…</span>
+      </button>
+      <span class="sys-updated" id="gen">—</span>
+      <button class="sys-refresh" id="refreshBtn" onclick="load(true)" title="Refresh now" aria-label="Refresh">↻</button>
+      <button class="outbox hidden" id="outbox" onclick="flushOutbox()"></button>
+    </div>
 
     <nav class="jump">
-      <a href="#sec-today">Today</a>
-      <a href="#sec-skills">Skills</a>
+      <a href="#sec-today">Tasks</a>
+      <a href="#sec-brief">Brief</a>
+      <a href="#sec-skills">Routines</a>
       <a href="#sec-people">People</a>
     </nav>
 
@@ -357,41 +493,41 @@
         <button class="btn mic hidden" id="micBtn" onclick="toggleMic()" title="Dictate">🎙 Rec</button>
         <button class="btn primary" onclick="doCapture()">Capture to inbox</button>
       </div>
+      <div id="inboxList"></div>
     </div>
 
     <div class="card c-ask">
-      <div class="section-head"><p class="label">Ask</p><span class="count">your vault</span></div>
+      <div class="section-head"><p class="label">Ask</p><span class="count" id="askState">your vault</span></div>
       <input type="text" id="askq" placeholder="e.g. what's open for the house?" onkeydown="if(event.key==='Enter')askVault()" />
       <div class="row"><button class="btn primary" onclick="askVault()">Ask</button></div>
+      <div id="askBody"></div>
     </div>
 
     <div class="card c-tasks" id="sec-today">
       <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount"></span></div>
+      <div class="addrow">
+        <input type="text" id="ttext" placeholder="Add a task…" onkeydown="if(event.key==='Enter')doAddTask()" />
+        <button class="btn primary addbtn" onclick="doAddTask()" aria-label="Add task">＋</button>
+      </div>
+      <div class="addmeta" id="addMeta">
+        <input type="date" id="tdue" aria-label="Due date" />
+        <select id="ttag" aria-label="Area">
+          <option value="">#area…</option>
+          <option>family</option><option>house</option><option>work</option>
+          <option>health</option><option>interests</option><option>admin</option>
+        </select>
+      </div>
       <div id="tasksTop" class="skel"></div>
       <div id="tasksAll" class="hidden"></div>
       <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
     </div>
 
     <div class="card c-skills" id="sec-skills">
-      <div class="section-head"><p class="label">Skills</p><span class="count">queued to inbox/_runs · run by the bridge</span></div>
+      <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span></div>
       <div id="skills" class="skel"></div>
     </div>
 
-    <div class="card c-add">
-      <div class="section-head"><p class="label">Add task</p><span class="count">→ tasks.md</span></div>
-      <input type="text" id="ttext" placeholder="What needs doing" />
-      <div class="row">
-        <input type="date" id="tdue" />
-        <select id="ttag">
-          <option value="">#area…</option>
-          <option>family</option><option>house</option><option>work</option>
-          <option>health</option><option>interests</option><option>admin</option>
-        </select>
-      </div>
-      <div class="row"><button class="btn primary" onclick="doAddTask()">Add to task list</button></div>
-    </div>
-
-    <div class="card c-brief">
+    <div class="card c-brief" id="sec-brief">
       <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span></div>
       <div class="md" id="brief"><div class="muted">—</div></div>
     </div>
@@ -412,13 +548,12 @@
         <div id="ppl" class="skel"></div>
       </div>
       <div class="card c-agenda">
-        <div class="section-head"><p class="label">Agenda</p><span class="count">next 7 days</span></div>
+        <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next month</span></div>
         <div id="agenda" class="skel"></div>
       </div>
     </div>
     </div><!-- /.cards -->
 
-    <div class="foot">Cloud dashboard · reads/writes the vault via GitHub · one source of truth</div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -431,7 +566,7 @@
         <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
       </div>
       <div class="modal-body md" id="modalBody"></div>
-      <div class="modal-reply">
+      <div class="modal-reply" id="modalReply">
         <textarea id="replyText" placeholder="Reply — captured to your inbox and actioned now…"></textarea>
         <button class="btn primary" onclick="sendReply()">Send &amp; action</button>
       </div>
@@ -451,9 +586,12 @@
     { name:"interest-scout",    label:"Discover", desc:"Weekly discover feed for your interests" },
     { name:"ask",               label:"Ask",      desc:"Answers from the vault (use the Ask box)", noRun:true },
   ];
+  // Served from localhost = the dev server (dev/server.mjs), which mounts the
+  // same API on the same origin and needs no unlock token.
+  const DEV = ["localhost", "127.0.0.1"].includes(location.hostname);
   // The Worker URL is fixed, so default it — you only ever enter the token.
   const DEFAULT_API = "https://life-vault.benvault.workers.dev";
-  let API = localStorage.getItem("lv_api") || DEFAULT_API;
+  let API = DEV ? "" : (localStorage.getItem("lv_api") || DEFAULT_API);
   let TOKEN = localStorage.getItem("lv_token") || "";
   let lastData = null;
   // skill -> the .when seen when queued, to detect a fresh completion and
@@ -468,7 +606,25 @@
   // Vault dates are Europe/London days — toISOString() is UTC and rolls a day
   // early between 23:00 and midnight in summer.
   function localToday(){ return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date()); }
-  function toast(m, err){ const t=$("toast"); t.textContent=m; t.classList.toggle("err",!!err); t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600); }
+  let toastTimer=null;
+  function toast(m, err){ showToast(m, err, null, null); }
+  // A toast that can carry one action. Used for undo, because "Removed" with no
+  // way back is a worse answer than a confirm dialog nobody reads.
+  function showToast(m, err, label, fn){
+    const t=$("toast");
+    t.innerHTML='<span></span>';
+    t.firstChild.textContent=m;
+    t.classList.toggle("err",!!err);
+    if(label && fn){
+      const b=document.createElement("button");
+      b.className="toast-act"; b.textContent=label;
+      b.onclick=()=>{ t.classList.remove("show"); fn(); };
+      t.appendChild(b);
+    }
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.remove("show"), label?6000:1600);
+  }
 
   // --- gate -----------------------------------------------------------------
   function showGate(msg){
@@ -488,21 +644,110 @@
   function req(path, opts={}){
     return fetch(API+path, { ...opts, headers:{ "Authorization":"Bearer "+TOKEN, "Content-Type":"application/json", ...(opts.headers||{}) } });
   }
-  async function load(){
+  async function load(manual){
+    const btn=$("refreshBtn");
+    if(manual) btn.classList.add("spin");
     try{
       const r = await req("/api/data?t="+Date.now());   // cache-bust
       if(r.status===401){ showGate("Token rejected. Check the unlock token."); return; }
       if(!r.ok) throw new Error("HTTP "+r.status);
       render(await r.json());
       setStatus(true);
-    }catch(e){ setStatus(false); toast("Load failed — check the Worker URL",true); }
+      if(manual) toast("Up to date");
+    }catch(e){ setStatus(false); if(manual) toast("Couldn't reach the vault",true); }
+    finally{ if(manual) setTimeout(()=>btn.classList.remove("spin"),400); }
+    loadHealth();
+  }
+
+  // --- is the agent loop alive? --------------------------------------------
+  // The most useful thing this app can tell you is that it has stopped working.
+  // A brief that silently hasn't run for three days looks identical to one that
+  // ran fine, unless something checks. This is that check (golden rule 5).
+  let lastHealth=null;
+  async function loadHealth(){
+    try{
+      const r=await req("/api/health"); if(!r.ok) throw new Error();
+      renderHealth(lastHealth=await r.json());
+    }catch(e){
+      $("sysHealthText").textContent="health unknown";
+      $("sysHealth").className="sys-chip warn";
+    }
+  }
+  function renderHealth(h){
+    $("sysHealthText").textContent=h.summary;
+    $("sysHealth").className="sys-chip"+(h.stuck.length?" bad":(h.ok?"":" warn"));
+  }
+  function openHealth(){
+    const h=lastHealth;
+    if(!h){ openPanel("System", '<div class="muted">Health unavailable.</div>'); return; }
+    let html="<h3>Routines</h3>";
+    html+=h.checks.map((c)=>
+      '<div class="hrow"><span class="'+(c.ok?"tick":"cross")+'">'+(c.ok?"✓":"✗")+'</span>'+
+      '<span class="hname">'+esc(c.name)+'</span>'+
+      '<span class="hwhy">'+esc(c.why || (c.when?fmtWhen(c.when):""))+'</span></div>').join("");
+    if(h.stuck.length){
+      html+="<h3>Waiting for a runner</h3>"+h.stuck.map((s)=>
+        '<div class="hrow"><span class="cross">✗</span><span class="hname">'+esc(s.name)+
+        '</span><span class="hwhy">queued '+s.mins+'m ago</span></div>').join("")+
+        '<p class="muted">Nothing has picked these up. Start the desktop watcher, or check the '+
+        'skill-runner workflow on GitHub.</p>';
+    }
+    // Feedback that vanishes is feedback nobody gives twice. Show it back.
+    const ls=(lastData&&lastData.lessons)||[];
+    html+="<h3>What it's learned <span style='color:var(--faint);font-weight:400'>"+
+      ((lastData&&lastData.lessonCount)||0)+"</span></h3>";
+    html+= ls.length ? ls.map((l)=>
+      '<div class="lesson"><span class="ldate">'+fmtDate(l.date).replace(/^\w+\s/,"")+"</span>"+
+      '<span>'+(l.verdict==="less like"?"👎 ":l.verdict==="more like"?"👍 ":"")+esc(l.text)+
+      '<div class="lscope">'+esc(l.scope)+"</div></span></div>").join("")
+      : '<p class="muted">Nothing yet. The 👍 / 👎 on each brief line writes a dated lesson to '+
+        '<code>_meta/lessons.md</code>, which the skills read before they generate.</p>';
+    html+='<hr><p><button class="btn" onclick="signOut()">Disconnect this device</button></p>';
+    openPanel("System", html);
   }
   function post(path, body, msg){
     return req(path,{ method:"POST", body:JSON.stringify(body) })
       .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
       .then(()=>{ toast(msg); load(); })
-      .catch(()=>toast("Failed",true));
+      .catch(()=>{ queueWrite(path, body); });
   }
+
+  // --- outbox ---------------------------------------------------------------
+  // This runs on a phone, and a phone loses signal mid-thought. A capture that
+  // fails to send is exactly the thing the vault's first golden rule says must
+  // never be lost, so writes that can't reach the Worker are held on-device and
+  // replayed. Only the writes where replay is safe: appends and queued runs.
+  // Toggles and edits are deliberately excluded — replaying a stale toggle
+  // against a file someone else has since changed flips the wrong thing.
+  const REPLAYABLE = ["/api/capture","/api/task","/api/append","/api/run","/api/lesson"];
+  let outbox = [];
+  try { outbox = JSON.parse(localStorage.getItem("lv_outbox") || "[]"); } catch {}
+  function saveOutbox(){ localStorage.setItem("lv_outbox", JSON.stringify(outbox)); renderOutbox(); }
+  function queueWrite(path, body){
+    if(!REPLAYABLE.includes(path)){ toast("Failed — not saved", true); return; }
+    outbox.push({ path, body, at:Date.now() });
+    saveOutbox();
+    toast("Saved on this device — will send when back online");
+  }
+  function renderOutbox(){
+    const el=$("outbox");
+    if(!outbox.length){ el.classList.add("hidden"); return; }
+    el.classList.remove("hidden");
+    el.textContent = outbox.length+" unsent "+(outbox.length===1?"change":"changes")+" — tap to retry";
+  }
+  async function flushOutbox(){
+    if(!outbox.length || !navigator.onLine) return;
+    const pending=[...outbox];
+    for(const item of pending){
+      try{
+        const r=await req(item.path,{method:"POST",body:JSON.stringify(item.body)});
+        if(!r.ok) return;                       // still down; keep the rest queued
+        outbox=outbox.filter((x)=>x!==item); saveOutbox();
+      }catch(e){ return; }
+    }
+    if(!outbox.length){ toast("Sent everything that was waiting"); load(); }
+  }
+  window.addEventListener("online", flushOutbox);
   function setStatus(ok){
     $("statusPill").classList.toggle("off",!ok);
     $("statusText").textContent = ok ? "live on the vault" : "disconnected";
@@ -510,6 +755,10 @@
 
   // --- actions --------------------------------------------------------------
   function doCapture(){ const e=$("cap"); if(!e.value.trim())return; post("/api/capture",{text:e.value},"Captured to inbox").then(()=>e.value=""); }
+  // The due/area row only appears once you're actually adding something, so the
+  // card isn't two-thirds empty form the rest of the time.
+  $("ttext").addEventListener("focus",()=>$("addMeta").classList.add("show"));
+  $("ttext").addEventListener("input",()=>$("addMeta").classList.toggle("show", true));
   function doAddTask(){
     const t=$("ttext"); if(!t.value.trim())return;
     const text=t.value.trim(), due=$("tdue").value, tag=$("ttag").value;
@@ -520,7 +769,7 @@
         due:due||null, tags:tag?[tag]:[], overdue: !!(due && due<=todayStr) });
       render(lastData);
     }
-    t.value=""; $("tdue").value=""; $("ttag").value="";
+    t.value=""; $("tdue").value=""; $("ttag").value=""; $("addMeta").classList.remove("show");
     req("/api/task",{method:"POST",body:JSON.stringify({text,due,tag})})
       .then((r)=>{ if(!r.ok) throw new Error(); toast("Task added"); })
       .catch(()=>{ toast("Failed",true); load(); });
@@ -571,15 +820,26 @@
   function taskRow(t, draggable){
     return '<div class="task'+(t.done?" done":"")+(t.priority?" pri":"")+'" data-id="'+t.id+'">'+
       (draggable?'<span class="drag" onpointerdown="dragStart(event)" title="Drag to reorder">⠿</span>':'')+
-      '<div class="check'+(t.done?" on":"")+'" onclick="toggle(\''+t.id+'\')">'+(t.done?"✓":"")+"</div>"+
-      '<div class="t-body"><span class="t-title">'+esc(t.text)+"</span>"+duePill(t)+"</div>"+
-      '<button class="pstar'+(t.priority?" on":"")+'" onclick="togglePriority(\''+t.id+'\')" title="Mark priority">⏫</button>'+
+      '<div class="check'+(t.done?" on":"")+'" onclick="toggle(\''+t.id+'\')" role="checkbox" tabindex="0" '+
+        'aria-checked="'+(t.done?"true":"false")+'" aria-label="'+esc(t.text)+'">'+(t.done?"✓":"")+"</div>"+
+      '<div class="t-body"><span class="t-title tap" data-open="'+t.id+'" title="Edit, reschedule or remove">'+
+        esc(t.text)+"</span>"+duePill(t)+"</div>"+
+      '<button class="pstar'+(t.priority?" on":"")+'" onclick="togglePriority(\''+t.id+'\')" '+
+        'title="Mark priority" aria-label="Mark priority">⏫</button>'+
       "</div>";
   }
-  // Open tasks ordered priority-first, then by the vault's file order.
-  function orderedOpen(tasks){
+  // What the short list should show is what today actually asks of you:
+  // anything overdue, anything due today, then flagged priorities. A flat
+  // "first three in file order" was arbitrary — it could show three someday
+  // items while an overdue one sat out of sight behind "Show all".
+  function topTasks(tasks){
     const open=(tasks||[]).filter((t)=>!t.done);
-    return open.map((t,i)=>({t,i})).sort((a,b)=>(b.t.priority?1:0)-(a.t.priority?1:0)||a.i-b.i).map((x)=>x.t);
+    const rank=(t)=> t.overdue?0 : t.today?1 : t.priority?2 : 3;
+    const idx=new Map(open.map((t,i)=>[t.id,i]));
+    const sorted=[...open].sort((a,b)=>rank(a)-rank(b)||idx.get(a.id)-idx.get(b.id));
+    const live=sorted.filter((t)=>rank(t)<3);
+    // If nothing is pressing, still show a few so the card is never blank.
+    return { rows: live.length?live.slice(0,6):sorted.slice(0,3), pressing: live.length };
   }
   function fmtWhen(iso){
     if(!iso) return "";
@@ -627,13 +887,22 @@
     $("modalName").textContent=path;
     $("modalBody").innerHTML='<div class="muted">Loading…</div>';
     $("replyText").value="";
+    $("modalReply").classList.remove("hidden");
     $("modalBack").classList.add("show");
     req("/api/file?path="+encodeURIComponent(path))
       .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
-      .then((d)=>{ $("modalBody").innerHTML=mdToHtml(d.text); decorateAdvice(); })
+      .then((d)=>{ $("modalBody").innerHTML=mdToHtml(d.text);
+        decorateBrief($("modalBody"), path.split("/").pop().replace(/\.md$/,"")); })
       .catch(()=> $("modalBody").innerHTML='<div class="muted">Couldn\'t load this file.</div>');
   }
   function closeModal(){ $("modalBack").classList.remove("show"); }
+  // The sheet does double duty: a file with a reply box, or a plain panel.
+  function openPanel(title, html){
+    $("modalName").textContent=title;
+    $("modalBody").innerHTML=html;
+    $("modalReply").classList.add("hidden");
+    $("modalBack").classList.add("show");
+  }
   // Reply to an open brief → capture + immediately run File to action it.
   function sendReply(){
     const t=$("replyText").value.trim(); if(!t) return;
@@ -643,39 +912,106 @@
       .catch(()=>toast("Failed",true));
     closeModal();
   }
-  // Add a "Save" to each item under an ## Advice heading → append to Charlotte.
-  function decorateAdvice(){
-    const body=$("modalBody");
-    const h=[...body.querySelectorAll("h3")].find((x)=>/advice/i.test(x.textContent));
-    const ul=h && h.nextElementSibling;
-    if(!ul || ul.tagName!=="UL") return;
-    [...ul.querySelectorAll("li")].forEach((li)=>{
-      const text=li.textContent.trim();
-      const btn=document.createElement("button");
-      btn.className="save-advice"; btn.textContent="＋ Save";
-      btn.onclick=()=>saveAdvice(text, btn);
-      li.appendChild(document.createTextNode(" ")); li.appendChild(btn);
+  // A brief is the app's main output, and it was pure read-only text: you could
+  // be told "reply to dad today" and had no way to turn that into anything.
+  // Every line now carries the three things you actually want to do with it —
+  // make it a task, save it to the person it's about, or tell the system it was
+  // useless so the next one is better.
+  //
+  // That last one is the whole self-improvement loop: a thumbs-down appends a
+  // dated line to _meta/lessons.md, which the skills read before they generate.
+  const PERSON_HEAD = /^(?:for|about)\s+(.+?)\s*$/i;
+  function decorateBrief(root, scope){
+    let section = "", person = "";
+    [...root.children].forEach((el) => {
+      if (el.tagName === "H3") {
+        section = el.textContent.trim();
+        const pm = section.match(PERSON_HEAD);
+        person = pm ? pm[1] : "";
+        return;
+      }
+      if (el.tagName !== "UL") return;
+      [...el.querySelectorAll("li")].forEach((li) => {
+        const text = li.textContent.trim();
+        // Skills emit "—" as a placeholder for an empty section. It is not a
+        // line you can do anything with.
+        if (!text || text === "—") { li.remove(); return; }
+        const bar = document.createElement("span");
+        bar.className = "li-acts";
+        bar.innerHTML =
+          '<button data-a="task" title="Make this a task">＋</button>' +
+          (person ? '<button data-a="save" title="Save to ' + esc(person) + '">👤</button>' : "") +
+          '<button data-a="up" title="More like this">👍</button>' +
+          '<button data-a="down" title="Less like this — teaches the brief">👎</button>';
+        bar.dataset.text = text;
+        bar.dataset.person = person;
+        bar.dataset.scope = scope + (section ? " · " + section : "");
+        li.appendChild(bar);
+      });
+      // A heading whose list is now empty is noise; drop the pair.
+      if (!el.querySelector("li")) {
+        const prev = el.previousElementSibling;
+        if (prev && prev.tagName === "H3") prev.remove();
+        el.remove();
+      }
     });
   }
-  function saveAdvice(text, btn){
-    btn.disabled=true; btn.textContent="Saving…";
-    req("/api/append",{method:"POST",body:JSON.stringify({person:"Charlotte",text})})
-      .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="Saved ✓"; toast("Saved to Charlotte"); })
-      .catch(()=>{ btn.disabled=false; btn.textContent="＋ Save"; toast("Failed",true); });
+  // One handler for both the inline brief card and the file sheet.
+  function briefActions(e){
+    const btn=e.target.closest(".li-acts button"); if(!btn) return;
+    const bar=btn.parentElement, text=bar.dataset.text, act=btn.dataset.a;
+    if(act==="task"){
+      btn.disabled=true;
+      req("/api/task",{method:"POST",body:JSON.stringify({text})})
+        .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="✓"; toast("Added to tasks"); load(); })
+        .catch(()=>{ btn.disabled=false; toast("Failed",true); });
+      return;
+    }
+    if(act==="save"){
+      btn.disabled=true;
+      req("/api/append",{method:"POST",body:JSON.stringify({person:bar.dataset.person,text})})
+        .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="✓"; toast("Saved to "+bar.dataset.person); })
+        .catch(()=>{ btn.disabled=false; toast("Failed",true); });
+      return;
+    }
+    teach(bar.dataset.scope, text, act, btn);
   }
+  // The Karpathy loop, made concrete: your verdict becomes a written lesson.
+  function teach(scope, text, verdict, btn){
+    [...btn.parentElement.querySelectorAll("button")].forEach((b)=>b.classList.remove("on"));
+    btn.classList.add("on");
+    req("/api/lesson",{method:"POST",body:JSON.stringify({scope,text,verdict})})
+      .then((r)=>{ if(!r.ok) throw new Error();
+        toast(verdict==="up"?"Noted — more like that":"Noted — less like that"); load(); })
+      .catch(()=>{ btn.classList.remove("on"); toast("Failed",true); });
+  }
+  $("brief").addEventListener("click", briefActions);
+  $("modalBody").addEventListener("click", briefActions);
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeModal(); });
+  // The checkbox is a div with role=checkbox, so it has to answer to the
+  // keyboard the way a real one does.
+  document.addEventListener("keydown",(e)=>{
+    if(e.key!==" " && e.key!=="Enter") return;
+    const chk=e.target.closest(".check[role=checkbox]");
+    if(!chk) return;
+    e.preventDefault();
+    const row=chk.closest(".task");
+    if(row) toggle(row.dataset.id);
+  });
   let showAll=false;
   function toggleShowAll(){ showAll=!showAll; if(lastData) renderTasks(lastData.tasks); }
   function renderTasks(tasks){
     const openFO=(tasks||[]).filter((t)=>!t.done);     // file order (drag-controlled)
-    const top=orderedOpen(tasks).slice(0,3);           // priority-first for the top
-    $("taskCount").textContent = openFO.length+" open";
-    $("tasksTop").innerHTML = top.length ? top.map((t)=>taskRow(t,false)).join("")
-      : '<div class="muted">No open tasks.</div>';
+    const { rows, pressing } = topTasks(tasks);
+    const over=openFO.filter((t)=>t.overdue).length;
+    $("taskCount").textContent = over ? over+" overdue · "+openFO.length+" open" : openFO.length+" open";
+    $("tasksTop").innerHTML = rows.length
+      ? (pressing?"":'<div class="tcat">next up</div>')+rows.map((t)=>taskRow(t,false)).join("")
+      : '<div class="muted">Nothing open. Add one above.</div>';
     const all=$("tasksAll");
     if(!showAll){ all.classList.add("hidden");
-      $("showAllBtn").textContent = openFO.length>3 ? "Show all ("+openFO.length+")" : "Show all";
-      $("showAllBtn").style.display = openFO.length ? "" : "none"; return; }
+      $("showAllBtn").textContent = "Show all ("+openFO.length+")";
+      $("showAllBtn").style.display = openFO.length>rows.length ? "" : "none"; return; }
     all.classList.remove("hidden"); $("showAllBtn").textContent="Show less";
     const byArea={}; const other=[];
     openFO.forEach((t)=>{ const a=(t.tags||[]).find((g)=>AREAS.includes(g));
@@ -687,6 +1023,80 @@
     if(other.length) html+='<div class="tcat">other</div><div class="tgroup" data-area="">'+other.map((t)=>taskRow(t,true)).join("")+'</div>';
     all.innerHTML = html;
   }
+  // Tapping a task's title opens it. Until now a task could only be ticked or
+  // starred — a typo was permanent, a slipped date could not be moved, and the
+  // only way to remove something was to edit tasks.md by hand.
+  document.addEventListener("click",(e)=>{
+    const el=e.target.closest(".t-title[data-open]");
+    if(el) openTask(el.dataset.open);
+  });
+  let curTask=null;
+  function openTask(id){
+    const t=(lastData&&lastData.tasks||[]).find((x)=>String(x.id)===String(id));
+    if(!t) return;
+    curTask=t;
+    const areaOpts=['<option value="">no area</option>'].concat(
+      AREAS.map((a)=>'<option'+(t.area===a?" selected":"")+">"+a+"</option>")).join("");
+    openPanel("Task",
+      '<div class="tfield"><label for="etext">Task</label>'+
+        '<input type="text" id="etext" value="'+esc(t.text)+'" /></div>'+
+      '<div class="tfield"><label for="edue">Due</label>'+
+        '<input type="date" id="edue" value="'+esc(t.due||"")+'" />'+
+        '<div class="quick">'+
+          '<button onclick="quickDue(0)">Today</button>'+
+          '<button onclick="quickDue(1)">Tomorrow</button>'+
+          '<button onclick="quickDue(7)">Next week</button>'+
+          '<button onclick="quickDue(null)">No date</button>'+
+        "</div></div>"+
+      '<div class="tfield"><label for="earea">Area</label><select id="earea">'+areaOpts+"</select></div>"+
+      '<div class="row"><button class="btn primary" onclick="saveTask()">Save</button>'+
+        '<button class="btn danger" onclick="removeTask()">Remove</button></div>'+
+      '<p class="muted" style="margin-top:10px">Removing archives the line to '+
+        "<code>notes/deleted-tasks.md</code> — nothing is ever deleted outright.</p>");
+  }
+  function quickDue(days){
+    const el=$("edue");
+    if(days===null){ el.value=""; return; }
+    el.value=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+days*864e5));
+  }
+  async function saveTask(){
+    if(!curTask) return;
+    const text=$("etext").value.trim(), due=$("edue").value||null, area=$("earea").value;
+    const id=curTask.id;
+    // One call: the id is a hash of the title, so a retitle invalidates it and
+    // any follow-up edit would match nothing.
+    const fields={};
+    if(text && text!==curTask.text) fields.text=text;
+    if(due!==(curTask.due||null)) fields.due=due;
+    if(area!==(curTask.area||"")) fields.tag=area;
+    closeModal();
+    if(!Object.keys(fields).length) return;
+    try{ await postOK("/api/edit",{id,fields}); toast("Task updated"); load(); }
+    catch(e){ toast("Couldn't save",true); load(); }
+  }
+  function removeTask(){
+    if(!curTask) return;
+    const t=curTask;
+    closeModal();
+    postOK("/api/delete",{id:t.id})
+      .then(()=>{
+        load();
+        showToast("Removed — archived", false, "Undo", ()=>{
+          postOK("/api/task",{text:t.text,due:t.due,tag:t.area,priority:t.priority})
+            .then(()=>{ toast("Restored"); load(); })
+            .catch(()=>toast("Couldn't restore",true));
+        });
+      })
+      .catch(()=>{ toast("Failed",true); load(); });
+  }
+  // The API answers 200 {ok:false} when it accepted the request but matched
+  // nothing — a silent no-op the UI used to report as success.
+  function postOK(path, body){
+    return req(path,{method:"POST",body:JSON.stringify(body)})
+      .then((r)=>{ if(!r.ok) throw new Error(path); return r.json(); })
+      .then((j)=>{ if(j && j.ok===false) throw new Error(path+" no-op"); return j; });
+  }
+
   // --- priority + drag-reorder ---------------------------------------------
   function togglePriority(id){
     if(lastData){ const t=(lastData.tasks||[]).find((x)=>String(x.id)===String(id)); if(t){ t.priority=!t.priority; renderTasks(lastData.tasks); } }
@@ -720,30 +1130,197 @@
   }
   function renderBrief(b){
     $("briefName").textContent = b ? b.name.replace(/\.md$/,"") : "—";
-    $("brief").innerHTML = b ? mdToHtml(b.text) : '<div class="muted">—</div>';
+    if(!b){ $("brief").innerHTML='<div class="muted">No brief yet — run Morning.</div>'; return; }
+    $("brief").innerHTML = mdToHtml(b.text);
+    decorateBrief($("brief"), b.name.replace(/\.md$/,""));
   }
+  // People are the point of the vault, so this card is a way in, not a poster.
+  // Each row opens the person; the meta line carries the one fact a glance can
+  // act on — how long since anything was written down about them.
   function renderPeople(people){
+    // An occasion only leads if it is near enough to act on. Milo's birthday in
+    // ten months is not more pressing than a friend nobody has noted in a month.
+    const SOON=45;
+    const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+SOON*864e5));
+    const withOcc=(p)=>
+      (lastData&&lastData.occasions||[]).find((x)=>x.who===p.slug && x.date<=horizon) || null;
+    const sorted=[...people].sort((a,b)=>{
+      const oa=withOcc(a), ob=withOcc(b);
+      if(oa&&!ob) return -1; if(ob&&!oa) return 1;
+      if(oa&&ob&&oa.date!==ob.date) return oa.date.localeCompare(ob.date);
+      return (b.silentDays||0)-(a.silentDays||0);
+    });
     $("pplCount").textContent = people.length;
-    $("ppl").innerHTML = people.length ? people.slice(0,6).map((p)=>
-      '<div class="ent"><div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
-      '<div><div class="e-name">'+esc(p.name)+"</div>"+
-      '<div class="e-sum">'+esc(p.summary||"")+"</div></div></div>"
-    ).join("") : '<div class="muted">—</div>';
+    $("ppl").innerHTML = sorted.length ? sorted.map((p)=>{
+      const occ=withOcc(p);
+      const meta = occ ? '<span style="color:var(--accent-text)">'+esc(occ.text)+" · "+fmtDate(occ.date).replace(/^\w+\s/,"")+"</span>"
+        : p.silentDays==null ? '<span style="color:var(--faint)">nothing captured yet</span>'
+        : p.silentDays>21 ? '<span style="color:var(--yellow)">quiet for '+p.silentDays+" days</span>"
+        : "last noted "+(p.silentDays===0?"today":p.silentDays+"d ago");
+      return '<div class="ent tappable" data-person="'+esc(p.slug)+'" tabindex="0" role="button">'+
+        '<div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
+        '<div style="min-width:0"><div class="e-name">'+esc(p.name)+"</div>"+
+        '<div class="e-sum">'+meta+"</div></div>"+
+        '<span class="chev">›</span></div>';
+    }).join("") : '<div class="muted">No people notes yet.</div>';
   }
-  // Agenda = occasions + due tasks in the next 7 days, merged and dated.
+  $("ppl").addEventListener("click",(e)=>{
+    const row=e.target.closest("[data-person]"); if(row) openPerson(row.dataset.person);
+  });
+  $("ppl").addEventListener("keydown",(e)=>{
+    if(e.key!=="Enter"&&e.key!==" ") return;
+    const row=e.target.closest("[data-person]"); if(row){ e.preventDefault(); openPerson(row.dataset.person); }
+  });
+
+  // The person sheet: summary, what's coming up, and every dated fragment —
+  // the fragments verbatim, with their capture dates, because they are the
+  // truth and the summary is only a convenience (golden rule 2).
+  let curPerson=null;
+  async function openPerson(slug){
+    openPanel("…", '<div class="muted">Loading…</div>');
+    try{
+      const r=await req("/api/person?slug="+encodeURIComponent(slug));
+      if(!r.ok) throw new Error();
+      const p=await r.json(); curPerson=p;
+      let html="";
+      if(p.summary) html+='<p style="color:var(--text2)">'+mdInline(p.summary)+"</p>";
+      if(p.occasions.length){
+        html+="<h3>Coming up</h3>"+p.occasions.map((o)=>
+          '<div class="occ"><span class="d">'+fmtDate(o.date).replace(/^\w+\s/,"")+"</span><span>"+
+          mdInline(o.text)+"</span></div>").join("");
+      }
+      html+='<h3>Add a note</h3><div class="person-add">'+
+        '<textarea id="pnote" placeholder="What just happened? Saved as a dated fragment."></textarea>'+
+        '<button class="btn primary" onclick="addFragment()">Save to '+esc(p.name)+"</button></div>";
+      html+="<h3>Log <span style='color:var(--faint);font-weight:400'>"+p.log.length+" fragments</span></h3>";
+      html+= p.log.length ? p.log.map((f)=>
+        '<div class="frag"><span class="fdate">'+fmtDate(f.date).replace(/^\w+\s/,"")+
+        "</span><span>"+mdInline(f.text)+"</span></div>").join("")
+        : '<div class="muted">Nothing captured about '+esc(p.name)+" yet.</div>";
+      $("modalName").textContent=p.name;
+      $("modalBody").innerHTML=html;
+    }catch(e){ $("modalBody").innerHTML='<div class="muted">Couldn\'t load this person.</div>'; }
+  }
+  function addFragment(){
+    const el=$("pnote"); const text=(el&&el.value||"").trim();
+    if(!text||!curPerson) return;
+    el.disabled=true;
+    req("/api/append",{method:"POST",body:JSON.stringify({person:curPerson.slug,text})})
+      .then((r)=>{ if(!r.ok) throw new Error(); toast("Saved to "+curPerson.name); openPerson(curPerson.slug); load(); })
+      .catch(()=>{ el.disabled=false; toast("Failed",true); });
+  }
+  // Agenda = occasions + due tasks, merged and dated. The window was 7 days,
+  // which showed "nothing" on a day with three anniversaries pending — a lead
+  // time of under a week is useless for anything you have to buy or book. It
+  // now looks a month out and says whose occasion it is, and every row goes
+  // somewhere: a task to its list, an occasion to that person.
+  const AGENDA_DAYS=31;
   function renderAgenda(d){
     const today=localToday();
-    const wk=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+7*864e5));
+    const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+AGENDA_DAYS*864e5));
     const items=[];
-    (d.occasions||[]).forEach((o)=>{ if(o.date>=today && o.date<=wk) items.push({date:o.date,text:o.text,kind:"occasion"}); });
-    (d.tasks||[]).forEach((t)=>{ if(!t.done && t.due && t.due>=today && t.due<=wk) items.push({date:t.due,text:t.text,kind:"task"}); });
-    items.sort((a,b)=>a.date.localeCompare(b.date));
-    $("agenda").innerHTML = items.length ? items.map((it)=>{
-      const days=Math.round((new Date(it.date)-new Date(today))/864e5);
-      const inTxt = days<=0?"today":(days===1?"tomorrow":"in "+days+"d");
-      const mark = it.kind==="task" ? '<span style="color:var(--faint)">✓ </span>' : "";
-      return '<div class="occ"><span class="d">'+fmtDate(it.date).replace(/^\w+\s/,"")+'</span><span>'+mark+esc(it.text)+'</span><span class="in">'+inTxt+'</span></div>';
-    }).join("") : '<div class="muted">Nothing in the next 7 days.</div>';
+    (d.occasions||[]).forEach((o)=>{ if(o.date>=today && o.date<=horizon)
+      items.push({date:o.date,text:o.text,kind:"occasion",who:o.who}); });
+    (d.tasks||[]).forEach((t)=>{ if(!t.done && t.due && t.due>=today && t.due<=horizon)
+      items.push({date:t.due,text:t.text,kind:"task",id:t.id}); });
+    (d.calendar||[]).forEach((e,i)=>{ items.push({date:e.date,text:e.title,kind:"event",
+      time:e.time,allDay:e.allDay,minutes:e.minutes,location:e.location,source:e.source,idx:i}); });
+
+    // Group by day. A flat dated list works for a handful of occasions; with a
+    // work calendar in it there are five things on a Monday and the day is the
+    // unit you actually think in.
+    const byDay={};
+    items.forEach((it)=>{ (byDay[it.date]=byDay[it.date]||[]).push(it); });
+    const days=Object.keys(byDay).sort();
+    const rank=(x)=> x.kind==="event" ? (x.allDay?0:1) : x.kind==="occasion"?2:3;
+    const count=(d.calendar||[]).filter((e)=>e.date===today).length;
+    $("agendaCount").textContent = count ? count+" today" : "next month";
+
+    $("agenda").innerHTML = days.length ? days.map((day)=>{
+      const n=Math.round((new Date(day)-new Date(today))/864e5);
+      const label = n<=0?"Today" : n===1?"Tomorrow" : fmtDate(day);
+      const rows=byDay[day].sort((a,b)=>rank(a)-rank(b)||String(a.time||"").localeCompare(String(b.time||"")));
+      return '<div class="aday"><div class="aday-h'+(n<=0?" now":"")+'">'+esc(label)+"</div>"+
+        rows.map((it)=>agendaRow(it,n)).join("")+"</div>";
+    }).join("") : '<div class="muted">Nothing due or coming up in the next month.</div>';
+
+    // A calendar that quietly stopped syncing looks exactly like a free week,
+    // so both the failure and the freshness are stated rather than assumed.
+    const srcs=d.calendarSources||[];
+    const bad=srcs.filter((s)=>!s.ok);
+    if(bad.length){
+      $("agenda").insertAdjacentHTML("beforeend",
+        '<div class="cal-warn">⚠ '+bad.map((s)=>esc(s.name)+" calendar unavailable").join(", ")+"</div>");
+    }
+    const ok=srcs.filter((s)=>s.ok);
+    if(ok.length){
+      const oldest=Math.max(...ok.map((s)=>s.ageMs||0));
+      const mins=Math.floor(oldest/60000);
+      $("agenda").insertAdjacentHTML("beforeend",
+        '<div class="cal-sync">'+esc(ok.map((s)=>s.name).join(" + "))+" calendar · synced "+
+        (mins<1?"just now":mins+"m ago")+
+        ' · <button class="link" style="padding:0" onclick="refreshCalendar(this)">refresh</button></div>');
+    }
+  }
+  // Outlook regenerates the feed on every request, so the only thing between a
+  // change there and this screen is our own 15-minute cache. This skips it.
+  function refreshCalendar(btn){
+    btn.textContent="refreshing…"; btn.disabled=true;
+    req("/api/data?calendar=fresh&t="+Date.now())
+      .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
+      .then((d)=>{ render(d); toast("Calendar refreshed"); })
+      .catch(()=>toast("Couldn't refresh the calendar",true));
+  }
+  function agendaRow(it, n){
+    if(it.kind==="event"){
+      const when = it.allDay ? "all-day" : it.time;
+      const dur = it.minutes ? (it.minutes>=60?Math.round(it.minutes/60*10)/10+"h":it.minutes+"m") : "";
+      return '<div class="occ tappable ev" data-event="'+it.idx+'" tabindex="0" role="button">'+
+        '<span class="d">'+esc(when)+'</span>'+
+        '<span class="src '+esc(it.source)+'" title="'+esc(it.source)+' calendar"></span>'+
+        '<span>'+esc(it.text)+'</span><span class="in">'+esc(dur)+'</span></div>';
+    }
+    const attr = it.kind==="task" ? 'data-task="'+esc(it.id)+'"' : 'data-person="'+esc(it.who||"")+'"';
+    const mark = it.kind==="task" ? '<span style="color:var(--faint)" title="Task due">✓</span>'
+      : '<span style="color:var(--a-family)" title="Occasion">◆</span>';
+    return '<div class="occ tappable" '+attr+' tabindex="0" role="button">'+
+      '<span class="d">'+(it.kind==="task"?"due":"")+'</span>'+mark+
+      '<span>'+esc(it.text)+'</span></div>';
+  }
+  // A work calendar is read-only here — the vault is the source of truth, not
+  // Outlook — so an event offers the two things worth doing with it instead.
+  function openEvent(idx){
+    const e=(lastData&&lastData.calendar||[])[idx]; if(!e) return;
+    const when = e.allDay ? "All day" : e.time+(e.minutes?" · "+(e.minutes>=60?Math.round(e.minutes/60*10)/10+"h":e.minutes+"m"):"");
+    openPanel(e.title,
+      '<p><b>'+esc(fmtDate(e.date))+"</b> · "+esc(when)+"</p>"+
+      (e.location?'<p class="muted">'+esc(e.location)+"</p>":"")+
+      '<p class="muted">From your '+esc(e.source)+" calendar — read-only here.</p><hr>"+
+      '<div class="row"><button class="btn primary" onclick="eventToTask('+idx+')">Add a task for this</button>'+
+      '<button class="btn" onclick="eventToCapture('+idx+')">Capture a note</button></div>');
+  }
+  function eventToTask(idx){
+    const e=lastData.calendar[idx]; closeModal();
+    postOK("/api/task",{text:e.title,due:e.date,tag:e.source==="work"?"work":""})
+      .then(()=>{ toast("Task added"); load(); }).catch(()=>toast("Failed",true));
+  }
+  function eventToCapture(idx){
+    const e=lastData.calendar[idx]; closeModal();
+    post("/api/capture",{text:e.date+" "+(e.time||"all-day")+" — "+e.title},"Captured to inbox");
+  }
+  $("agenda").addEventListener("click",(e)=>{
+    const row=e.target.closest(".occ"); if(!row) return;
+    if(row.dataset.event!==undefined) openEvent(+row.dataset.event);
+    else if(row.dataset.person) openPerson(row.dataset.person);
+    else if(row.dataset.task) focusTask(row.dataset.task);
+  });
+  // Jump to a task in the list and flash it, rather than dead-ending.
+  function focusTask(id){
+    if(!showAll){ showAll=true; if(lastData) renderTasks(lastData.tasks); }
+    const row=document.querySelector('.task[data-id="'+id+'"]');
+    if(!row) return;
+    row.scrollIntoView({block:"center",behavior:"smooth"});
+    row.classList.add("flash"); setTimeout(()=>row.classList.remove("flash"),1200);
   }
   // Habits: today's tick-offs with per-habit streaks (data from habits.md).
   function renderHabits(habits){
@@ -755,10 +1332,16 @@
     $("habitPct").textContent = all ? Math.round(100*done/all)+"% today" : "";
     el.innerHTML = habits.map((h)=>{
       const d=h.items.filter(i=>i.done).length;
+      // A streak number alone hides the shape: 0 looks the same whether you
+      // have never started or just broke a run of thirty. The dots are the
+      // last fortnight, so a slip is visible and recoverable.
+      const dots=(h.history||[]).map((on,i)=>
+        '<span class="hdot'+(on?" on":"")+(i===13?" today":"")+'"></span>').join("");
       return '<div class="habit'+(d===h.items.length?" complete":"")+'">'+
         '<div class="habit-head"><span class="habit-name">'+esc(h.name)+'</span>'+
         (h.streak>1?'<span class="habit-streak">🔥 '+h.streak+'</span>':'')+
         '<span class="habit-count">'+d+"/"+h.items.length+'</span></div>'+
+        '<div class="hdots" title="'+(h.days30||0)+' of the last 30 days">'+dots+"</div>"+
         '<div class="habit-items">'+h.items.map((i)=>
           '<div class="habit-item'+(i.done?" on":"")+'" data-habit="'+esc(h.name)+'" data-item="'+esc(i.text)+'">'+
           '<span class="hchk">✓</span><span>'+esc(i.text)+'</span></div>').join("")+'</div></div>';
@@ -778,11 +1361,19 @@
       .catch(()=>{ toast("Failed",true); load(); });
   });
 
-  // Inbox chip: unfiled captures + one-tap File.
-  function renderInbox(n){
-    const el=$("inboxChip");
-    if(n>0){ el.innerHTML = n+' waiting · <a class="link" style="padding:0" onclick="runFile()">File</a>'; }
-    else { el.textContent = "→ inbox/"; }
+  // A capture used to disappear the moment you saved it — the only trace was a
+  // count in the corner. You could not tell whether the thing you dictated
+  // actually landed, or what was still sitting unfiled. Now the card shows the
+  // captures themselves, with one tap to file them.
+  function renderInbox(items){
+    items=items||[];
+    const chip=$("inboxChip"), list=$("inboxList");
+    if(!items.length){ chip.textContent="→ inbox/"; list.innerHTML=""; return; }
+    chip.innerHTML = items.length+' unfiled · <a class="link" style="padding:0" onclick="runFile()">File now</a>';
+    list.innerHTML = '<div class="cap-list">'+items.slice(0,4).map((c)=>
+      '<div class="cap"><span class="cap-when">'+esc(fmtWhen(c.when))+'</span>'+
+      '<span class="cap-text">'+esc(c.text)+"</span></div>").join("")+
+      (items.length>4?'<div class="cap-more">+'+(items.length-4)+" more</div>":"")+"</div>";
   }
   function queueSkill(name, input, msg){
     awaiting[name]=(lastData&&lastData.skills&&lastData.skills[name])?lastData.skills[name].when:"queued"; saveAwaiting();
@@ -791,41 +1382,106 @@
       .catch(()=>toast("Failed",true));
   }
   function runFile(){ queueSkill("file-inbox","","Filing…"); }
+
+  // Ask fired a question into the void: the box cleared, a toast flashed, and
+  // nothing else happened until an answer file appeared minutes later. If no
+  // runner was listening it never appeared and the app never said so.
+  let pendingAsk = null;
+  try { pendingAsk = JSON.parse(localStorage.getItem("lv_ask") || "null"); } catch {}
   function askVault(){
     const q=$("askq").value.trim(); if(!q) return;
-    $("askq").value=""; queueSkill("ask",q,"Asking…");   // its answer auto-opens when ready
+    $("askq").value="";
+    pendingAsk={ q, at:Date.now() };
+    localStorage.setItem("lv_ask", JSON.stringify(pendingAsk));
+    renderAsk(lastData);
+    queueSkill("ask",q,"Asking…");   // its answer auto-opens when ready
   }
+  function renderAsk(d){
+    const st=(d&&d.skills&&d.skills.ask)||null;
+    const body=$("askBody"), state=$("askState");
+    let html="";
+    if(pendingAsk){
+      const mins=Math.round((Date.now()-pendingAsk.at)/60000);
+      const stuck=lastHealth&&lastHealth.stuck.some((s)=>s.name==="ask");
+      state.textContent="waiting…";
+      html+='<div class="pending"><span class="running"></span>'+
+        '<div><div class="pq">'+esc(pendingAsk.q)+"</div>"+
+        '<div class="pmeta">'+(stuck?"no runner has picked this up — check System"
+          : mins<1?"just asked":"asked "+mins+"m ago")+"</div></div>"+
+        '<button class="link" onclick="cancelAsk()">Clear</button></div>';
+    } else {
+      state.textContent="your vault";
+    }
+    // The last answer stays reachable instead of being a modal you can only see once.
+    if(st && st.outputs && st.outputs.length){
+      html+='<div class="last-ans">Last answer · <a data-path="'+esc(st.outputs[0])+'">'+
+        esc(st.outputs[0].split("/").pop())+"</a> <span class='pmeta'>"+esc(fmtWhen(st.when))+"</span></div>";
+    }
+    body.innerHTML=html;
+  }
+  function cancelAsk(){ pendingAsk=null; localStorage.removeItem("lv_ask"); renderAsk(lastData); }
+  $("askBody").addEventListener("click",(e)=>{
+    const a=e.target.closest("[data-path]"); if(a) openFile(a.dataset.path);
+  });
   function render(d){
     lastData=d;
-    $("gen").textContent = "Updated "+new Date(d.generated).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+" · reads and writes the vault directly";
+    $("gen").textContent = "updated "+new Date(d.generated).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+    $("skillsCount").textContent = Object.values(d.skills||{}).filter((s)=>s.queued).length
+      ? "a run is queued" : "on-demand";
     renderSkills(d.skills); renderTasks(d.tasks);
-    renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox||0);
-    renderHabits(d.habits);
+    renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
+    renderHabits(d.habits); renderAsk(d);
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};
     Object.keys(awaiting).forEach((name)=>{
       const st=skills[name];
       if(st && st.when && st.when!==awaiting[name]){
         delete awaiting[name]; saveAwaiting();
+        if(name==="ask"){ pendingAsk=null; localStorage.removeItem("lv_ask"); renderAsk(d); }
         if(st.outputs && st.outputs.length){ toast(name+" done"); openFile(st.outputs[0]); }
         else toast(name+(st.ok===false?" failed":" ran"),st.ok===false);
       }
     });
   }
 
-  // Tiny markdown renderer for the brief (### headings, - lists, --- rule, **bold**).
+  // Vault prose is Obsidian-flavoured, so a renderer that only knows **bold**
+  // leaks `_italics_`, `[[wikilinks]]` and `- [ ]` checkboxes as literal syntax
+  // into the brief — which is exactly what it was doing.
+  function mdInline(s){
+    return esc(s)
+      .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,"$2")          // [[note|alias]] -> alias
+      .replace(/\[\[([^\]]+)\]\]/g,"$1")                     // [[note]] -> note
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/`([^`]+)`/g,"<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+      .replace(/(^|[\s(])_([^_]+)_(?=[\s.,;:)!?]|$)/g,"$1<em>$2</em>")
+      .replace(/(^|[\s(])\*([^*]+)\*(?=[\s.,;:)!?]|$)/g,"$1<em>$2</em>")
+      .replace(/📅\s*(\d{4}-\d{2}-\d{2})/g,'<span class="pill">$1</span>')
+      .replace(/(^|\s)#([A-Za-z][A-Za-z0-9_-]*)/g,'$1<span class="pill">#$2</span>');
+  }
+  // Strip markdown to plain text — for summaries rendered into a bare element.
+  function mdPlain(s){
+    return (s||"").replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g,(m,a,b)=>b||a)
+      .replace(/\*\*|__|[*_`]/g,"").trim();
+  }
   function mdToHtml(md){
     const lines=md.replace(/\r/g,"").split("\n"); let html="", inList=false;
-    const inline=(s)=>esc(s).replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    const close=()=>{ if(inList){ html+="</ul>"; inList=false; } };
     for(let raw of lines){
       const l=raw.trimEnd();
-      if(/^#{1,6}\s/.test(l)){ if(inList){html+="</ul>";inList=false;} html+="<h3>"+inline(l.replace(/^#{1,6}\s/,""))+"</h3>"; continue; }
-      if(/^---+$/.test(l)){ if(inList){html+="</ul>";inList=false;} html+="<hr>"; continue; }
-      if(/^[-*]\s+/.test(l)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+inline(l.replace(/^[-*]\s+/,""))+"</li>"; continue; }
-      if(!l.trim()){ if(inList){html+="</ul>";inList=false;} continue; }
-      if(inList){html+="</ul>";inList=false;} html+="<p>"+inline(l)+"</p>";
+      if(/^#{1,6}\s/.test(l)){ close(); html+="<h3>"+mdInline(l.replace(/^#{1,6}\s/,""))+"</h3>"; continue; }
+      if(/^(---+|\*\*\*+)$/.test(l)){ close(); html+="<hr>"; continue; }
+      // Checkbox lines are common in briefs; render the box, not the brackets.
+      const cb=l.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
+      if(cb){ if(!inList){html+="<ul>";inList=true;}
+        html+='<li class="md-task'+(cb[1]===" "?"":" done")+'"><span class="md-box">'+
+          (cb[1]===" "?"":"✓")+"</span>"+mdInline(cb[2])+"</li>"; continue; }
+      if(/^\s*[-*]\s+/.test(l)){ if(!inList){html+="<ul>";inList=true;} html+="<li>"+mdInline(l.replace(/^\s*[-*]\s+/,""))+"</li>"; continue; }
+      if(/^>\s?/.test(l)){ close(); html+="<blockquote>"+mdInline(l.replace(/^>\s?/,""))+"</blockquote>"; continue; }
+      if(!l.trim()){ close(); continue; }
+      close(); html+="<p>"+mdInline(l)+"</p>";
     }
-    if(inList) html+="</ul>";
+    close();
     return html;
   }
 
@@ -949,13 +1605,15 @@
     const nh=Math.max(0,Math.min(23,new Date().getHours()));
     const marker='<line x1="'+xs(nh).toFixed(1)+'" y1="'+padT+'" x2="'+xs(nh).toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--line-key)" stroke-dasharray="2 2"/>'+
       '<circle cx="'+xs(nh).toFixed(1)+'" cy="'+ys(temps[nh]).toFixed(1)+'" r="3" fill="var(--accent)"/>';
+    const outlook=wxOutlook(temps,precs,times);
     const aqi=(aq&&aq.current)?aq.current.european_aqi:null, pm=(aq&&aq.current)?aq.current.pm2_5:null;
     const [band,col]=aqiBand(aqi);
     const aqHtml = aqi!=null ? '<div class="wx-aq">Air <b style="color:'+col+'">'+band+'</b> · AQI '+Math.round(aqi)+(pm!=null?' · PM2.5 '+Math.round(pm):'')+'</div>' : '';
     $("weatherBody").innerHTML =
       '<div class="wx-top"><div class="wx-now"><span class="wx-emoji">'+em+'</span>'+
       '<div><span class="wx-temp">'+Math.round(cur.temperature_2m)+'°</span><div class="wx-cond">'+txt+'</div></div></div>'+
-      '<div class="wx-hl"><b>'+hi+'°</b> / '+lo+'°<div>high / low</div></div></div>'+ aqHtml +
+      '<div class="wx-hl"><b>'+hi+'°</b> / '+lo+'°<div>high / low</div></div></div>'+
+      (outlook?'<div class="wx-outlook">'+outlook+"</div>":"") + aqHtml +
       '<div class="wx-chart"><svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+
       bars+'<path d="'+area+'" fill="var(--accent)" opacity="0.10"/>'+
       '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
@@ -964,6 +1622,30 @@
     chart.addEventListener("pointermove", wxHover);
     chart.addEventListener("pointerleave", ()=>{ const t=$("wxTip"); if(t) t.style.opacity=0; });
   }
+  // A temperature and a chart are numbers, not an answer. The question this
+  // card exists to settle is "when can I get out today" — the vault's habits
+  // literally include "Gym or a walk". So say when it rains and when it doesn't.
+  function wxOutlook(temps, precs, times){
+    const now=new Date().getHours();
+    const rest=[]; for(let i=now;i<24;i++) rest.push({i,p:precs[i]||0,t:temps[i]});
+    if(!rest.length) return "";
+    const WET=40;
+    const firstWet=rest.find((h)=>h.p>=WET);
+    // Longest dry run left in the day, at least two hours to be worth naming.
+    let best=null, run=null;
+    for(const h of rest){
+      if(h.p<WET){ run=run||{from:h.i,to:h.i}; run.to=h.i; if(!best||run.to-run.from>best.to-best.from) best=run; }
+      else run=null;
+    }
+    const hh=(i)=>String(i).padStart(2,"0")+":00";
+    if(!firstWet) return '<b>Dry the rest of the day.</b>'+(best&&best.to-best.from>=2
+      ? " Warmest around "+hh(rest.reduce((a,b)=>b.t>a.t?b:a).i)+"." : "");
+    if(firstWet.i===now) return '<b>Raining now.</b>'+(best&&best.to-best.from>=1
+      ? " Next dry window "+hh(best.from)+"–"+hh(best.to)+"." : "");
+    return "<b>Dry until "+hh(firstWet.i)+"</b>, rain likely after."+
+      (best&&best.from<firstWet.i&&best.to-best.from>=2 ? " Best window "+hh(best.from)+"–"+hh(best.to)+"." : "");
+  }
+
   // Hover/drag on the chart → tooltip for the nearest hour.
   function wxHover(e){
     if(!wxData) return;
@@ -980,7 +1662,10 @@
   }
 
   // --- boot -----------------------------------------------------------------
-  if(API && TOKEN){ load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
+  if(DEV || (API && TOKEN)){
+    $("gate").classList.add("hidden"); $("app").classList.remove("hidden");
+    renderOutbox(); flushOutbox();
+    load(); setInterval(load, 60000); loadWeather(); setInterval(loadWeather, 1800000); refreshAlertsBtn(); }
   else { showGate(); }
 </script>
 </body>

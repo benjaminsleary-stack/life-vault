@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["dev/server.mjs"],
+      "port": 8766
+    },
+    {
+      "name": "worker",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--config", "worker/wrangler.toml", "--port", "8787"],
+      "port": 8787
+    },
+    {
+      "name": "dashboard-pwa",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "pages", "dev", "dashboard", "--port", "8788"],
+      "port": 8788
+    }
+  ]
+}

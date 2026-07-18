@@ -31,7 +31,7 @@ PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
   weave, onboard).
 - `maps/*.md` — one MOC per life area; the ordering layer over the flat folders.
 - `routines/*.md` — the thin saved-prompts you paste into each Routine.
-- `scripts/` — `fetch-mail.py`, `fetch-ics.py`, `notify.sh`, `bridge.sh`,
+- `scripts/` — `fetch-mail.py`, `fetch-calendar.mjs`, `notify.sh`, `bridge.sh`,
   `setup.sh`, `requirements.txt`, and `migrate-from-life-os.mjs`.
 - Folder skeleton: `inbox/ people/ projects/ notes/ daily/ digests/ _meta/`.
 

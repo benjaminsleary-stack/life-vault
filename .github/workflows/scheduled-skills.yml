@@ -49,6 +49,8 @@ jobs:
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
           ICS_URL: ${{ secrets.ICS_URL }}
+          CAL_WORK: ${{ secrets.CAL_WORK }}
+          CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
         run: |
           set -uo pipefail
           case "${{ github.event.schedule }}" in
@@ -69,6 +71,8 @@ jobs:
           WORKER_URL: ${{ secrets.WORKER_URL }}
           UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
           ICS_URL: ${{ secrets.ICS_URL }}
+          CAL_WORK: ${{ secrets.CAL_WORK }}
+          CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
         run: |
           set -uo pipefail
           shopt -s nullglob

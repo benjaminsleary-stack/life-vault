@@ -11,6 +11,12 @@ conflict-files-obsidian-git.md
 # Transient script working dirs (mail bodies/attachments are never committed).
 scripts/.venv/
 scripts/_work/
+# Secrets. A private .ics feed URL is a credential — anyone holding it can read
+# the calendar — and so are the mail and push keys. Only .env.example is tracked.
+.env
+.env.*
+!.env.example
+.dev.vars
 # Wrangler (Cloudflare) local cache for the dashboard worker + PWA.
 .wrangler/
 node_modules/
