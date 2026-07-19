@@ -11,3 +11,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Order pixels food. #admin 📅 2026-07-19
 - [ ] Add stones to freecycle #house
 - [ ] Order [[Jasper]]'s bike #family
+- [ ] Order a new hearth for the fireplace #house
