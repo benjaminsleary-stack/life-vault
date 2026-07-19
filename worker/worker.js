@@ -140,6 +140,7 @@ export default {
       calendars: [
         env.CAL_WORK && { name: "work", url: env.CAL_WORK },
         env.CAL_PERSONAL && { name: "personal", url: env.CAL_PERSONAL },
+        env.CAL_FAMILY && { name: "family", url: env.CAL_FAMILY },
       ].filter(Boolean),
     });
 

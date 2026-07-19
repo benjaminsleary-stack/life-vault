@@ -14,3 +14,4 @@ Son, age 5. Birthday 11 August.
 ## Log
 - 2026-07-13 — Age 5.
 - 2026-07-19 — Attends Mayfield Primary School, Warwick Road, Cambridge (Reception/Y1; team leader Pippa Joyce). Swimming kit needed every Wednesday morning in term time. _(from Gmail)_
+- 2026-07-19 — Birthday (Jasper's day) now on the shared Family calendar as a yearly event, so it reaches the agenda from the calendar rather than only the vault. _(written by the dashboard)_

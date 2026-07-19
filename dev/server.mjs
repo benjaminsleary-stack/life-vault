@@ -81,6 +81,7 @@ loadEnvFile();
 const calendars = [
   process.env.CAL_WORK && { name: "work", url: process.env.CAL_WORK },
   process.env.CAL_PERSONAL && { name: "personal", url: process.env.CAL_PERSONAL },
+  process.env.CAL_FAMILY && { name: "family", url: process.env.CAL_FAMILY },
 ].filter(Boolean);
 
 const handle = createApi(store, { calendars });
