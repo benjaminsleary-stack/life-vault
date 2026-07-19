@@ -489,7 +489,7 @@
   .cap-btn:active{ background:rgba(217,138,99,.2); }
   @media (max-width:520px){ .cap-btn span{ display:none; } }
 
-  .bento{ display:grid; grid-template-columns:1fr; gap:12px; align-items:start; }
+  .bento{ display:grid; grid-template-columns:1fr; gap:12px; align-items:start; grid-auto-flow:dense; }
   @media (min-width:720px){ .bento{ grid-template-columns:1fr 1fr; } }
   @media (min-width:940px){ .bento{ grid-template-columns:repeat(3,1fr); } }
   .tile{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:15px 16px;

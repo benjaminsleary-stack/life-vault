@@ -4,7 +4,7 @@
 // app shell offline. It deliberately NEVER caches API responses — live task data
 // masquerading as current from a stale cache is worse than a network error.
 
-const SHELL = "lv-shell-v4";
+const SHELL = "lv-shell-v5";
 const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
