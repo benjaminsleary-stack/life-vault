@@ -190,6 +190,64 @@ async function readOccasions(store) {
   return out;
 }
 
+/* ---------------------------------------------------------------- graph */
+
+// The vault map: a node+edge graph of the vault's [[wikilinks]], so the
+// dashboard can draw an Obsidian-style "map of content". Nodes are the notes in
+// maps/ (areas), people/, projects/ and notes/; edges are the wikilink
+// references between them (a [[target]] that has no file still gets a light
+// node, so orphan mentions are visible). record_count is each node's degree,
+// used to size it. Read-only and store-agnostic (works on the Worker and the
+// local dev server alike).
+const WIKILINK_RE = /\[\[([^\]]+)\]\]/g;
+const linkTarget = (raw) => String(raw).split(/[|#]/)[0].trim();
+const graphSlug = (s) => String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const prettyName = (slug) => String(slug).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+async function buildGraph(store) {
+  const FOLDERS = [["maps", "area"], ["people", "person"], ["projects", "project"], ["notes", "topic"]];
+  const nodes = new Map();
+  const edgeSet = new Set();
+  const edges = [];
+  const ensure = (id, name, type) => {
+    let n = nodes.get(id);
+    if (!n) { n = { id, name: name || prettyName(id), type: type || "topic", record_count: 0 }; nodes.set(id, n); }
+    else if (type && type !== "topic" && n.type === "topic") { n.type = type; if (name) n.name = name; }
+    return n;
+  };
+  const filed = [];
+  for (const [folder, type] of FOLDERS) {
+    let files = [];
+    try { files = await store.listDir(folder); } catch { files = []; }
+    for (const f of files) {
+      if (!f.name.endsWith(".md") || f.name.startsWith("_")) continue;
+      const slug = f.name.slice(0, -3);
+      const id = graphSlug(slug);
+      let name = prettyName(slug);
+      const file = await store.readFile(f.path);
+      const nm = file && file.text.match(/^name:\s*(.+)$/m);
+      if (nm) name = nm[1].trim();
+      ensure(id, name, type);
+      filed.push({ id, text: file ? file.text : "" });
+    }
+  }
+  for (const fl of filed) {
+    const src = nodes.get(fl.id);
+    const seen = new Set();
+    for (const m of fl.text.matchAll(WIKILINK_RE)) {
+      const raw = linkTarget(m[1]);
+      const tid = graphSlug(raw);
+      if (!tid || tid === fl.id || seen.has(tid)) continue;
+      seen.add(tid);
+      const tgt = ensure(tid, prettyName(raw), "topic");
+      const key = fl.id < tid ? `${fl.id}|${tid}` : `${tid}|${fl.id}`;
+      if (!edgeSet.has(key)) { edgeSet.add(key); edges.push({ from: fl.id, to: tid }); }
+      src.record_count++; tgt.record_count++;
+    }
+  }
+  return { nodes: [...nodes.values()], edges };
+}
+
 /* -------------------------------------------------------------- digests */
 
 const BRIEF_RE = /^(\d{4}-\d{2}-\d{2})-(morning|evening)\.md$/;
@@ -1228,6 +1286,7 @@ export function createApi(rawStore, hooks = {}) {
         return { status: 200, body: await buildData(store, feeds, force) };
       }
       if (path === "/api/health") return { status: 200, body: await health(store) };
+      if (path === "/api/graph") return { status: 200, body: await buildGraph(store) };
       if (path === "/api/person") {
         const p = await readPerson(store, params.get("slug") || "");
         return p ? { status: 200, body: p } : { status: 404, body: { error: "not found" } };
