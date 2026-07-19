@@ -13,4 +13,4 @@ Edit the sections/items below to make them yours — these are starters.
 
 ## Evening wind-down
 - [ ] Journal the day
-- [ ] Plan tomorrow
+- [x] Plan tomorrow
