@@ -1,0 +1,31 @@
+# Vault domain-layer tests.
+#
+# worker/vault.js holds every rule about what a task, habit, list or person note
+# means, and it is shared by the Cloudflare Worker and the local dev server. A
+# mistake in it corrupts the vault silently — twice already an edit destroyed a
+# wikilink nobody had touched — so it gets a test run on every push.
+#
+# No dependencies: Node's built-in runner against an in-memory store.
+
+name: tests
+
+on:
+  push:
+    paths:
+      - "worker/**"
+      - "test/**"
+      - "dev/**"
+      - ".github/workflows/tests.yml"
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run tests
+        run: node --test test/*.test.mjs

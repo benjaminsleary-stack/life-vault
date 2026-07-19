@@ -76,9 +76,15 @@ function taskLines(lines) {
   return out;
 }
 
+// The morning brief's anti-nag counter (CLAUDE.md rule 3): it increments ⏳<n>
+// on an overdue task and drops it from the brief after three. It is bookkeeping,
+// so it must survive in the file but never appear in the title — "Reply to dad
+// ⏳2" was reaching the screen exactly like the project slug did.
+const NAG_RE = /⏳\s*\d*/gu;
+
 // Strip stamps/tags/wikilinks down to the human label.
 function taskLabel(body) {
-  let label = body.replace(DUE_RE, "").replace(DONE_RE, "").replace(PRIORITY_RE, "");
+  let label = body.replace(DUE_RE, "").replace(DONE_RE, "").replace(PRIORITY_RE, "").replace(NAG_RE, "");
   label = label.replace(/(?:^|\s)#[A-Za-z0-9_/-]+/g, "");
   label = label.replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "$1");
   return label.split(/\s+/).join(" ").trim();
@@ -102,6 +108,12 @@ export function parseTasks(text) {
     out.push({
       id: tl.id,
       text: taskLabel(body),
+      // The title with its links intact. buildData needs this to drop the
+      // PROJECT link from the display text while keeping [[Milo]] — taskLabel
+      // unwraps every link to its bare text, which is right for a person and
+      // wrong for a project, since "Insulate Milo's room house-retrofit" is not
+      // a sentence anyone wrote.
+      titleRaw: taskTitleRaw(body),
       links,
       done: checked,
       due,
@@ -786,6 +798,16 @@ async function buildData(store, feeds, forceCalendar) {
   for (const t of tasks) {
     t.project = (t.links || []).map((l) => bySlug.get(slugify(l)) || bySlug.get(l.toLowerCase()))
       .find(Boolean) || null;
+    // A project link is metadata, not part of the sentence — remove it from the
+    // display title, then unwrap the links that ARE part of it.
+    if (t.project && t.titleRaw) {
+      t.text = t.titleRaw
+        .replace(/\s*\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, (m, target) =>
+          (bySlug.get(slugify(target)) || bySlug.get(target.toLowerCase())) ? "" : m)
+        .replace(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, "$1")
+        .replace(/\s{2,}/g, " ").trim();
+    }
+    delete t.titleRaw;
   }
   for (const p of projects) {
     const mine = tasks.filter((t) => t.project === p.slug);
@@ -955,7 +977,7 @@ const tagsIn = (s) => [...String(s).matchAll(TAG_RE)].map((m) => m[1]);
  * to remove, so anything else disappearing is a bug, and this turns it into a
  * loud failure instead of a quiet one (golden rule 5).
  */
-function assertNothingLost(before, after, mayRemove = []) {
+export function assertNothingLost(before, after, mayRemove = []) {
   const allowed = new Set(mayRemove.map((s) => String(s).toLowerCase()));
   const lost = (kind, was, now) => {
     const left = [...now];
@@ -1054,6 +1076,9 @@ async function rescheduleTask(store, id, due) {
 // Milo's room" — quietly severing the link to Milo's note. An edit must never
 // destroy a link the user did not touch.
 function taskTitleRaw(body) {
+  // NOTE: the ⏳ nag counter is deliberately NOT stripped here. This feeds the
+  // line that gets written back, and the brief's own bookkeeping must survive an
+  // edit made from the dashboard.
   let t = body.replace(DUE_RE, "").replace(DONE_RE, "").replace(PRIORITY_RE, "");
   t = t.replace(/(?:^|\s)#[A-Za-z0-9_/-]+/g, "");
   return t.split(/\s+/).join(" ").trim();
@@ -1104,7 +1129,7 @@ async function editTask(store, id, fields, projectSlugs) {
     if (due) parts.push(`📅 ${due}`);
     if (doneM) parts.push(doneM[0]);
     return parts.join(" ").replace(/\s{2,}/g, " ").trim();
-  });
+  }, mayRemove);
 }
 
 // Delete is the one operation the golden rules forbid doing silently: the line

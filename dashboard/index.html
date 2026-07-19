@@ -334,29 +334,23 @@
   .wx-aq{ margin-top:6px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .wx-axis{ fill:var(--faint); font-size:8px; font-family:var(--ui); }
 
-  /* Desktop: a masonry flow, not a fixed bento.
+  /* Desktop widths. The tile layout itself lives with `.bento` below.
 
-     This was a named-area grid, and it failed twice over. Rows are shared
-     across columns, so the tall Brief stretched the rows beside it and left
-     dead space under Ask. Worse, an `fr` column cannot shrink below its
-     content's min-content width — one long unbreakable capture line blew the
-     middle column out to 855px and crushed Tasks to 169px, overflowing the
-     wrapper entirely.
-
-     Columns have neither failure mode: each card is atomic, heights are
-     independent, and nothing one card contains can resize its neighbours. */
+     A `column-count` masonry once lived here, written to fix a named-area grid
+     whose shared rows left dead space beside the tall Brief tile. The bento was
+     rebuilt on `grid-auto-flow:dense`, which solves the same problem, so the
+     masonry rules were removed rather than left to shadow it. Only the widths
+     are still load-bearing. */
   @media (min-width:900px){
     .wrap{ max-width:1240px; }
-    .cards{ column-count:3; column-gap:14px; }
-    .cards .card{ break-inside:avoid; margin-bottom:14px; display:flow-root; }
   }
   @media (min-width:1800px){
     .wrap{ max-width:1720px; }
-    .cards{ column-count:4; }
   }
-  /* Any card whose text can be long needs an explicit floor, or its
-     min-content width becomes the column's. Belt and braces after the above. */
-  .card{ overflow-wrap:anywhere; }
+  /* A tile holding a long unbroken string (a pasted URL, a capture with no
+     spaces) would otherwise set its column's min-content width and push the
+     grid wider than the page. */
+  .tile{ overflow-wrap:anywhere; }
 
   /* Tasks: drag handle, priority star, category headers */
   .task .drag{ flex:0 0 auto; cursor:grab; color:var(--faint); font-size:15px; margin-top:1px;
