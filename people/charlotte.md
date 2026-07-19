@@ -2,7 +2,7 @@
 type: person
 name: Charlotte
 tags: [family]
-updated: 2026-07-13
+updated: 2026-07-19
 ---
 
 ## What to know
@@ -15,3 +15,4 @@ Wife. Relationship is strained and in therapy. Birthday 19 November.
 
 ## Log
 - 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-14)_
+- 2026-07-19 — Contact: charlottemfkeime@gmail.com. Travel and appointments are usually booked jointly. _(from Gmail)_
