@@ -165,15 +165,15 @@ function slugify(name) {
 }
 
 async function readEntities(store, folder) {
-  const files = await store.listDir(folder);
-  const items = [];
-  for (const f of files) {
-    if (!f.name.endsWith(".md") || f.name.startsWith("_")) continue;
+  const files = (await store.listDir(folder)).filter((f) => f.name.endsWith(".md") && !f.name.startsWith("_"));
+  // Concurrent, not a for-await loop: fired together, the batching store folds
+  // all these reads into a single GraphQL request instead of one call each.
+  const items = await Promise.all(files.map(async (f) => {
     const file = await store.readFile(f.path);
-    if (!file) continue;
+    if (!file) return null;
     const e = parseEntity(file.text, f.name.slice(0, -3));
     const log = parseLog(file.text);
-    items.push({
+    return {
       ...e,
       path: f.path,
       slug: f.name.slice(0, -3),
@@ -181,28 +181,30 @@ async function readEntities(store, folder) {
       // "last heard" drives the People card's real job: who has gone quiet.
       last: log.length ? log[0].date : null,
       silentDays: log.length ? daysAgo(log[0].date) : null,
-    });
-  }
-  return items;
+    };
+  }));
+  return items.filter(Boolean);
 }
 
 // Occasions live wherever they are written, not only on people notes. Fifteen
 // acquaintances with a birthday each do not each warrant an entity note — they
 // live in notes/birthdays.md — but their dates should still reach the agenda.
 async function readOccasions(store) {
-  const files = [...await store.listDir("people"), ...await store.listDir("notes")];
+  const [pf, nf] = await Promise.all([store.listDir("people"), store.listDir("notes")]);
+  const files = [...pf, ...nf].filter((f) => f.name.endsWith(".md"));
   const out = [];
   const t = today();
-  for (const f of files) {
-    if (!f.name.endsWith(".md")) continue;
+  // Concurrent — and people/notes read here dedupe (via memoStore) with the same
+  // files read by readEntities/readLists, so they cost no extra subrequests.
+  await Promise.all(files.map(async (f) => {
     const file = await store.readFile(f.path);
-    if (!file) continue;
+    if (!file) return;
     // A note's occasions belong to a person only if it IS a person note.
     const who = f.path.startsWith("people/") ? f.name.slice(0, -3) : null;
     for (const m of file.text.matchAll(OCCASION_RE)) {
       if (m[1] >= t) out.push({ date: m[1], text: m[2].trim(), who });
     }
-  }
+  }));
   out.sort((a, b) => a.date.localeCompare(b.date));
   return out;
 }
@@ -310,17 +312,15 @@ function newestMatching(files, re) {
 // Skill run status: one <skill>.status file per skill in inbox/_runs/, plus any
 // unclaimed .run triggers (which tell us something is queued but not yet run).
 async function readSkills(store) {
-  const files = await store.listDir("inbox/_runs");
-  const digests = await store.listDir("digests");
+  const [files, digests] = await Promise.all([store.listDir("inbox/_runs"), store.listDir("digests")]);
   const status = {};
-  for (const f of files) {
-    if (!f.name.endsWith(".status")) continue;
+  await Promise.all(files.filter((f) => f.name.endsWith(".status")).map(async (f) => {
     const file = await store.readFile(f.path);
-    if (!file) continue;
+    if (!file) return;
     try {
       status[f.name.replace(/\.status$/, "")] = JSON.parse(file.text);
     } catch { /* ignore malformed status */ }
-  }
+  }));
   // Backfill missing outputs so Open is never greyed out over a bookkeeping gap.
   for (const [name, st] of Object.entries(status)) {
     if ((!st.outputs || !st.outputs.length) && SKILL_OUTPUT[name]) {
@@ -552,21 +552,19 @@ async function renameHabitGroup(store, habit, name) {
 // dashboard shows what they SAY, not just how many — a bare count of five is
 // not something you can act on.
 async function readInbox(store) {
-  const files = await store.listDir("inbox");
-  const out = [];
-  for (const f of files) {
-    if (!f.name.endsWith(".md") || f.name.startsWith("_")) continue;
+  const files = (await store.listDir("inbox")).filter((f) => f.name.endsWith(".md") && !f.name.startsWith("_"));
+  const out = await Promise.all(files.map(async (f) => {
     const file = await store.readFile(f.path);
     const text = file ? file.text.trim() : "";
     // <ISO>-<rand>.md — match the stamp rather than slicing a fixed width, or
     // the random suffix bleeds into the timestamp.
     const m = f.name.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})(\d{2})(\d{2})/);
-    out.push({
+    return {
       path: f.path,
       when: m ? `${m[1]}T${m[2]}:${m[3]}:${m[4]}` : null,
       text: text.length > 140 ? text.slice(0, 140) + "…" : text,
-    });
-  }
+    };
+  }));
   return out.sort((a, b) => String(b.when || "").localeCompare(String(a.when || "")));
 }
 
@@ -589,23 +587,21 @@ function parseListItems(text) {
 }
 
 async function readLists(store) {
-  const files = await store.listDir("notes");
-  const out = [];
-  for (const f of files) {
-    if (!f.name.endsWith(".md") || f.name.startsWith("_")) continue;
+  const files = (await store.listDir("notes")).filter((f) => f.name.endsWith(".md") && !f.name.startsWith("_"));
+  const out = (await Promise.all(files.map(async (f) => {
     const file = await store.readFile(f.path);
-    if (!file || !/^---\n[\s\S]*?^type:\s*list\s*$/m.test(file.text)) continue;
+    if (!file || !/^---\n[\s\S]*?^type:\s*list\s*$/m.test(file.text)) return null;
     const e = parseEntity(file.text, f.name.slice(0, -3));
     const items = parseListItems(file.text);
-    out.push({
+    return {
       slug: f.name.slice(0, -3),
       name: e.name || f.name.slice(0, -3),
       tags: e.tags,
       items,
       open: items.filter((i) => !i.done).length,
       done: items.filter((i) => i.done).length,
-    });
-  }
+    };
+  }))).filter(Boolean);
   return out.sort((a, b) => b.open - a.open || a.name.localeCompare(b.name));
 }
 
@@ -803,13 +799,12 @@ function agendaHorizon() {
 }
 
 async function buildData(store, feeds) {
-  const tasksFile = await store.readFile("tasks.md");
-  // cachedOnly: /api/data never blocks on the ~1MB calendar fetch. If the cache
-  // is cold it returns pending:true and the client hits /api/calendar, so the
-  // whole dashboard no longer waits five seconds behind one slow feed.
-  // allSettled, not all: if one read fails (e.g. a transient GitHub error or
-  // brushing the subrequest cap) that one card comes back empty instead of the
-  // whole dashboard 500-ing to "disconnected".
+  // Everything fires concurrently in one Promise.allSettled so the batching
+  // store folds the reads into ~2 GraphQL requests (listDirs, then all files).
+  // cachedOnly: /api/data never blocks on the ~1MB calendar fetch — a cold cache
+  // returns pending and the client hits /api/calendar separately.
+  // allSettled, not all: one failed read (transient GitHub error, or brushing
+  // the subrequest cap) empties that one card instead of 500-ing everything.
   const settled = await Promise.allSettled([
     readEntities(store, "projects"),
     readEntities(store, "people"),
@@ -821,6 +816,7 @@ async function buildData(store, feeds) {
     readLessons(store),
     readCalendar(feeds, today(), agendaHorizon(), false, true),
     readLists(store),
+    store.readFile("tasks.md"),
   ]);
   const pick = (i, dflt) => (settled[i].status === "fulfilled" ? settled[i].value : dflt);
   const projects = pick(0, []);
@@ -833,6 +829,7 @@ async function buildData(store, feeds) {
   const lessons = pick(7, []);
   const calendar = pick(8, { events: [], sources: [], pending: false });
   const lists = pick(9, []);
+  const tasksFile = pick(10, null);
   const tasks = tasksFile ? parseTasks(tasksFile.text) : [];
   // Resolve each task's [[wikilinks]] against the projects that actually exist,
   // so a link to a note that isn't a project doesn't invent one.

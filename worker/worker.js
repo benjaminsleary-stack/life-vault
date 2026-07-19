@@ -80,27 +80,98 @@ function gh(env, path, init = {}) {
 
 /* ------------------------------------------------------------- github store */
 
+// Fetch many files/dirs in ONE GraphQL request. Each key is {kind,path}; a file
+// resolves to a Blob (text+oid), a dir to a Tree (entries). This is what keeps
+// /api/data under the Workers subrequest cap: ~40 Contents calls collapse into a
+// couple of GraphQL calls. `entries` is a plain list (not a paginated
+// connection), so it needs no pagination args and the query costs ~1 point.
+async function graphqlBatch(env, branch, keys) {
+  const fields = keys.map((k, i) =>
+    `a${i}: object(expression: ${JSON.stringify(`${branch}:${k.path}`)}) {
+       __typename
+       ... on Blob { text isBinary oid }
+       ... on Tree { entries { name type oid } }
+     }`
+  ).join("\n");
+  const query = `query { repository(owner: ${JSON.stringify(env.GH_OWNER)}, name: ${JSON.stringify(env.GH_REPO)}) { ${fields} } }`;
+  const r = await fetch(`${API}/graphql`, {
+    method: "POST",
+    cf: { cacheTtl: 0, cacheEverything: false },
+    headers: {
+      Authorization: `Bearer ${env.GH_TOKEN}`,
+      "User-Agent": "life-vault-dashboard",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  });
+  if (!r.ok) throw new Error(`graphql ${r.status}`);
+  const j = await r.json();
+  if (j.errors) throw new Error(`graphql: ${JSON.stringify(j.errors).slice(0, 200)}`);
+  const repo = j.data && j.data.repository;
+  if (!repo) throw new Error("graphql: no repository");
+  return keys.map((_, i) => repo[`a${i}`] || null);
+}
+
 function githubStore(env) {
   const branch = env.GH_BRANCH || "main";
+
+  // Single-item REST calls: the GraphQL fallback path, and the writer's re-read.
+  async function restRead(path) {
+    const r = await gh(env, `/contents/${encodeURI(path)}?ref=${branch}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`read ${path}: ${r.status}`);
+    const j = await r.json();
+    return { text: j.content ? b64decode(j.content) : "", sha: j.sha };
+  }
+  async function restList(path) {
+    const r = await gh(env, `/contents/${encodeURI(path)}?ref=${branch}`);
+    if (r.status === 404) return [];
+    if (!r.ok) throw new Error(`list ${path}: ${r.status}`);
+    const j = await r.json();
+    return Array.isArray(j) ? j.map((e) => ({ name: e.name, path: e.path, sha: e.sha })) : [];
+  }
+
+  // DataLoader-style batching: reads queued within a microtask tick go out as
+  // ONE GraphQL query. The queue is per-request (a fresh store per fetch), so
+  // there is no cross-request state. On any GraphQL failure the whole batch
+  // falls back to per-item REST — the dashboard keeps working, just with more
+  // subrequests, never an outage over an optimisation.
+  let queue = [];
+  let scheduled = false;
+  const schedule = () => { if (!scheduled) { scheduled = true; queueMicrotask(flush); } };
+  async function flush() {
+    scheduled = false;
+    const batch = queue;
+    queue = [];
+    if (!batch.length) return;
+    let objs;
+    try {
+      objs = await graphqlBatch(env, branch, batch);
+    } catch {
+      await Promise.all(batch.map(async (b) => {
+        try { b.resolve(b.kind === "file" ? await restRead(b.path) : await restList(b.path)); }
+        catch (err) { b.reject(err); }
+      }));
+      return;
+    }
+    batch.forEach((b, i) => {
+      const o = objs[i];
+      if (b.kind === "file") {
+        b.resolve(o && o.__typename === "Blob" ? { text: o.isBinary ? "" : (o.text || ""), sha: o.oid } : null);
+      } else {
+        b.resolve(o && o.__typename === "Tree"
+          ? o.entries.map((e) => ({ name: e.name, path: `${b.path}/${e.name}`, sha: e.oid }))
+          : []);
+      }
+    });
+  }
+
   return {
-    async readFile(path) {
-      const r = await gh(env, `/contents/${encodeURI(path)}?ref=${branch}`);
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error(`read ${path}: ${r.status}`);
-      const j = await r.json();
-      return { text: j.content ? b64decode(j.content) : "", sha: j.sha };
-    },
-    async listDir(path) {
-      const r = await gh(env, `/contents/${encodeURI(path)}?ref=${branch}`);
-      if (r.status === 404) return [];
-      if (!r.ok) throw new Error(`list ${path}: ${r.status}`);
-      const j = await r.json();
-      return Array.isArray(j) ? j.map((e) => ({ name: e.name, path: e.path, sha: e.sha })) : [];
-    },
-    // Create or update a file (a commit). Pass sha to update, omit to create.
-    // A concurrent writer (bridge, scheduled skill, second device) makes the sha
-    // stale → GitHub returns 409/422; re-read the sha and retry a few times
-    // rather than surfacing a 500 to the dashboard.
+    readFile: (path) => new Promise((resolve, reject) => { queue.push({ kind: "file", path, resolve, reject }); schedule(); }),
+    listDir: (path) => new Promise((resolve, reject) => { queue.push({ kind: "dir", path, resolve, reject }); schedule(); }),
+    // Create or update a file (a commit). Pass sha to update, omit to create. A
+    // concurrent writer (bridge, scheduled skill, second device) makes the sha
+    // stale → 409/422; re-read (REST, unbatched) and retry rather than 500.
     async putFile(path, text, message, sha) {
       for (let attempt = 0; ; attempt++) {
         const body = { message, content: b64encode(text), branch };
@@ -112,7 +183,7 @@ function githubStore(env) {
         if (r.ok) return r.json();
         if ((r.status === 409 || r.status === 422) && attempt < 3) {
           await new Promise((res) => setTimeout(res, 250 * (attempt + 1)));
-          const cur = await this.readFile(path);
+          const cur = await restRead(path);
           sha = cur ? cur.sha : undefined;
           continue;
         }
