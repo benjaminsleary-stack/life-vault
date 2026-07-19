@@ -884,7 +884,48 @@ async function addTasks(store, lines, due, tag, project) {
 
 // Shared read-modify-write over one task line. `fn(body, m)` returns the new
 // body, or null to leave the file untouched.
-async function editTaskLine(store, id, message, fn) {
+const LINK_RE = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+const linksIn = (s) => [...String(s).matchAll(LINK_RE)].map((m) => m[1].trim());
+const tagsIn = (s) => [...String(s).matchAll(TAG_RE)].map((m) => m[1]);
+
+/**
+ * Refuse a rewrite that silently drops a link or tag.
+ *
+ * Twice in one sitting an edit destroyed something it was never asked to
+ * touch — both times because a line was rebuilt from its DISPLAY form, and the
+ * display form is lossy by design. Only the caller knows which links it means
+ * to remove, so anything else disappearing is a bug, and this turns it into a
+ * loud failure instead of a quiet one (golden rule 5).
+ */
+function assertNothingLost(before, after, mayRemove = []) {
+  const allowed = new Set(mayRemove.map((s) => String(s).toLowerCase()));
+  const lost = (kind, was, now) => {
+    const left = [...now];
+    const gone = [];
+    for (const item of was) {
+      const i = left.findIndex((x) => x.toLowerCase() === item.toLowerCase());
+      if (i >= 0) left.splice(i, 1);
+      else if (!allowed.has(item.toLowerCase())) gone.push(item);
+    }
+    if (gone.length) {
+      throw new Error(
+        `refusing to edit: would drop ${kind} ${gone.map((g) => `"${g}"`).join(", ")} — ` +
+        `not requested. before: "${before}" after: "${after}"`
+      );
+    }
+  };
+  lost("wikilink", linksIn(before), linksIn(after));
+  lost("tag", tagsIn(before), tagsIn(after));
+}
+
+/**
+ * The one place a task line's body is rewritten.
+ *
+ * `fn(body, match)` returns the new body, `false` to delete the line, or `null`
+ * to abort. Every mutation funnels through here, so the loss check only has to
+ * exist once — and any future endpoint inherits it without having to remember.
+ */
+async function editTaskLine(store, id, message, fn, mayRemove) {
   const cur = await store.readFile("tasks.md");
   if (!cur) return false;
   const lines = cur.text.split("\n");
@@ -893,7 +934,13 @@ async function editTaskLine(store, id, message, fn) {
   const next = fn(tl.m[3], tl.m);
   if (next === null) return false;
   if (next === false) lines.splice(tl.idx, 1);                       // delete
-  else lines[tl.idx] = `${tl.m[1]}- [${tl.m[2]}] ${next}`;
+  else {
+    // mayRemove may be a list, or a function of the original body — a retitle
+    // only knows what it is allowed to drop once it can see what was there.
+    const allowed = typeof mayRemove === "function" ? mayRemove(tl.m[3]) : (mayRemove || []);
+    assertNothingLost(tl.m[3], next, allowed);
+    lines[tl.idx] = `${tl.m[1]}- [${tl.m[2]}] ${next}`;
+  }
   await writeTasks(store, lines, message, cur.sha);
   return true;
 }
@@ -960,6 +1007,19 @@ async function editTask(store, id, fields, projectSlugs) {
   const tag = has("tag") ? String(fields.tag || "").replace(/^#/, "").trim() : null;
   if (tag && !AREAS.includes(tag)) return false;
   const project = has("project") ? String(fields.project || "").trim() : null;
+
+  // What this edit is ALLOWED to remove, declared up front: the area tag when
+  // you change area, and a project link when you reassign the project. Anything
+  // else disappearing is a bug and will throw.
+  // Computed from the line being edited, because a deliberate retitle is
+  // allowed to drop whatever the OLD title contained — you typed a new one.
+  const mayRemove = (body) => {
+    const out = [];
+    if (has("tag")) out.push(...AREAS);
+    if (has("project")) out.push(...(projectSlugs || []));
+    if (has("text") && String(fields.text).trim()) out.push(...linksIn(body));
+    return out;
+  };
 
   return editTaskLine(store, id, "dashboard: edit task", (body) => {
     let title = has("text") && String(fields.text).trim()
