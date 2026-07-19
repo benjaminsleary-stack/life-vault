@@ -807,7 +807,10 @@ async function buildData(store, feeds) {
   // cachedOnly: /api/data never blocks on the ~1MB calendar fetch. If the cache
   // is cold it returns pending:true and the client hits /api/calendar, so the
   // whole dashboard no longer waits five seconds behind one slow feed.
-  const [projects, people, occasions, brief, skills, inbox, habits, lessons, calendar, lists] = await Promise.all([
+  // allSettled, not all: if one read fails (e.g. a transient GitHub error or
+  // brushing the subrequest cap) that one card comes back empty instead of the
+  // whole dashboard 500-ing to "disconnected".
+  const settled = await Promise.allSettled([
     readEntities(store, "projects"),
     readEntities(store, "people"),
     readOccasions(store),
@@ -819,6 +822,17 @@ async function buildData(store, feeds) {
     readCalendar(feeds, today(), agendaHorizon(), false, true),
     readLists(store),
   ]);
+  const pick = (i, dflt) => (settled[i].status === "fulfilled" ? settled[i].value : dflt);
+  const projects = pick(0, []);
+  const people = pick(1, []);
+  const occasions = pick(2, []);
+  const brief = pick(3, null);
+  const skills = pick(4, {});
+  const inbox = pick(5, []);
+  const habits = pick(6, []);
+  const lessons = pick(7, []);
+  const calendar = pick(8, { events: [], sources: [], pending: false });
+  const lists = pick(9, []);
   const tasks = tasksFile ? parseTasks(tasksFile.text) : [];
   // Resolve each task's [[wikilinks]] against the projects that actually exist,
   // so a link to a note that isn't a project doesn't invent one.
@@ -1316,6 +1330,22 @@ async function health(store) {
 
 /* ------------------------------------------------------------------ routing */
 
+// Cloudflare Workers cap outbound subrequests (50 on the free plan). /api/data
+// reads every people/project/note file, and several are read twice (entities +
+// occasions, etc.) — 79 reads for this vault, which blows the cap and 500s the
+// whole dashboard. This wraps a store so each path is fetched at most once per
+// request (the in-flight promise is shared), collapsing 79 → ~50. Read-only and
+// request-scoped, so no staleness and writes are untouched.
+function memoStore(store) {
+  const inflight = new Map();
+  const once = (kind) => (p) => {
+    const k = kind + ":" + p;
+    if (!inflight.has(k)) inflight.set(k, store[kind](p));
+    return inflight.get(k);
+  };
+  return { readFile: once("readFile"), listDir: once("listDir"), putFile: store.putFile };
+}
+
 /**
  * The whole HTTP surface, host-agnostic.
  * Returns { status, body } — the host turns that into its own Response type.
@@ -1339,8 +1369,9 @@ export function createApi(rawStore, hooks = {}) {
     if (method === "GET") {
       if (path === "/api/data") {
         // Fast: never blocks on the calendar. A cold calendar comes back
-        // pending and the client fetches /api/calendar separately.
-        return { status: 200, body: await buildData(store, feeds) };
+        // pending and the client fetches /api/calendar separately. memoStore
+        // dedupes reads so this stays under the Worker subrequest cap.
+        return { status: 200, body: await buildData(memoStore(store), feeds) };
       }
       if (path === "/api/calendar") {
         // Slow: the actual ~1MB fetch lives here, on its own, so it can take five
