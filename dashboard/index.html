@@ -1473,15 +1473,28 @@
         '<div class="cal-sync">'+esc(ok.map((s)=>s.name).join(" + "))+" calendar · synced "+
         (mins<1?"just now":mins+"m ago")+
         ' · <button class="link" style="padding:0" onclick="refreshCalendar(this)">refresh</button></div>');
+    } else if(d.calendarPending){
+      $("agenda").insertAdjacentHTML("beforeend",
+        '<div class="cal-sync"><span class="running"></span> loading calendar…</div>');
     }
+  }
+  // The calendar loads on its own endpoint so the ~1MB fetch never blocks the
+  // dashboard. On success it merges into lastData and re-renders only the agenda.
+  function loadCalendar(fresh){
+    return req("/api/calendar?t="+Date.now()+(fresh?"&fresh=1":""))
+      .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
+      .then((c)=>{
+        if(!lastData) return;
+        lastData.calendar=c.calendar; lastData.calendarSources=c.calendarSources;
+        lastData.calendarPending=false; renderAgenda(lastData);
+      });
   }
   // Outlook regenerates the feed on every request, so the only thing between a
   // change there and this screen is our own 15-minute cache. This skips it.
   function refreshCalendar(btn){
     btn.textContent="refreshing…"; btn.disabled=true;
-    req("/api/data?calendar=fresh&t="+Date.now())
-      .then((r)=>{ if(!r.ok) throw new Error(); return r.json(); })
-      .then((d)=>{ render(d); toast("Calendar refreshed"); })
+    loadCalendar(true)
+      .then(()=>toast("Calendar refreshed"))
       .catch(()=>toast("Couldn't refresh the calendar",true));
   }
   function agendaRow(it, n){
@@ -1843,6 +1856,9 @@
     renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
     renderHabits(d.habits); renderAsk(d);
     renderProjects(d.projects); fillProjectPicker(d.projects); renderLists(d.lists);
+    // The calendar is fetched separately so a cold 5s feed never blocks the rest
+    // of the dashboard. When /api/data reports it cold, go and get it.
+    if(d.calendarPending) loadCalendar();
     // A run you triggered just landed → pop its first output for reading.
     const skills=d.skills||{};
     Object.keys(awaiting).forEach((name)=>{

@@ -727,9 +727,17 @@ const calCache = new Map();                    // url -> { at, events }
 // Last-Modified or Cache-Control on this URL, so a conditional request is
 // impossible and every refresh is a full megabyte. Hence a TTL, and an explicit
 // bypass for when you have just added something and want to see it now.
-async function fetchCalendar(feed, force) {
+async function fetchCalendar(feed, force, cachedOnly) {
   const hit = calCache.get(feed.url);
   if (!force && hit && Date.now() - hit.at < CAL_TTL_MS) return hit;
+  // The slow path is a full ~1MB download. /api/data must never wait on it —
+  // tasks, people and habits are all sub-100ms, and a cold calendar once blocked
+  // the entire dashboard behind a five-second fetch. In cachedOnly mode we return
+  // whatever we have (even stale) and let /api/calendar do the fetching.
+  if (cachedOnly) {
+    if (hit) return hit;
+    const e = new Error("cold"); e.cold = true; throw e;
+  }
   const r = await fetch(feed.url, {
     headers: { "User-Agent": "life-vault-dashboard" },
     cf: force ? { cacheTtl: 0 } : { cacheTtl: 900, cacheEverything: true },
@@ -746,15 +754,16 @@ async function fetchCalendar(feed, force) {
 // event stays on the calendar; it just never surfaces here.
 const PRIVATE_EVENT = /^that week$/i;
 
-async function readCalendar(feeds, fromDay, toDay, force) {
-  if (!feeds || !feeds.length) return { events: [], sources: [] };
+async function readCalendar(feeds, fromDay, toDay, force, cachedOnly) {
+  if (!feeds || !feeds.length) return { events: [], sources: [], pending: false };
   const events = [];
   const sources = [];
+  let pending = false;
   // One broken feed must not take the whole dashboard down with it — the app
   // says which source failed and still renders the rest.
   await Promise.all(feeds.map(async (feed) => {
     try {
-      const entry = await fetchCalendar(feed, force);
+      const entry = await fetchCalendar(feed, force, cachedOnly);
       // Expanding recurrences costs real CPU, and a Worker's budget is measured
       // in milliseconds — so the expanded window is memoised alongside the
       // parse. Without this every poll re-expanded the whole calendar and the
@@ -769,6 +778,10 @@ async function readCalendar(feeds, fromDay, toDay, force) {
       for (const occ of entry.expanded) events.push(occ);
       sources.push({ name: feed.name, ok: true, fetched: new Date(entry.at).toISOString(), ageMs: Date.now() - entry.at });
     } catch (e) {
+      // A cold miss in cachedOnly mode is not a failure — it means "ask
+      // /api/calendar", not "this feed is broken". Keep it off the sources list
+      // so the app doesn't flash a spurious "unavailable".
+      if (e && e.cold) { pending = true; return; }
       sources.push({ name: feed.name, ok: false, error: String((e && e.message) || e) });
     }
   }));
@@ -776,7 +789,7 @@ async function readCalendar(feeds, fromDay, toDay, force) {
     a.date.localeCompare(b.date) ||
     (a.allDay === b.allDay ? String(a.time).localeCompare(String(b.time)) : (a.allDay ? -1 : 1))
   );
-  return { events, sources };
+  return { events, sources, pending };
 }
 
 /* -------------------------------------------------------------- assembly */
@@ -784,10 +797,16 @@ async function readCalendar(feeds, fromDay, toDay, force) {
 // How far the agenda looks. Matches the dashboard's own horizon.
 const AGENDA_DAYS = 14;
 
-async function buildData(store, feeds, forceCalendar) {
-  const tasksFile = await store.readFile("tasks.md");
-  const horizon = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" })
+function agendaHorizon() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" })
     .format(new Date(Date.now() + AGENDA_DAYS * 864e5));
+}
+
+async function buildData(store, feeds) {
+  const tasksFile = await store.readFile("tasks.md");
+  // cachedOnly: /api/data never blocks on the ~1MB calendar fetch. If the cache
+  // is cold it returns pending:true and the client hits /api/calendar, so the
+  // whole dashboard no longer waits five seconds behind one slow feed.
   const [projects, people, occasions, brief, skills, inbox, habits, lessons, calendar, lists] = await Promise.all([
     readEntities(store, "projects"),
     readEntities(store, "people"),
@@ -797,7 +816,7 @@ async function buildData(store, feeds, forceCalendar) {
     readInbox(store),
     readHabits(store),
     readLessons(store),
-    readCalendar(feeds, today(), horizon, forceCalendar),
+    readCalendar(feeds, today(), agendaHorizon(), false, true),
     readLists(store),
   ]);
   const tasks = tasksFile ? parseTasks(tasksFile.text) : [];
@@ -843,6 +862,7 @@ async function buildData(store, feeds, forceCalendar) {
     lessonCount: lessons.length,
     calendar: calendar.events,
     calendarSources: calendar.sources,
+    calendarPending: calendar.pending,   // cold — client should hit /api/calendar
     lists,
   };
 }
@@ -1318,10 +1338,16 @@ export function createApi(rawStore, hooks = {}) {
   return async function handle(method, path, params, payload) {
     if (method === "GET") {
       if (path === "/api/data") {
-        // ?calendar=fresh bypasses the feed cache, for when you have just added
-        // a meeting and do not want to wait out the TTL.
-        const force = params.get("calendar") === "fresh";
-        return { status: 200, body: await buildData(store, feeds, force) };
+        // Fast: never blocks on the calendar. A cold calendar comes back
+        // pending and the client fetches /api/calendar separately.
+        return { status: 200, body: await buildData(store, feeds) };
+      }
+      if (path === "/api/calendar") {
+        // Slow: the actual ~1MB fetch lives here, on its own, so it can take five
+        // seconds without freezing tasks/people/habits. ?fresh bypasses the TTL.
+        const force = params.get("fresh") != null;
+        const cal = await readCalendar(feeds, today(), agendaHorizon(), force, false);
+        return { status: 200, body: { calendar: cal.events, calendarSources: cal.sources } };
       }
       if (path === "/api/health") return { status: 200, body: await health(store) };
       if (path === "/api/graph") return { status: 200, body: await buildGraph(store) };
