@@ -483,6 +483,60 @@
     .skel:empty{ animation:none; }
     .modal-back,.modal,.task,.task .t-title{ transition:none; }
   }
+  /* ============ Bento redesign ============ */
+  .cap-btn{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--accent-text);
+    background:rgba(217,138,99,.12); border:1px solid rgba(217,138,99,.4); border-radius:999px; padding:7px 13px; cursor:pointer; }
+  .cap-btn:active{ background:rgba(217,138,99,.2); }
+  @media (max-width:520px){ .cap-btn span{ display:none; } }
+
+  .bento{ display:grid; grid-template-columns:1fr; gap:12px; align-items:start; }
+  @media (min-width:720px){ .bento{ grid-template-columns:1fr 1fr; } }
+  @media (min-width:940px){ .bento{ grid-template-columns:repeat(3,1fr); } }
+  .tile{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:15px 16px;
+    overflow-wrap:anywhere; min-width:0; }
+  .tile.click{ cursor:pointer; transition:border-color .15s; }
+  .tile.click:active, .tile.click:hover{ border-color:var(--line-key); }
+  .tile-sep{ height:1px; background:var(--line-row); margin:14px 0; }
+  /* Today runs tall; the map spans the full width and is the visual anchor. */
+  @media (min-width:720px){ .t-today{ grid-row:span 2; } .t-map{ grid-column:1 / -1; } }
+  .expand{ font-family:var(--ui); font-size:10.5px; letter-spacing:.04em; color:var(--faint); cursor:pointer; text-transform:uppercase; }
+  .expand:hover{ color:var(--accent-text); }
+  .brief-clip{ max-height:190px; overflow:hidden; -webkit-mask-image:linear-gradient(#000 72%, transparent); mask-image:linear-gradient(#000 72%, transparent); }
+
+  /* Vault map tile — Operator wireframe on near-black */
+  .t-map{ background:#0f0d0a; border-color:#241d12; }
+  .map-h{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .map-h .label{ color:var(--muted); }
+  .live{ color:var(--honey); font-size:9.5px; margin-left:8px; }
+  .live b{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--honey); box-shadow:0 0 6px var(--honey); margin-right:4px; vertical-align:middle; }
+  .map-canvas{ position:relative; width:100%; height:260px; overflow:hidden; touch-action:none; }
+  .map-canvas canvas{ display:block; width:100%; height:100%; }
+
+  /* Graph inspector sheet */
+  .gsheet-back{ position:fixed; inset:0; z-index:60; display:none; place-items:center; padding:16px;
+    background:rgba(8,6,4,.62); }
+  .gsheet-back.show{ display:grid; }
+  .gsheet{ width:100%; max-width:940px; height:82vh; max-height:660px; background:#0f0d0a; border:1px solid #2a2114;
+    border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+  .gsheet-head{ display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid #221a10; }
+  .gsheet-head .gs-title{ font-family:var(--display); font-size:17px; }
+  .gsheet-head input{ margin-left:auto; max-width:230px; font-size:13px; padding:7px 12px; }
+  .gsheet-body{ flex:1; display:grid; grid-template-columns:1fr 290px; min-height:0; }
+  @media (max-width:640px){ .gsheet-body{ grid-template-columns:1fr; grid-template-rows:1fr auto; } }
+  .gsheet-canvas{ position:relative; border-right:1px solid #221a10; min-height:0; overflow:hidden; touch-action:none; }
+  @media (max-width:640px){ .gsheet-canvas{ border-right:none; border-bottom:1px solid #221a10; min-height:300px; } }
+  .gsheet-canvas canvas{ display:block; width:100%; height:100%; }
+  .gsheet-inspect{ padding:16px; overflow-y:auto; }
+  .gi-type{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--purple); }
+  .gi-name{ font-family:var(--display); font-size:22px; margin:2px 0 6px; }
+  .gi-facts{ font-size:11.5px; color:var(--muted); line-height:1.7; }
+  .gi-sec{ font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin:14px 0 6px; }
+  .gi-rel{ display:flex; flex-wrap:wrap; gap:5px; }
+  .gi-rel span{ font-size:11.5px; color:var(--text2); border:1px solid var(--line-key); border-radius:999px; padding:3px 9px; cursor:pointer; }
+  .gi-rel span:hover{ border-color:var(--accent); }
+
+  /* Latest-brief reader popup: reuse the modal, with a soft glow */
+  .modal.glow-soft{ box-shadow:0 0 0 1px rgba(217,138,99,.16), 0 0 40px -6px rgba(217,138,99,.24); }
 </style>
 </head>
 <body>
@@ -505,6 +559,7 @@
         <h1>Life<span>·</span>Vault</h1>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
+        <button class="cap-btn" onclick="focusCapture()" title="Capture to inbox">＋ <span>Capture</span></button>
         <span class="status-pill" id="statusPill" onclick="openHealth()" title="Connection and routine health"><span class="breathe-dot"></span><span id="statusText">connecting…</span></span>
       </div>
     </div>
@@ -518,15 +573,20 @@
     </div>
 
     <nav class="jump">
-      <a href="#sec-today">Tasks</a>
+      <a href="#sec-today">Today</a>
       <a href="#sec-brief">Brief</a>
+      <a href="#sec-map">Map</a>
       <a href="#sec-skills">Routines</a>
       <a href="#sec-people">People</a>
     </nav>
 
-    <div class="cards">
-    <div class="card c-tasks" id="sec-today">
-      <div class="section-head"><p class="label">Tasks</p><span class="count" id="taskCount"></span></div>
+    <div class="bento">
+    <!-- TODAY: agenda + tasks (merged) -->
+    <div class="tile t-today" id="sec-today">
+      <div class="section-head"><p class="label">Today</p><span class="count" id="agendaCount">next 2 weeks</span></div>
+      <div id="agenda" class="skel"></div>
+      <div class="tile-sep"></div>
+      <div class="section-head"><p class="label">To-do</p><span class="count" id="taskCount"></span></div>
       <div class="addrow">
         <input type="text" id="ttext" placeholder="Add a task…" onkeydown="if(event.key==='Enter')doAddTask()" />
         <button class="btn primary addbtn" onclick="doAddTask()" aria-label="Add task">＋</button>
@@ -550,22 +610,34 @@
       <div id="tasksAll" class="hidden"></div>
       <button class="link" id="showAllBtn" onclick="toggleShowAll()" style="margin-top:8px">Show all</button>
     </div>
-    <div class="card c-agenda">
-      <div class="section-head"><p class="label">Agenda</p><span class="count" id="agendaCount">next 2 weeks</span></div>
-      <div id="agenda" class="skel"></div>
-    </div>
-    <div class="card c-lists">
-      <div class="section-head"><p class="label">Lists</p><span class="count" id="listCount"></span></div>
-      <div id="lists" class="skel"></div>
-      <button class="link" onclick="newList()" style="margin-top:8px">＋ New list</button>
+
+    <!-- BRIEF (expand → glow popup) -->
+    <div class="tile t-brief" id="sec-brief">
+      <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span><span class="expand" onclick="openBrief()">expand ⤢</span></div>
+      <div class="md brief-clip" id="brief"><div class="muted">—</div></div>
     </div>
 
-    <div class="card c-projects">
-      <div class="section-head"><p class="label">Projects</p><span class="count" id="projCount"></span></div>
-      <div id="projects" class="skel"></div>
+    <!-- VAULT MAP (Operator; tap to inspect) -->
+    <div class="tile t-map click" id="sec-map" onclick="openGraphSheet()">
+      <div class="map-h"><p class="label">Vault map <span class="live"><b></b>live</span></p><span class="expand">expand ⤢</span></div>
+      <div class="map-canvas" id="mapCanvas"></div>
     </div>
 
-    <div class="card c-capture">
+    <!-- RHYTHM (habits) -->
+    <div class="tile t-rhythm">
+      <div class="section-head"><p class="label">Rhythm</p><span class="count" id="habitPct"></span></div>
+      <div id="habits" class="skel"></div>
+      <button class="link" onclick="editHabits()" style="margin-top:8px">Edit habits</button>
+    </div>
+
+    <!-- WEATHER -->
+    <div class="tile t-weather">
+      <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
+      <div id="weatherBody" class="skel"></div>
+    </div>
+
+    <!-- CAPTURE -->
+    <div class="tile t-capture">
       <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
       <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
       <div class="row">
@@ -574,35 +646,56 @@
       </div>
       <div id="inboxList"></div>
     </div>
-    <div class="card c-brief" id="sec-brief">
-      <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span></div>
-      <div class="md" id="brief"><div class="muted">—</div></div>
+
+    <!-- ROUTINES & activity -->
+    <div class="tile t-skills" id="sec-skills">
+      <div class="section-head"><p class="label">Routines &amp; activity</p><span class="count" id="skillsCount"></span></div>
+      <div id="skills" class="skel"></div>
     </div>
-    <div class="card c-habits">
-      <div class="section-head"><p class="label">Habits</p><span class="count" id="habitPct"></span></div>
-      <div id="habits" class="skel"></div>
-      <button class="link" onclick="editHabits()" style="margin-top:8px">Edit habits</button>
+
+    <!-- PEOPLE -->
+    <div class="tile t-people" id="sec-people">
+      <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
+      <div id="ppl" class="skel"></div>
     </div>
-    <div class="card c-weather">
-      <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
-      <div id="weatherBody" class="skel"></div>
-    </div>
-    <div class="card c-ask">
+
+    <!-- ASK -->
+    <div class="tile t-ask">
       <div class="section-head"><p class="label">Ask</p><span class="count" id="askState">your vault</span></div>
       <input type="text" id="askq" placeholder="e.g. what's open for the house?" onkeydown="if(event.key==='Enter')askVault()" />
       <div class="row"><button class="btn primary" onclick="askVault()">Ask</button></div>
       <div id="askBody"></div>
     </div>
-    <div class="card c-people" id="sec-people">
-      <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
-      <div id="ppl" class="skel"></div>
-    </div>
-    <div class="card c-skills" id="sec-skills">
-      <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span></div>
-      <div id="skills" class="skel"></div>
-    </div>
-    </div><!-- /.cards -->
 
+    <!-- LISTS -->
+    <div class="tile t-lists">
+      <div class="section-head"><p class="label">Lists</p><span class="count" id="listCount"></span></div>
+      <div id="lists" class="skel"></div>
+      <button class="link" onclick="newList()" style="margin-top:8px">＋ New list</button>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="tile t-projects">
+      <div class="section-head"><p class="label">Projects</p><span class="count" id="projCount"></span></div>
+      <div id="projects" class="skel"></div>
+    </div>
+    </div><!-- /.bento -->
+
+  </div>
+
+  <!-- Vault map — expanded inspector -->
+  <div class="gsheet-back" id="graphSheet" onclick="if(event.target===this)closeGraphSheet()">
+    <div class="gsheet">
+      <div class="gsheet-head">
+        <span class="gs-title">Vault map</span>
+        <input type="text" id="gsSearch" placeholder="search entities…" oninput="graphHighlight(this.value)" />
+        <button class="modal-close" onclick="closeGraphSheet()" aria-label="Close">✕</button>
+      </div>
+      <div class="gsheet-body">
+        <div class="gsheet-canvas" id="gsCanvas"></div>
+        <div class="gsheet-inspect" id="gsInspect"><div class="muted">Tap a node to inspect it.</div></div>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -702,6 +795,7 @@
       if(!r.ok) throw new Error("HTTP "+r.status);
       render(await r.json());
       setStatus(true);
+      loadGraph();
       if(manual) toast("Up to date");
     }catch(e){ setStatus(false); if(manual) toast("Couldn't reach the vault",true); }
     finally{ if(manual) setTimeout(()=>btn.classList.remove("spin"),400); }
@@ -979,7 +1073,14 @@
         decorateBrief($("modalBody"), path.split("/").pop().replace(/\.md$/,"")); })
       .catch(()=> $("modalBody").innerHTML='<div class="muted">Couldn\'t load this file.</div>');
   }
-  function closeModal(){ $("modalBack").classList.remove("show"); }
+  function closeModal(){ $("modalBack").classList.remove("show"); const m=$("modalBack").querySelector(".modal"); if(m) m.classList.remove("glow-soft"); }
+  function focusCapture(){ const e=$("cap"); if(!e) return; e.scrollIntoView({behavior:"smooth", block:"center"}); setTimeout(()=>e.focus(), 260); }
+  // Read the latest brief full-screen, with a soft glow.
+  function openBrief(){
+    const html=$("brief").innerHTML;
+    openPanel("Latest brief", (html && !/^\s*<div class="muted">—<\/div>\s*$/.test(html)) ? html : '<div class="muted">No brief yet — run Morning or Evening.</div>');
+    const m=$("modalBack").querySelector(".modal"); if(m) m.classList.add("glow-soft");
+  }
   // The sheet does double duty: a file with a reply box, or a plain panel.
   function openPanel(title, html){
     $("modalName").textContent=title;
@@ -1968,6 +2069,101 @@
     setInterval(()=>{ load(); loadHealth(); }, 60000);
     loadWeather(); setInterval(loadWeather, 1800000); }
   else { showGate(); }
+
+  /* ---------------------- Vault map (Operator graph) ---------------------- */
+  let GRAPH=null, mapView=null, sheetView=null;
+  const GTYPE_COL={ person:"#8faa78", project:"#d9a441", topic:"#b79bd0", area:"#d9a441" };
+  const GTYPE_FOLDER={ area:"maps", person:"people", project:"projects", topic:"notes" };
+
+  // A tiny force layout (repulsion + edge springs + centre gravity), run once,
+  // then normalised to 0..1 so the renderer can scale it into any container.
+  function graphLayout(nodes, edges){
+    const idx=new Map(nodes.map((n,i)=>[n.id,i]));
+    nodes.forEach((n,i)=>{ const a=i/Math.max(1,nodes.length)*Math.PI*2; n.x=Math.cos(a); n.y=Math.sin(a); n.vx=0; n.vy=0; });
+    const links=edges.map((e)=>[idx.get(e.from), idx.get(e.to)]).filter(([a,b])=>a!=null&&b!=null);
+    for(let it=0; it<240; it++){
+      for(let i=0;i<nodes.length;i++){ for(let j=i+1;j<nodes.length;j++){
+        let dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y, d2=dx*dx+dy*dy+0.01, d=Math.sqrt(d2), f=0.05/d2;
+        dx/=d; dy/=d; nodes[i].vx+=dx*f; nodes[i].vy+=dy*f; nodes[j].vx-=dx*f; nodes[j].vy-=dy*f;
+      }}
+      for(const [a,b] of links){ let dx=nodes[b].x-nodes[a].x, dy=nodes[b].y-nodes[a].y, d=Math.sqrt(dx*dx+dy*dy)+0.001, f=(d-0.34)*0.12;
+        dx/=d; dy/=d; nodes[a].vx+=dx*f; nodes[a].vy+=dy*f; nodes[b].vx-=dx*f; nodes[b].vy-=dy*f; }
+      for(const n of nodes){ n.vx-=n.x*0.02; n.vy-=n.y*0.02; n.x+=n.vx; n.y+=n.vy; n.vx*=0.85; n.vy*=0.85; }
+    }
+    let mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+    for(const n of nodes){ mnx=Math.min(mnx,n.x);mxx=Math.max(mxx,n.x);mny=Math.min(mny,n.y);mxy=Math.max(mxy,n.y); }
+    const sx=(mxx-mnx)||1, sy=(mxy-mny)||1;
+    for(const n of nodes){ n.bx=(n.x-mnx)/sx; n.by=(n.y-mny)/sy; }
+  }
+
+  function makeGraph(host, data, opts){
+    opts=opts||{};
+    const nodes=(data.nodes||[]).map((n)=>({...n})); const edges=data.edges||[];
+    graphLayout(nodes, edges);
+    const byId=new Map(nodes.map((n)=>[n.id,n]));
+    const nbr=new Map(); const add=(a,b)=>{ if(!nbr.has(a))nbr.set(a,new Set()); nbr.get(a).add(b); };
+    edges.forEach((e)=>{ add(e.from,e.to); add(e.to,e.from); });
+    const canvas=document.createElement("canvas"); host.textContent=""; host.appendChild(canvas);
+    const ctx=canvas.getContext("2d"); const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let W=0,H=0,dpr=1,t=0,raf=null,running=false,hl="";
+    const PAD=opts.mini?0.12:0.09;
+    function size(){ const r=host.getBoundingClientRect(); if(!r.width)return; dpr=Math.min(2,devicePixelRatio||1); W=r.width; H=r.height||220; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+    const px=(n)=>(PAD+n.bx*(1-2*PAD))*W, py=(n)=>(PAD+n.by*(1-2*PAD))*H;
+    const wob=(n,ax)=>reduce?0:Math.sin(t*0.5+((n.id.charCodeAt(0)||3))+(ax==="y"?1.7:0))*(opts.mini?1.3:2.2);
+    const pos=(n)=>({ x:px(n)+wob(n,"x"), y:py(n)+wob(n,"y"), r:(opts.mini?2.2:3)+Math.sqrt(Math.max(1,n.record_count||1))*(opts.mini?1:1.4) });
+    const ov=(a,b)=>!(a.x2<b.x1||b.x2<a.x1||a.y2<b.y1||b.y2<a.y1);
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      edges.forEach((e)=>{ const a=byId.get(e.from), b=byId.get(e.to); if(!a||!b)return; const pa=pos(a),pb=pos(b);
+        ctx.strokeStyle="rgba(217,164,65,.22)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke(); });
+      nodes.forEach((n)=>{ const p=pos(n), col=GTYPE_COL[n.type]||"#b9ab97", dim=hl && !n.name.toLowerCase().includes(hl);
+        ctx.globalAlpha=dim?0.22:1;
+        if(opts.mini){ ctx.strokeStyle=col; ctx.lineWidth=1.3; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.stroke(); }
+        else { ctx.fillStyle=col; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); }
+        ctx.globalAlpha=1; });
+      if(W>200){ const drawn=[]; const cand=nodes.filter((n)=>n.type==="area"||(!opts.mini&&(n.record_count||0)>=3)).sort((a,b)=>(b.type==="area")-(a.type==="area")||((b.record_count||0)-(a.record_count||0)));
+        for(const n of cand){ const p=pos(n), fs=n.type==="area"?(opts.mini?11:12.5):10.5; ctx.font=fs+'px ui-monospace, "SF Mono", Menlo, monospace'; const tw=ctx.measureText(n.name).width;
+          const below=(p.y/H)<0.75, ly=below?p.y+p.r+3:p.y-p.r-3-fs, rect={x1:p.x-tw/2-3,x2:p.x+tw/2+3,y1:ly-2,y2:ly+fs+2};
+          if(rect.x1<2||rect.x2>W-2||rect.y1<2||rect.y2>H-2)continue; if(drawn.some((d)=>ov(rect,d)))continue; drawn.push(rect);
+          ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillStyle=n.type==="area"?"#e8dcc2":"#8f8262"; ctx.fillText(n.name,p.x,ly); } }
+      t+=0.016;
+    }
+    function loop(){ if(!running)return; draw(); raf=requestAnimationFrame(loop); }
+    function start(){ if(running)return; running=true; loop(); } function stop(){ running=false; if(raf)cancelAnimationFrame(raf); }
+    canvas.addEventListener("click",(ev)=>{ const r=canvas.getBoundingClientRect(), mx=ev.clientX-r.left, my=ev.clientY-r.top; let best=null,bd=1e9;
+      for(const n of nodes){ const p=pos(n), d=(p.x-mx)**2+(p.y-my)**2; if(d<bd){ bd=d; best=n; } } if(best&&bd<420&&opts.onSelect) opts.onSelect(best.id); });
+    size(); draw();
+    try{ new ResizeObserver(()=>{ size(); if(!running)draw(); }).observe(host); }catch(e){}
+    try{ new IntersectionObserver((es)=>es.forEach((e)=>e.isIntersecting?start():stop()),{threshold:.05}).observe(canvas); }catch(e){ start(); }
+    document.addEventListener("visibilitychange",()=>document.hidden?stop():start());
+    return { highlight:(term)=>{ hl=(term||"").toLowerCase().trim(); }, node:(id)=>byId.get(id),
+      neighbors:(id)=>[...(nbr.get(id)||[])].map((x)=>byId.get(x)).filter(Boolean), destroy:()=>{ stop(); host.textContent=""; } };
+  }
+
+  async function loadGraph(){
+    const host=$("mapCanvas"); if(!host) return;
+    try{ const r=await req("/api/graph"); if(!r.ok) throw new Error(); GRAPH=await r.json();
+      if(mapView) mapView.destroy(); mapView=makeGraph(host, GRAPH, { mini:true, onSelect:(id)=>openGraphSheet(id) });
+    }catch(e){ host.innerHTML='<div class="muted" style="padding:14px">Map unavailable.</div>'; }
+  }
+  function openGraphSheet(focusId){
+    $("graphSheet").classList.add("show");
+    if(sheetView) sheetView.destroy();
+    sheetView=makeGraph($("gsCanvas"), GRAPH||{nodes:[],edges:[]}, { mini:false, onSelect:inspectNode });
+    if(typeof focusId==="string") inspectNode(focusId);
+  }
+  function closeGraphSheet(){ $("graphSheet").classList.remove("show"); if(sheetView){ sheetView.destroy(); sheetView=null; } }
+  function graphHighlight(term){ if(sheetView) sheetView.highlight(term); }
+  function inspectNode(id){
+    const v=sheetView||mapView; if(!v) return; const n=v.node(id); if(!n) return;
+    const nb=v.neighbors(id), folder=GTYPE_FOLDER[n.type]||"notes", path=folder+"/"+id+".md";
+    const rel=nb.slice(0,14).map((x)=>'<span onclick="inspectNode(\''+x.id+'\')">'+esc(x.name)+'</span>').join("") || '<span class="muted" style="border:none;padding:0">no links yet</span>';
+    $("gsInspect").innerHTML='<div class="gi-type">'+esc(n.type)+' · selected</div><div class="gi-name">'+esc(n.name)+'</div>'+
+      '<div class="gi-facts">'+(n.record_count||0)+' connection'+((n.record_count||0)===1?"":"s")+' · '+esc(folder)+'/</div>'+
+      '<div class="gi-sec">Linked</div><div class="gi-rel">'+rel+'</div>'+
+      '<div style="margin-top:16px"><button class="btn primary" style="width:100%" onclick="openFile(\''+path+'\')">Open note →</button></div>';
+  }
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape" && $("graphSheet").classList.contains("show")) closeGraphSheet(); });
 </script>
 </body>
 </html>
