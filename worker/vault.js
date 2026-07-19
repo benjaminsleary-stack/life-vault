@@ -186,16 +186,21 @@ async function readEntities(store, folder) {
   return items;
 }
 
+// Occasions live wherever they are written, not only on people notes. Fifteen
+// acquaintances with a birthday each do not each warrant an entity note — they
+// live in notes/birthdays.md — but their dates should still reach the agenda.
 async function readOccasions(store) {
-  const files = await store.listDir("people");
+  const files = [...await store.listDir("people"), ...await store.listDir("notes")];
   const out = [];
   const t = today();
   for (const f of files) {
     if (!f.name.endsWith(".md")) continue;
     const file = await store.readFile(f.path);
     if (!file) continue;
+    // A note's occasions belong to a person only if it IS a person note.
+    const who = f.path.startsWith("people/") ? f.name.slice(0, -3) : null;
     for (const m of file.text.matchAll(OCCASION_RE)) {
-      if (m[1] >= t) out.push({ date: m[1], text: m[2].trim(), who: f.name.slice(0, -3) });
+      if (m[1] >= t) out.push({ date: m[1], text: m[2].trim(), who });
     }
   }
   out.sort((a, b) => a.date.localeCompare(b.date));
@@ -735,6 +740,12 @@ async function fetchCalendar(feed, force) {
   return entry;
 }
 
+// Calendar titles that are private markers, not appointments. They are the
+// user's own shorthand — "That week" tracks Charlotte's cycle — and must not
+// reach the agenda or a brief, exactly like a ## Private note (CLAUDE.md). The
+// event stays on the calendar; it just never surfaces here.
+const PRIVATE_EVENT = /^that week$/i;
+
 async function readCalendar(feeds, fromDay, toDay, force) {
   if (!feeds || !feeds.length) return { events: [], sources: [] };
   const events = [];
@@ -750,7 +761,9 @@ async function readCalendar(feeds, fromDay, toDay, force) {
       // steady-state cost of a cache HIT was still tens of milliseconds.
       const key = `${fromDay}|${toDay}`;
       if (entry.window !== key) {
-        entry.expanded = expandEvents(entry.events, fromDay, toDay).map((o) => ({ ...o, source: feed.name }));
+        entry.expanded = expandEvents(entry.events, fromDay, toDay)
+          .filter((o) => !PRIVATE_EVENT.test(o.title.trim()))
+          .map((o) => ({ ...o, source: feed.name }));
         entry.window = key;
       }
       for (const occ of entry.expanded) events.push(occ);

@@ -151,6 +151,22 @@ For each file in `inbox/` (oldest first): **archive the raw file first**, then r
 - otherwise → a note under `notes/` (or `daily/` if it's a journal-style entry)
 Never lose text: if unsure, file under `notes/unsorted/` with the original line.
 
+## Private sections (binding)
+
+A `## Private` section in any note is **never** surfaced in a brief, digest,
+notification or nudge — not summarised, not alluded to, not used as the reason for
+a suggestion. It may be read when Ben asks a direct question, and it renders in the
+app on his own unlocked device.
+
+This exists because some things are worth the system knowing and not worth it
+mentioning. Treat a `## Private` heading as a wall: content below it informs
+nothing that leaves the vault unprompted.
+
+The same wall applies to **calendar events used as private markers**: an event
+titled `That week` (Charlotte's cycle) is filtered out of the agenda and every
+brief, in both `worker/vault.js` and `scripts/fetch-calendar.mjs`. It stays on
+the calendar; it never surfaces.
+
 ## Style
 
 Plain British English. Wikilinks (`[[Charlotte]]`) between related notes. Keep

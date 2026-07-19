@@ -31,6 +31,16 @@ years ago — her father had a long-running affair and is now with that woman.
 - (occasion:: 2026-08-31) Civil wedding anniversary
 - (occasion:: 2026-09-17) Wedding anniversary
 
+## Private
+
+_Never surfaced in a brief, digest or notification. Available when Ben asks
+directly, and visible in the app on his own unlocked device. See the private-notes
+rule in CLAUDE.md._
+
+- Charlotte's period is tracked on the personal calendar as a recurring all-day
+  marker titled "That week", roughly monthly. Useful context for reading how a
+  week is going; not something to raise unprompted.
+
 ## Log
 - 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-14)_
 - 2026-07-19 — Contact: charlottemfkeime@gmail.com. Travel and appointments are usually booked jointly. _(from Gmail)_
@@ -47,3 +57,4 @@ dated fragments about her, surfaced before they matter. Every fragment logged he
 a direct attempt at the thing she has asked for. Surface, prompt, and track; Ben has
 asked to be challenged on it and set no limits._
 - 2026-07-19 — Correction: civil wedding anniversary is 31 August, not 21 August. The onboarding date was wrong; confirmed by Ben against the calendar.
+- 2026-07-19 — Cycle marker identified on the calendar; recorded under Private at Ben's request.

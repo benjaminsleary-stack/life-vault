@@ -60,6 +60,9 @@ await Promise.all(feeds.map(async (feed) => {
     const r = await fetch(feed.url, { headers: { "User-Agent": "life-vault" } });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     for (const e of expandEvents(parseICS(await r.text()), from, to, { zone: TZ })) {
+      // Private calendar markers never reach a brief — see PRIVATE_EVENT in
+      // worker/vault.js and the ## Private rule in CLAUDE.md.
+      if (/^that week$/i.test(e.title.trim())) continue;
       events.push({
         date: e.date,
         when: e.date === from ? "today" : e.date === fmt(new Date(Date.now() + 864e5)) ? "tomorrow" : e.date,
