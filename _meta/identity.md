@@ -9,6 +9,7 @@ Chartered MEP engineer (CEng MCIBSE MIET), 10+ years in UK new-build and retrofi
 decarbonisation masterplans, high-performance builds, heritage, higher education.
 Currently at JGC. Lives at 30 Canterbury Street, Cambridge with wife [[Charlotte]],
 sons [[Jasper]] (5) and [[Milo]] (2), and cat [[Pixel]].
+Born 21 March.
 
 Pragmatic engineer who balances system efficiency with buildability and long-term
 operation. Direct, evidence-led, rigorous.
@@ -66,3 +67,4 @@ clear positive effect on his mental health — see [[mental-health]].
 ## Log
 - 2026-07-19 — Structured interview: voice and pressure, direction, people. Replaces
   the placeholder profile.
+- 2026-07-19 — Own birthday (21 March) taken from the personal calendar.

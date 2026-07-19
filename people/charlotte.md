@@ -28,7 +28,7 @@ years ago — her father had a long-running affair and is now with that woman.
 
 ## Dates & occasions
 - (occasion:: 2026-11-19) Charlotte's birthday
-- (occasion:: 2026-08-21) Civil wedding anniversary
+- (occasion:: 2026-08-31) Civil wedding anniversary
 - (occasion:: 2026-09-17) Wedding anniversary
 
 ## Log
@@ -46,3 +46,4 @@ not know or understand her. This vault's people-memory is exactly the tool for t
 dated fragments about her, surfaced before they matter. Every fragment logged here is
 a direct attempt at the thing she has asked for. Surface, prompt, and track; Ben has
 asked to be challenged on it and set no limits._
+- 2026-07-19 — Correction: civil wedding anniversary is 31 August, not 21 August. The onboarding date was wrong; confirmed by Ben against the calendar.

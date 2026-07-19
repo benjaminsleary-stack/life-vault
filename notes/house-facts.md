@@ -30,5 +30,14 @@ Ben doing most work in-house.
 - Electrical — C. King Electrical Services, invoice INV-4220 (£362.00).
 - Energy — Octopus Energy, account A-E040E1B8; meter work 2026-06-02.
 
+## Recurring maintenance (from the personal calendar)
+
+- **Filter clean** — 8 February and 8 August, yearly. Twice-yearly cadence fits the
+  MVHR / heat-pump filters on the [[house-retrofit]].
+- **Prune roses** — 15 February (winter hard cut).
+- **Prune espalier apple** — 17 August (summer spur trim).
+- **Replace bike chain** — 10 February.
+
 ## Log
 - 2026-07-19 — Address, recent works and purchases added from a Gmail sweep.
+- 2026-07-19 — Recurring maintenance schedule pulled from the personal calendar.
