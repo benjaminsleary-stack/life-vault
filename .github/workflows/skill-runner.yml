@@ -56,7 +56,6 @@ jobs:
           CAL_WORK: ${{ secrets.CAL_WORK }}
           CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
           CAL_FAMILY: ${{ secrets.CAL_FAMILY }}
-          CAL_FAMILY: ${{ secrets.CAL_FAMILY }}
         run: |
           set -uo pipefail
           # Yield to the desktop watcher, if any: wait briefly then re-pull so
