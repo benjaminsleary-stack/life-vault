@@ -8,7 +8,12 @@
  * Reads the same feeds the dashboard does, from the same env vars:
  *   CAL_WORK       work Outlook published .ics
  *   CAL_PERSONAL   personal Google private .ics
+ *   CAL_FAMILY     shared family Google private .ics
  *   ICS_URL        legacy name for the personal feed; still honoured
+ *
+ * Each is optional on its own, but every one you set must also exist as a GitHub
+ * Actions secret — Actions secrets are separate from the Worker's, so a feed the
+ * dashboard shows can still be missing from the brief.
  *
  * Values come from the environment, or from .env at the vault root when run on
  * the desktop. A private .ics URL is a credential — it is never printed.
@@ -37,11 +42,21 @@ try {
   }
 } catch { /* no .env is fine — CI supplies real env vars */ }
 
-const feeds = [
-  process.env.CAL_WORK && { name: "work", url: process.env.CAL_WORK },
-  (process.env.CAL_PERSONAL || process.env.ICS_URL) &&
-    { name: "personal", url: process.env.CAL_PERSONAL || process.env.ICS_URL },
-].filter(Boolean);
+// Same three feeds the dashboard subscribes to. Family was missing here, so
+// shared-calendar events (birthdays, trips, the boys' things) never reached a
+// brief even though the app showed them.
+const configured = [
+  { name: "work", url: process.env.CAL_WORK, env: "CAL_WORK" },
+  { name: "personal", url: process.env.CAL_PERSONAL || process.env.ICS_URL, env: "CAL_PERSONAL" },
+  { name: "family", url: process.env.CAL_FAMILY, env: "CAL_FAMILY" },
+];
+const feeds = configured.filter((f) => f.url);
+// An unset feed used to vanish entirely, so "secret missing" and "free day" were
+// the same empty list. Report it as a source that is not ok — the brief is told
+// to print an unhealthy source rather than an empty calendar.
+const unset = configured
+  .filter((f) => !f.url)
+  .map((f) => ({ name: f.name, ok: false, error: `${f.env} not set` }));
 
 const days = Math.max(1, parseInt(process.argv[2] || "2", 10));
 const fmt = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
@@ -49,12 +64,12 @@ const from = fmt(new Date());
 const to = fmt(new Date(Date.now() + (days - 1) * 864e5));
 
 if (!feeds.length) {
-  console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL)", events: [], sources: [] }));
+  console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL / CAL_FAMILY)", events: [], sources: [] }));
   process.exit(1);
 }
 
 const events = [];
-const sources = [];
+const sources = [...unset];
 await Promise.all(feeds.map(async (feed) => {
   try {
     const r = await fetch(feed.url, { headers: { "User-Agent": "life-vault" } });

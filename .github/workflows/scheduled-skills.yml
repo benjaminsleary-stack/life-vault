@@ -51,6 +51,7 @@ jobs:
           ICS_URL: ${{ secrets.ICS_URL }}
           CAL_WORK: ${{ secrets.CAL_WORK }}
           CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
+          CAL_FAMILY: ${{ secrets.CAL_FAMILY }}
         run: |
           set -uo pipefail
           case "${{ github.event.schedule }}" in
@@ -73,6 +74,7 @@ jobs:
           ICS_URL: ${{ secrets.ICS_URL }}
           CAL_WORK: ${{ secrets.CAL_WORK }}
           CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
+          CAL_FAMILY: ${{ secrets.CAL_FAMILY }}
         run: |
           set -uo pipefail
           shopt -s nullglob
