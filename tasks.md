@@ -13,4 +13,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Order [[Jasper]]'s bike #family
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Be home for delivery all day #house 📅 2026-07-21
-- [ ] Order caps #family 📅 2026-07-20
+- [x] Order caps #family 📅 2026-07-20 ✅ 2026-07-20
