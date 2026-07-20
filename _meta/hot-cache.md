@@ -5,6 +5,7 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-07-20 (morning-brief, re-run 06:28): brief re-generated at Ben's request to [[2026-07-20-morning]] — fresh news pull (UK has a new PM, Andy Burnham; Iran-Gulf conflict escalation; World Cup final). Task counters unchanged (same day, not re-incremented). Surfaced a different Charlotte fragment this time — the "breaking point" interview (stamped surfaced: 2026-07-20), since the "feel known and understood" one was already used by the 06:05 run today.
 - 2026-07-20 (morning-brief): brief written to [[2026-07-20-morning]]. Email digest skipped (Gmail creds unset); personal calendar not configured. Overdue: "Reply to dad" now ⏳3 (drops to stale next time), "Order pixels food" now ⏳1. Surfaced Charlotte fragment "what she needs is to feel known and understood" (stamped surfaced: 2026-07-20).
 - 2026-07-18 (file-inbox): 1 capture filed — 4 items added to [[house-to-do]] list (tidy living room, tidy kitchen, do dishes, go for a wee).
 - 2026-07-18 (file-inbox): 2 captures filed — news/media preference (more positive geopolitics/science/tech/environment coverage; architecture & building services interest) added to [[media-consumption]]; new task "Order [[Jasper]]'s bike" #family added to tasks.md.
