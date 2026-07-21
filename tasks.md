@@ -18,3 +18,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] IKEA and dishwasher order #house 📅 2026-07-21
 - [ ] Shampoo and conditioner
 - [ ] Ear defenders
+- [ ] Milo headphones
