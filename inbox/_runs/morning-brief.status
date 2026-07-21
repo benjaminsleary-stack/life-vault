@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":true,"when":"2026-07-21T06:01:38Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":5217,"out":16134,"cache":1824220},"cost_usd":1.4314631999999998}
+{"skill":"morning-brief","ok":true,"when":"2026-07-21T07:23:38Z","outputs":["_meta/hot-cache.md"],"error":"","model":"sonnet","tokens":{"in":4265,"out":18785,"cache":1830285},"cost_usd":1.5015728}
