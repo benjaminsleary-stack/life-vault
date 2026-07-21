@@ -6,7 +6,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 
 - [ ] Insulate [[Milo]]'s room [[house-retrofit]] #house
 - [ ] Plan new kitchen in extension [[house-retrofit]] #house
-- [ ] Reply to dad about him coming to visit #family 📅 2026-07-18 ⏳3
+- [ ] Reply to dad about him coming to visit #family 📅 2026-07-18 ⏳3 #stale
 - [x] Give Charlotte her self referral forms #family 📅 2026-07-18 ⏳1 ✅ 2026-07-19
 - [x] Order pixels food. #admin 📅 2026-07-19 ⏳1 ✅ 2026-07-20
 - [ ] Add stones to freecycle #house
