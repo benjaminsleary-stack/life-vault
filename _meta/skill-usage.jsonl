@@ -1,2 +1,3 @@
 {"when":"2026-07-20T19:46:30Z","skill":"ask","model":"sonnet","ok":true,"in":2698,"out":2965,"cache":339736,"cost_usd":0.25421210000000005,"turns":11,"ms":45022}
 {"when":"2026-07-20T20:53:44Z","skill":"evening-brief","model":"sonnet","ok":true,"in":2847,"out":4572,"cache":787661,"cost_usd":0.44964050000000005,"turns":21,"ms":90760}
+{"when":"2026-07-21T06:01:38Z","skill":"morning-brief","model":"sonnet","ok":true,"in":5217,"out":16134,"cache":1824220,"cost_usd":1.4314631999999998,"turns":39,"ms":254616}
