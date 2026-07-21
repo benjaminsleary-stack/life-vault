@@ -16,3 +16,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Order caps #family 📅 2026-07-20 ✅ 2026-07-20
 - [ ] Sort out ironing board #admin 📅 2026-07-21
 - [ ] IKEA and dishwasher order #house 📅 2026-07-21
+- [ ] Shampoo and conditioner
