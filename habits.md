@@ -12,5 +12,5 @@ Edit the sections/items below to make them yours — these are starters.
 - [ ] Supplements
 
 ## Evening wind-down
-- [ ] Journal the day
+- [x] Journal the day
 - [ ] Plan tomorrow
