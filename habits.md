@@ -1,6 +1,6 @@
 # Habits
 
-(day:: 2026-07-20)
+(day:: 2026-07-22)
 
 The dashboard's Habits card reads this file. Checkboxes are **today's** state —
 the day marker above resets them each morning (lazily, on the first tick of a
@@ -13,4 +13,4 @@ Edit the sections/items below to make them yours — these are starters.
 
 ## Evening wind-down
 - [ ] Journal the day
-- [x] Plan tomorrow
+- [ ] Plan tomorrow
