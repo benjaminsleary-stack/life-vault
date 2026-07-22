@@ -3,3 +3,4 @@
 {"when":"2026-07-21T06:01:38Z","skill":"morning-brief","model":"sonnet","ok":true,"in":5217,"out":16134,"cache":1824220,"cost_usd":1.4314631999999998,"turns":39,"ms":254616}
 {"when":"2026-07-21T07:23:38Z","skill":"morning-brief","model":"sonnet","ok":true,"in":4265,"out":18785,"cache":1830285,"cost_usd":1.5015728,"turns":43,"ms":285715}
 {"when":"2026-07-21T20:48:51Z","skill":"evening-brief","model":"sonnet","ok":true,"in":3123,"out":3474,"cache":436756,"cost_usd":0.3096833,"turns":14,"ms":52258}
+{"when":"2026-07-22T07:23:14Z","skill":"morning-brief","model":"sonnet","ok":true,"in":2978,"out":9067,"cache":1018340,"cost_usd":0.9355726999999998,"turns":32,"ms":172598}
