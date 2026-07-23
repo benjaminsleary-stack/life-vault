@@ -12,4 +12,5 @@ updated: 2026-07-13
 **Anime:** Attack on Titan, Jujutsu Kaisen, Cyberpunk: Edgerunners.
 
 ## Log
+- 2026-07-23 — Solo Levelling is really good; really enjoying it.
 - 2026-07-13 — Captured film/TV/anime preferences.
