@@ -16,3 +16,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Ear defenders ✅ 2026-07-21
 - [x] Milo headphones ✅ 2026-07-22
 - [ ] Jujutsu Kaisen Season 4 — first trailer revealed 19 June 2026 at MAPPA's 15th-anniversary livestream, covering the second half of the Culling Game arc. No release window yet. Crunchyroll
+- [ ] Cyberpunk: Edgerunners 2 — Netflix/Trigger confirmed a Fall 2026 release window with a new teaser, standalone story in Night City with a new cast. Crunchyroll
