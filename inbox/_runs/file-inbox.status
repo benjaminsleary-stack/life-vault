@@ -1,1 +1,1 @@
-{"skill":"file-inbox","ok":true,"when":"2026-07-18T18:10:49Z","outputs":["_meta/hot-cache.md","inbox/2026-07-18T180750-xiy6nq.md -> inbox/_archive/2026-07-18T180750-xiy6nq.md","notes/house-to-do.md"],"error":""}
+{"skill":"file-inbox","ok":true,"when":"2026-07-23T05:42:54Z","outputs":[],"error":"","model":"haiku","tokens":{"in":10,"out":297,"cache":26383},"cost_usd":0.0234896}
