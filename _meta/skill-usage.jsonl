@@ -10,3 +10,4 @@
 {"when":"2026-07-23T05:52:40Z","skill":"file-inbox","model":"haiku","ok":true,"in":747,"out":4473,"cache":274191,"cost_usd":0.07982594999999999,"turns":20,"ms":59890}
 {"when":"2026-07-23T07:23:57Z","skill":"morning-brief","model":"sonnet","ok":true,"in":2974,"out":8755,"cache":825776,"cost_usd":1.7660568499999998,"turns":24,"ms":411998}
 {"when":"2026-07-23T20:42:12Z","skill":"evening-brief","model":"sonnet","ok":true,"in":2849,"out":4036,"cache":823564,"cost_usd":0.4529759,"turns":20,"ms":90705}
+{"when":"2026-07-24T07:21:40Z","skill":"morning-brief","model":"sonnet","ok":true,"in":4328,"out":15909,"cache":2631376,"cost_usd":1.9082537999999996,"turns":54,"ms":322417}
