@@ -11,7 +11,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Order [[Jasper]]'s bike #family
 - [ ] Order a new hearth for the fireplace #house
 - [x] Sort out ironing board #admin 📅 2026-07-21 ✅ 2026-07-21
-- [ ] IKEA and dishwasher order #house 📅 2026-07-21 ⏳2
+- [ ] IKEA and dishwasher order #house 📅 2026-07-21 ⏳3
 - [x] Shampoo and conditioner ✅ 2026-07-21
 - [x] Ear defenders ✅ 2026-07-21
 - [x] Milo headphones ✅ 2026-07-22
