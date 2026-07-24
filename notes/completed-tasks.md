@@ -9,3 +9,6 @@ Ticked tasks, filed here 3 days after completion so tasks.md stays current. Noth
 - 2026-07-20 — Order pixels food.
 - 2026-07-20 — Be home for delivery all day
 - 2026-07-20 — Order caps
+- 2026-07-21 — Sort out ironing board
+- 2026-07-21 — Shampoo and conditioner
+- 2026-07-21 — Ear defenders
