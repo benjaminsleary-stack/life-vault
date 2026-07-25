@@ -12,3 +12,4 @@ Ticked tasks, filed here 3 days after completion so tasks.md stays current. Noth
 - 2026-07-21 — Sort out ironing board
 - 2026-07-21 — Shampoo and conditioner
 - 2026-07-21 — Ear defenders
+- 2026-07-22 — Milo headphones
