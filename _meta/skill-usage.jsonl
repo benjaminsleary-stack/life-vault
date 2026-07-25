@@ -14,3 +14,4 @@
 {"when":"2026-07-24T20:50:27Z","skill":"evening-brief","model":"sonnet","ok":true,"in":2845,"out":4018,"cache":721149,"cost_usd":0.4062125,"turns":18,"ms":74213}
 {"when":"2026-07-25T07:05:45Z","skill":"morning-brief","model":"sonnet","ok":true,"in":6116,"out":11624,"cache":1192266,"cost_usd":1.2575819999999998,"turns":35,"ms":227921}
 {"when":"2026-07-25T09:48:56Z","skill":"interest-scout","model":"sonnet","ok":false,"in":0,"out":0,"cache":0,"cost_usd":0,"turns":1,"ms":1084}
+{"when":"2026-07-25T20:31:45Z","skill":"evening-brief","model":"sonnet","ok":true,"in":2986,"out":5495,"cache":1053029,"cost_usd":0.5583044,"turns":26,"ms":92380}
