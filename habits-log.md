@@ -6,3 +6,4 @@
 - 2026-07-22 — Morning routine / Gym or a walk
 - 2026-07-22 — Evening wind-down / Journal the day
 - 2026-07-27 — Morning routine / Supplements
+- 2026-07-27 — Morning routine / Gym or a walk
