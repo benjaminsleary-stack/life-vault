@@ -8,7 +8,7 @@ new day). Completions append to [[habits-log]]; streaks come from that log.
 Edit the sections/items below to make them yours — these are starters.
 
 ## Morning routine
-- [ ] Gym or a walk
+- [x] Gym or a walk
 - [x] Supplements
 
 ## Evening wind-down
