@@ -78,24 +78,13 @@ area — it's the `people/` folder; a person is tagged with the areas they relat
 routines. An explicit human request to reorganise, merge, or re-link overrides
 it — restructure freely when asked; git makes it revertable.
 
-## Frontmatter schema (entity notes)
-
-```yaml
----
-type: person        # person | project | topic
-name: Charlotte
-tags: [family]        # area tags only, from the closed list
-updated: 2026-07-12
----
-```
-
 ## People notes: append-with-summary
 
 Structure every `people/*.md` and `projects/*.md` as:
 
 ```markdown
 ---
-type: person
+type: person        # person | project | topic
 name: Charlotte
 tags: [family]        # area tags only, from the closed list
 updated: 2026-07-12
