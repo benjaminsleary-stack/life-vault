@@ -1,1 +1,1 @@
-{"skill":"evening-brief","ok":false,"when":"2026-07-27T20:52:40Z","outputs":[],"error":"You've hit your org's monthly spend limit · ask your admin to raise it at claude.ai/settings/usage","model":"sonnet","tokens":{"in":0,"out":0,"cache":0},"cost_usd":0}
+{"skill":"evening-brief","ok":false,"when":"2026-07-28T20:47:55Z","outputs":[],"error":"You've hit your weekly limit · resets Jul 30, 12pm (UTC)","model":"sonnet","tokens":{"in":0,"out":0,"cache":0},"cost_usd":0}
