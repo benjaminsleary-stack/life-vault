@@ -19,3 +19,4 @@
 {"when":"2026-07-26T20:36:31Z","skill":"evening-brief","model":"sonnet","ok":true,"in":2967,"out":4902,"cache":595179,"cost_usd":0.3942127,"turns":17,"ms":77217}
 {"when":"2026-07-27T08:11:12Z","skill":"morning-brief","model":"sonnet","ok":true,"in":4817,"out":14165,"cache":1850060,"cost_usd":1.4584750000000002,"turns":45,"ms":297548}
 {"when":"2026-07-27T20:52:40Z","skill":"evening-brief","model":"sonnet","ok":false,"in":0,"out":0,"cache":0,"cost_usd":0,"turns":1,"ms":640}
+{"when":"2026-07-28T07:26:39Z","skill":"morning-brief","model":"sonnet","ok":true,"in":7014,"out":13172,"cache":1957309,"cost_usd":1.3036878500000002,"turns":45,"ms":232860}
