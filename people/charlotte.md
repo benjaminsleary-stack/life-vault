@@ -42,7 +42,7 @@ rule in CLAUDE.md._
   week is going; not something to raise unprompted.
 
 ## Log
-- 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-14)_
+- 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-31)_
 - 2026-07-19 — Contact: charlottemfkeime@gmail.com. Travel and appointments are usually booked jointly. _(from Gmail)_
 - 2026-07-19 — Interview: "we're at breaking point". Wants: happier, fight less, affection. _(surfaced: 2026-07-20)_
 - 2026-07-19 — The fight, both sides: she is tired of my depression and of me not paying attention; I feel constantly criticised, unloved, and that she is never happy. _(surfaced: 2026-07-22)_
