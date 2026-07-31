@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":false,"when":"2026-07-30T07:19:48Z","outputs":[],"error":"You've hit your weekly limit · resets 12pm (UTC)","model":"sonnet","tokens":{"in":0,"out":0,"cache":0},"cost_usd":0}
+{"skill":"morning-brief","ok":true,"when":"2026-07-31T07:37:27Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":6309,"out":14179,"cache":1229428},"cost_usd":1.2109846}
