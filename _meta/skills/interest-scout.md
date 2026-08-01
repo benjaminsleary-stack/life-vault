@@ -9,6 +9,13 @@ Ben's interests. Needs web access in the environment.
 2. Web-search for: newly released or newly announced **music**, **film**, **TV**
    that fit those interests this week; and **concerts/gigs near Cambridge** in the
    next ~3 months by artists he likes. Prefer specifics (title, date, where, a link).
+
+   **Standing instruction (captured 2026-07-23):** specifically watch for **big
+   film composers and game-soundtrack acts performing live** — that is a named
+   want, not a general one. It sat as a log line in `music-taste.md` for a week
+   with no skill reading it as an instruction, which is why it is written here.
+   Include anything in reach of Cambridge, and say so even if it is a few months
+   out, since these sell out early.
 3. Keep only genuinely new, genuinely relevant items (2–3 per category max). If a
    category has nothing worth it, say "nothing new" — do not pad.
 4. Write `digests/<year>-W<week>-interests.md` with a short section per category.

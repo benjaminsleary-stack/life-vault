@@ -11,18 +11,27 @@ That capture was first mis-filed as a task in `tasks.md`, which is exactly the
 failure the "Standing instructions are routines" rule in `CLAUDE.md` now exists
 to prevent. It is a routine. This is it.
 
-## What it can and cannot do
+## Adding to the calendar
 
-**Read the limitation before writing the digest, and be honest about it in the
-output.** Every calendar integration in this vault is a read-only `.ics`
-subscription — `CAL_WORK`, `CAL_PERSONAL`, `CAL_FAMILY`. There is no credential
-anywhere that can write to Google Calendar, so the "automatically" half of the
-capture is **not** currently possible.
+`scripts/calendar-add.mjs` writes events to Google Calendar for real — it is the
+only write path in the vault, since `CAL_WORK`/`CAL_PERSONAL`/`CAL_FAMILY` are
+read-only subscriptions. Setup is in `docs/google-calendar.md`.
 
-What this skill does instead: produce a short, dated, linked shortlist and push
-it to the phone, plus an `.ics` file that adds the chosen events in one action.
-Adding to the calendar stays a deliberate tap. Do not pretend otherwise in the
-digest, and do not create a task asking Ben to do it by hand.
+It is **idempotent**: every event carries a `lifeVaultKey` derived from its title
+and date, and the calendar is checked for that key before inserting. Re-running a
+month adds nothing. Do not try to deduplicate by hand.
+
+Its exit code tells you which of three things happened, and they are reported
+differently:
+
+- **0** — created (or already present). Say what went in.
+- **3** — not configured; a credential is unset. This is **not** a failure to
+  shout about. Write the digest and the `.ics` as normal, and add one line to
+  the digest saying calendar-adding is not set up and pointing at
+  `docs/google-calendar.md`. Do not notify a failure, and do not create a task.
+- **1** — configured but broken. This **is** loud: report it in the digest and
+  include the error. A silently-failing calendar write is indistinguishable from
+  a month with nothing on.
 
 ## Steps
 
@@ -67,11 +76,20 @@ digest, and do not create a task asking Ben to do it by hand.
    genuinely has nothing worth the drive, write "nothing worth the trip this
    month" and stop; padding it is worse than an empty month.
 
-5. **Write the calendar file.** Emit `attachments/family-events-<YYYY-MM>.ics`
-   containing one `VEVENT` per shortlisted item — all-day events, `SUMMARY` as
-   the title, `LOCATION` as the venue, `DESCRIPTION` carrying the link and the
-   cost. Opening that file on a phone offers to add the events in one action,
-   which is as close to "automatically" as the current setup reaches.
+5. **Put them in the calendar.** Build a JSON array — one object per shortlisted
+   item, `{summary, date, location, description}` with `date` as `YYYY-MM-DD`
+   and the link and cost in `description` — and pipe it in:
+
+   ```bash
+   node scripts/calendar-add.mjs events.json
+   ```
+
+   Read the exit code and report per the section above. Include the booking link
+   in `description`: the calendar entry is what Ben will actually be looking at
+   on the day he decides, and an entry he can't book from is half an entry.
+
+   Also emit `attachments/family-events-<YYYY-MM>.ics` with the same events, so
+   there is a copy that works when the calendar credential doesn't.
 
 6. **Deliver.** `bash scripts/notify.sh "Family days out — <Month>" digests/<file>`.
 
