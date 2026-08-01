@@ -42,6 +42,11 @@ rule in CLAUDE.md._
   week is going; not something to raise unprompted.
 
 ## Log
+- 2026-08-01 — **What actually works:** paying her more attention, and remembering
+  what is on her mind so he can ask about it later. Ben names not being able to
+  track those things as his single biggest obstacle. _(interview)_
+- 2026-08-01 — Therapy is weekly. The current focus is what Ben himself can do to
+  improve the relationship. _(interview)_
 - 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-31)_
 - 2026-07-19 — Contact: charlottemfkeime@gmail.com. Travel and appointments are usually booked jointly. _(from Gmail)_
 - 2026-07-19 — Interview: "we're at breaking point". Wants: happier, fight less, affection. _(surfaced: 2026-07-20)_
