@@ -1,1 +1,1 @@
-{"skill":"evening-brief","ok":true,"when":"2026-07-31T20:49:57Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":2704,"out":3584,"cache":474645},"cost_usd":0.318479}
+{"skill":"evening-brief","ok":true,"when":"2026-07-31T20:49:57Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":2704,"out":3584,"cache":474645},"cost_usd":0.318479,"delivered":false,"deliveryError":"NTFY_TOPIC not set (or empty) in this environment"}

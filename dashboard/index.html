@@ -112,10 +112,18 @@
 
   .skill{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line-row); }
   .skill:last-child{ border-bottom:0; }
-  .skill .s-body{ flex:1; min-width:0; }
+  /* The name column must keep a floor. `min-width:0` let it collapse to a
+     single character per line the moment the status column grew — which is
+     what adding "· not delivered" did. */
+  .skill .s-body{ flex:1 1 46%; min-width:112px; }
   .skill .s-name{ font-size:14.5px; font-weight:600; }
   .skill .s-desc{ font-size:12px; color:var(--muted); margin-top:1px; }
-  .skill .s-status{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+  /* Wraps onto a second line rather than shoving the name column off the page;
+     each piece inside stays unbroken. */
+  .skill .s-status{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums;
+    display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap;
+    gap:2px 5px; flex:0 1 auto; text-align:right; }
+  .skill .s-status > span{ white-space:nowrap; }
   .tick{ color:var(--green); font-weight:700; }
   .cross{ color:var(--red); font-weight:700; }
   .s-actions{ flex:0 0 auto; display:flex; gap:6px; }
@@ -186,6 +194,14 @@
   .ent.tappable:hover, .ent.tappable:focus-visible{ background:var(--bg1); outline:none; }
   .ent.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
   .ent .chev{ margin-left:auto; color:var(--faint); font-size:17px; flex:none; }
+  /* Remember card: the note box is the point of the row, so the ＋ is a real
+     target rather than a chevron you have to know opens something. */
+  .p-add{ margin-left:auto; flex:none; width:30px; height:30px; border-radius:50%;
+    background:var(--surface-2); border:1px solid var(--line-key); color:var(--accent-text);
+    font-size:15px; line-height:1; cursor:pointer; display:grid; place-items:center; }
+  .p-add:hover, .p-add:focus-visible{ border-color:var(--accent); color:var(--text); outline:none; }
+  .p-noterow{ display:flex; gap:8px; padding:0 0 10px; }
+  .p-noterow input{ flex:1; min-width:0; }
   .occ.tappable{ cursor:pointer; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
   .occ.tappable:hover, .occ.tappable:focus-visible{ background:var(--bg1); outline:none; }
   .occ.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
@@ -408,10 +424,18 @@
   @media (min-width:900px){ .jump{ display:none; } }
 
 
-  /* Output links under a skill */
+  /* Output links under a skill. The artefact rides the Open button; these are
+     the leftovers, folded away so the card stays a status list not a file tree. */
   .s-out{ font-size:12px; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 10px; }
   .s-out a{ color:var(--accent-text); cursor:pointer; text-decoration:none; }
   .s-out a:hover{ text-decoration:underline; }
+  .s-more{ margin-top:4px; }
+  .s-more summary{ font-size:11.5px; color:var(--faint); cursor:pointer; list-style:none; }
+  .s-more summary::-webkit-details-marker{ display:none; }
+  .s-more summary::before{ content:"› "; display:inline-block; transition:transform .15s ease; }
+  .s-more[open] summary::before{ content:"⌄ "; }
+  .s-more summary:hover{ color:var(--muted); }
+  .s-undeliv{ color:#e2b96f; }
   .s-err{ font-size:11.5px; color:#e29b96; margin-top:4px; line-height:1.35;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 
@@ -572,7 +596,7 @@
       <a href="#sec-brief">Brief</a>
       <a href="#sec-map">Map</a>
       <a href="#sec-skills">Routines</a>
-      <a href="#sec-people">People</a>
+      <a href="#sec-people">Remember</a>
     </nav>
 
     <div class="bento">
@@ -648,9 +672,10 @@
       <div id="skills" class="skel"></div>
     </div>
 
-    <!-- PEOPLE -->
+    <!-- REMEMBER — the two people the vault most wants something written about,
+         each with a one-tap note box. The full directory is behind the link. -->
     <div class="tile t-people" id="sec-people">
-      <div class="section-head"><p class="label">People</p><span class="count" id="pplCount"></span></div>
+      <div class="section-head"><p class="label">Remember</p><span class="count" id="pplCount"></span></div>
       <div id="ppl" class="skel"></div>
     </div>
 
@@ -720,7 +745,9 @@
     { name:"evening-brief",     label:"Evening",  desc:"Debrief, Charlotte, data-capture request" },
     { name:"weave",             label:"Weave",    desc:"Refresh MOCs & the index" },
     { name:"refresh-summaries", label:"Refresh",  desc:"Rewrite people / project summaries" },
+    { name:"harvest",           label:"Harvest",  desc:"Turn last week's calendar into dated fragments" },
     { name:"interest-scout",    label:"Discover", desc:"Weekly discover feed for your interests" },
+    { name:"family-events",     label:"Days out", desc:"Monthly family days out within an hour of Cambridge" },
     { name:"ask",               label:"Ask",      desc:"Answers from the vault (use the Ask box)", noRun:true },
   ];
   // Served from localhost = the dev server (dev/server.mjs), which mounts the
@@ -840,8 +867,12 @@
       '<div class="lscope">'+esc(l.scope)+"</div></span></div>").join("")
       : '<p class="muted">Nothing yet. The 👍 / 👎 on each brief line writes a dated lesson to '+
         '<code>_meta/lessons.md</code>, which the skills read before they generate.</p>';
+    // Notifications sit above the sign-out, because "why am I not getting my
+    // brief" is the question this panel exists to answer.
+    html+='<h3>Notifications</h3><div id="pushRow"><div class="muted">Checking…</div></div>';
     html+='<hr><p><button class="btn" onclick="signOut()">Disconnect this device</button></p>';
     openPanel("System", html);
+    renderPushRow();
   }
   function post(path, body, msg){
     return req(path,{ method:"POST", body:JSON.stringify(body) })
@@ -1022,19 +1053,30 @@
       // that was never requested.
       if(st && st.queued){
         const mins=Math.max(0,Math.round((Date.now()-new Date(st.queued+"Z").getTime())/60000));
-        line='<span class="running"></span> queued '+(mins<1?"just now":mins+"m ago");
+        line='<span class="running"></span><span>queued '+(mins<1?"just now":mins+"m ago")+"</span>";
       }
       else if(st){
         const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
-        line=mark+" ran "+fmtWhen(st.when);
+        // Tick and timestamp are one unbreakable unit — wrapping between them
+        // strands a lone ✓ on its own line.
+        line='<span>'+mark+" ran "+fmtWhen(st.when)+"</span>";
+        // Written and pushed is not the same as received. Say so on the row —
+        // this went unsaid for twelve days while every brief silently failed
+        // to send.
+        if(st.delivered===false) line+=' <span class="s-undeliv">· not delivered</span>';
         // A failure that won't say why sends you to the Actions log to find out.
         if(st.ok===false && st.error) outs+='<div class="s-err" title="'+esc(st.error)+'">'+esc(st.error)+"</div>";
-        // If a run produced more than one file, list the extras (Open covers the newest).
+        else if(st.delivered===false && st.deliveryError) outs+='<div class="s-err">'+esc(st.deliveryError)+"</div>";
+        // A run that touched six files is a fact for the git log, not for a
+        // phone screen. Open handles the artefact (outputs[0], digests-first);
+        // the rest stay folded away rather than becoming a wall of filenames.
+        // data-path (not an inline onclick) so quotes/parens in a filename
+        // can't break out of the handler — the delegated listener reads it back.
         if(hasOut && st.outputs.length>1){
-          // data-path (not an inline onclick) so quotes/parens in a filename
-          // can't break out of the handler — the delegated listener reads it back.
-          outs+='<div class="s-out">'+st.outputs.map((p)=>
-            '📄 <a data-path="'+esc(p)+'">'+esc(p.split("/").pop())+"</a>").join("")+"</div>";
+          const extra=st.outputs.slice(1);
+          outs+='<details class="s-more"><summary>'+extra.length+" more file"+(extra.length>1?"s":"")+"</summary>"+
+            '<div class="s-out">'+extra.map((p)=>
+              '📄 <a data-path="'+esc(p)+'">'+esc(p.split("/").pop())+"</a>").join("")+"</div></details>";
         }
       }
       const openBtn = hasOut
@@ -1335,43 +1377,98 @@
     $("brief").innerHTML = mdToHtml(b.text);
     decorateBrief($("brief"), b.name.replace(/\.md$/,""));
   }
-  // People are the point of the vault, so this card is a way in, not a poster.
-  // Each row opens the person; the meta line carries the one fact a glance can
-  // act on — how long since anything was written down about them.
+  // This card used to be a directory: 17 names, 12 of them a single line long,
+  // most reading "nothing captured yet". That is a poster — you read it once
+  // and never act on it, and the notes stayed empty because nothing here ever
+  // asked you to write in them.
+  //
+  // It now shows at most two rows: whoever has an occasion close enough to act
+  // on, and whoever has gone longest without a word written about them. Each
+  // carries a note box, because writing something down is the thing that was
+  // never happening. The full list is one tap away and rarely wanted.
+  const SOON_DAYS=45;
+  function nearOccasion(p){
+    const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+SOON_DAYS*864e5));
+    return (lastData&&lastData.occasions||[]).find((x)=>x.who===p.slug && x.date<=horizon) || null;
+  }
+  // Never noted at all is the stalest state there is, not an unknown one.
+  const silence=(p)=> p.silentDays==null ? Infinity : p.silentDays;
+  function personMeta(p){
+    const occ=nearOccasion(p);
+    if(occ) return '<span style="color:var(--accent-text)">'+esc(occ.text)+" · "+fmtDate(occ.date).replace(/^\w+\s/,"")+"</span>";
+    if(p.silentDays==null) return '<span style="color:var(--faint)">nothing captured yet</span>';
+    if(p.silentDays>21) return '<span style="color:var(--yellow)">quiet for '+p.silentDays+" days</span>";
+    return "last noted "+(p.silentDays===0?"today":p.silentDays+"d ago");
+  }
+  function personRow(p, withNote){
+    return '<div class="ent tappable" data-person="'+esc(p.slug)+'" tabindex="0" role="button">'+
+      '<div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
+      '<div style="min-width:0"><div class="e-name">'+esc(p.name)+"</div>"+
+      '<div class="e-sum">'+personMeta(p)+"</div></div>"+
+      (withNote ? '<button class="p-add" data-note="'+esc(p.slug)+'" title="Note something about '+esc(p.name)+'" aria-label="Note something about '+esc(p.name)+'">＋</button>'
+                : '<span class="chev">›</span>')+"</div>"+
+      (withNote ? '<div class="p-noterow hidden" data-noterow="'+esc(p.slug)+'">'+
+        '<input type="text" data-noteinput="'+esc(p.slug)+'" placeholder="What just happened? Saved as a dated fragment." />'+
+        '<button class="btn primary" data-notesave="'+esc(p.slug)+'">Save</button></div>' : "");
+  }
+  let allPeople=[];
   function renderPeople(people){
-    // An occasion only leads if it is near enough to act on. Milo's birthday in
-    // ten months is not more pressing than a friend nobody has noted in a month.
-    const SOON=45;
-    const horizon=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London"}).format(new Date(Date.now()+SOON*864e5));
-    const withOcc=(p)=>
-      (lastData&&lastData.occasions||[]).find((x)=>x.who===p.slug && x.date<=horizon) || null;
-    const sorted=[...people].sort((a,b)=>{
-      const oa=withOcc(a), ob=withOcc(b);
+    allPeople=people||[];
+    $("pplCount").textContent = allPeople.length ? allPeople.length+" people" : "";
+    if(!allPeople.length){ $("ppl").innerHTML='<div class="muted">No people notes yet.</div>'; return; }
+    // Pick at most two, and never the same person twice.
+    const dated=allPeople.map((p)=>({p,occ:nearOccasion(p)})).filter((x)=>x.occ)
+      .sort((a,b)=>a.occ.date.localeCompare(b.occ.date));
+    const picks=[];
+    if(dated.length) picks.push(dated[0].p);
+    const stalest=[...allPeople].filter((p)=>!picks.includes(p))
+      .sort((a,b)=>silence(b)-silence(a))[0];
+    if(stalest) picks.push(stalest);
+    $("ppl").innerHTML = picks.map((p)=>personRow(p,true)).join("")+
+      '<button class="link" style="margin-top:8px" onclick="openPeopleDir()">All '+allPeople.length+" people ›</button>";
+  }
+  // The old card, kept where it belongs: behind a tap, for the rare time you
+  // want to look someone up rather than write something down.
+  function openPeopleDir(){
+    const sorted=[...allPeople].sort((a,b)=>{
+      const oa=nearOccasion(a), ob=nearOccasion(b);
       if(oa&&!ob) return -1; if(ob&&!oa) return 1;
       if(oa&&ob&&oa.date!==ob.date) return oa.date.localeCompare(ob.date);
-      return (b.silentDays||0)-(a.silentDays||0);
+      return silence(b)-silence(a);
     });
-    $("pplCount").textContent = people.length;
-    $("ppl").innerHTML = sorted.length ? sorted.map((p)=>{
-      const occ=withOcc(p);
-      const meta = occ ? '<span style="color:var(--accent-text)">'+esc(occ.text)+" · "+fmtDate(occ.date).replace(/^\w+\s/,"")+"</span>"
-        : p.silentDays==null ? '<span style="color:var(--faint)">nothing captured yet</span>'
-        : p.silentDays>21 ? '<span style="color:var(--yellow)">quiet for '+p.silentDays+" days</span>"
-        : "last noted "+(p.silentDays===0?"today":p.silentDays+"d ago");
-      return '<div class="ent tappable" data-person="'+esc(p.slug)+'" tabindex="0" role="button">'+
-        '<div class="av">'+esc((p.name||"?")[0].toUpperCase())+"</div>"+
-        '<div style="min-width:0"><div class="e-name">'+esc(p.name)+"</div>"+
-        '<div class="e-sum">'+meta+"</div></div>"+
-        '<span class="chev">›</span></div>';
-    }).join("") : '<div class="muted">No people notes yet.</div>';
+    openPanel("People", sorted.map((p)=>personRow(p,false)).join(""));
   }
   $("ppl").addEventListener("click",(e)=>{
+    const add=e.target.closest("[data-note]");
+    if(add){
+      const row=$("ppl").querySelector('[data-noterow="'+add.dataset.note+'"]');
+      if(row){ row.classList.toggle("hidden");
+        const inp=row.querySelector("[data-noteinput]"); if(inp && !row.classList.contains("hidden")) inp.focus(); }
+      return;
+    }
+    const save=e.target.closest("[data-notesave]");
+    if(save){ savePersonNote(save.dataset.notesave); return; }
     const row=e.target.closest("[data-person]"); if(row) openPerson(row.dataset.person);
   });
   $("ppl").addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && e.target.dataset && e.target.dataset.noteinput){
+      e.preventDefault(); savePersonNote(e.target.dataset.noteinput); return;
+    }
     if(e.key!=="Enter"&&e.key!==" ") return;
+    if(e.target.closest("[data-noterow]")) return;
     const row=e.target.closest("[data-person]"); if(row){ e.preventDefault(); openPerson(row.dataset.person); }
   });
+  // Goes through post(), so a note written with no signal lands in the outbox
+  // and replays later rather than being lost (/api/append is REPLAYABLE).
+  function savePersonNote(slug){
+    const inp=$("ppl").querySelector('[data-noteinput="'+slug+'"]');
+    const text=(inp&&inp.value||"").trim();
+    if(!text) return;
+    const who=(allPeople.find((p)=>p.slug===slug)||{}).name || slug;
+    inp.value="";
+    const row=$("ppl").querySelector('[data-noterow="'+slug+'"]'); if(row) row.classList.add("hidden");
+    post("/api/append",{person:slug,text},"Saved to "+who);
+  }
 
   // The person sheet: summary, what's coming up, and every dated fragment —
   // the fragments verbatim, with their capture dates, because they are the
@@ -1417,7 +1514,8 @@
   // somewhere: a task to its list, an occasion to that person.
   // Two weeks. A month put 33 meetings on screen and made the card 2,181px
   // tall — past the point where a list is something you read rather than
-  // scroll past. Occasions further out still reach you via the People card.
+  // scroll past. Occasions further out still lead the Remember card, which
+  // looks 45 days ahead.
   const AGENDA_DAYS=14;
   let agendaAll=false;
   function toggleAgenda(){ agendaAll=!agendaAll; if(lastData) renderAgenda(lastData); }
@@ -1913,8 +2011,109 @@
     return html;
   }
 
-  // Service worker: installability + offline app shell. No push — see sw.js.
+  // Service worker: installability, offline app shell, and push (see sw.js).
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  // The push service can rotate a subscription behind our back; the SW asks us
+  // to re-register when it does.
+  if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message",(e)=>{
+    if(e.data && e.data.type==="resubscribe") enablePush(true);
+  });
+
+  // --- push notifications ---------------------------------------------------
+  // Briefs are delivered here and nowhere else — there is no ntfy any more, so
+  // if no device is registered a brief reaches nobody. The System panel says so
+  // in as many words rather than leaving it to be discovered on a quiet morning.
+  const pushSupported = ()=> "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+  function urlB64ToUint8(b64){
+    const pad="=".repeat((4-(b64.length%4))%4);
+    const raw=atob((b64+pad).replace(/-/g,"+").replace(/_/g,"/"));
+    return Uint8Array.from([...raw].map((c)=>c.charCodeAt(0)));
+  }
+
+  async function pushState(){
+    if(!pushSupported()) return { state:"unsupported" };
+    if(Notification.permission==="denied") return { state:"blocked" };
+    const reg=await navigator.serviceWorker.ready.catch(()=>null);
+    if(!reg) return { state:"off" };
+    const sub=await reg.pushManager.getSubscription().catch(()=>null);
+    return { state: sub ? "on" : "off", sub };
+  }
+
+  // `silent` is the re-subscribe path: same work, but no prompts or toasts,
+  // because it runs on a message from the SW rather than a tap.
+  async function enablePush(silent){
+    if(!pushSupported()){ if(!silent) toast("This browser can't do notifications",true); return; }
+    try{
+      // Must be called from a user gesture — which is why this hangs off a
+      // button and never runs on load.
+      const perm = Notification.permission==="granted" ? "granted" : await Notification.requestPermission();
+      if(perm!=="granted"){ if(!silent) toast("Notifications not allowed",true); return renderPushRow(); }
+
+      const kr=await req("/api/push/key");
+      const k=await kr.json();
+      if(!k.key) { if(!silent) toast("Server has no VAPID key yet",true); return; }
+
+      const reg=await navigator.serviceWorker.ready;
+      let sub=await reg.pushManager.getSubscription();
+      // A subscription made against a different application server key is dead
+      // weight — drop it and make a fresh one rather than silently keeping it.
+      if(sub){
+        const same = sub.options && sub.options.applicationServerKey &&
+          bufToB64url(sub.options.applicationServerKey)===k.key;
+        if(!same){ await sub.unsubscribe().catch(()=>{}); sub=null; }
+      }
+      if(!sub) sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:urlB64ToUint8(k.key) });
+
+      const r=await req("/api/push/subscribe",{ method:"POST", body:JSON.stringify({
+        subscription: JSON.parse(JSON.stringify(sub)),
+        label: (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "device",
+      })});
+      const out=await r.json();
+      if(!out.ok) throw new Error(out.error||"rejected");
+      if(!silent) toast("Notifications on for this device");
+      renderPushRow();
+    }catch(e){ if(!silent) toast("Couldn't turn on notifications",true); }
+  }
+
+  function bufToB64url(buf){
+    let bin=""; for(const b of new Uint8Array(buf)) bin+=String.fromCharCode(b);
+    return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  }
+
+  async function disablePush(){
+    const { sub }=await pushState();
+    if(sub){
+      await req("/api/push/unsubscribe",{ method:"POST", body:JSON.stringify({ endpoint:sub.endpoint })}).catch(()=>{});
+      await sub.unsubscribe().catch(()=>{});
+    }
+    toast("Notifications off for this device");
+    renderPushRow();
+  }
+
+  async function sendTestPush(){
+    const r=await req("/api/push/send",{ method:"POST", body:JSON.stringify({
+      title:"Test", body:"If you can read this, delivery works." })});
+    const out=await r.json().catch(()=>({}));
+    toast(out.ok ? "Sent to "+out.sent+" device"+(out.sent===1?"":"s") : (out.error||"Nothing was sent"), !out.ok);
+  }
+
+  async function renderPushRow(){
+    const el=$("pushRow"); if(!el) return;
+    const { state }=await pushState();
+    const msg={
+      unsupported:"This browser can't receive notifications.",
+      blocked:"Blocked in browser settings — you'll need to re-allow notifications for this site there.",
+      off:"<b>Off for this device.</b> Briefs are delivered here and nowhere else, so nothing will reach you until this is on.",
+      on:"On for this device.",
+    }[state];
+    el.innerHTML='<div class="'+(state==="on"?"muted":"s-err")+'" style="margin-bottom:8px">'+msg+"</div>"+
+      (state==="on"
+        ? '<button class="btn" onclick="sendTestPush()">Send a test</button> '+
+          '<button class="btn" onclick="disablePush()">Turn off</button>'
+        : state==="unsupported" || state==="blocked" ? ""
+        : '<button class="btn primary" onclick="enablePush()">Turn on notifications</button>');
+  }
 
   // --- voice capture (browser speech-to-text; hidden where unsupported) ----
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;

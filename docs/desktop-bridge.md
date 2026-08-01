@@ -2,7 +2,7 @@
 
 The bridge mirrors the local Obsidian vault to GitHub every ~10 min while the
 laptop is on. Pick your OS. Set `VAULT_DIR` to the vault path; source `.env` so
-conflict alerts can reach ntfy.
+conflict alerts can reach your phone.
 
 ## macOS (launchd)
 `~/Library/LaunchAgents/com.ben.life-vault-bridge.plist`:
@@ -37,4 +37,4 @@ schtasks /Create /SC MINUTE /MO 10 /TN "life-vault-bridge" ^
 
 Accept (spec §11 Phase 1): a phone edit reaches GitHub within one cycle; `.git`
 untouched by Obsidian Sync; a forced conflict lands on a `conflict/<date>` branch
-and pings ntfy — never a silent loss, never a force-push.
+and pushes an alert — never a silent loss, never a force-push.

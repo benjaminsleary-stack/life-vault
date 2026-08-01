@@ -5,7 +5,7 @@ its file in _meta/skills/:
 1. file-inbox     (_meta/skills/file-inbox.md) — file everything in inbox/, archive raws
 2. email-digest   (_meta/skills/email-digest.md)
 3. morning-brief  (_meta/skills/morning-brief.md) — this also runs charlotte-surfacer,
-   writes digests/<today>-morning.md, commits+pushes, and delivers via ntfy
+   writes digests/<today>-morning.md, commits+pushes, and delivers via push
 
 Then:
 - Ping the healthcheck: `curl -fsS "$HEALTHCHECK_URL" || true`.

@@ -11,6 +11,14 @@ Route every raw capture in `inbox/` into the right note, losing nothing. Read
       filename). Only after it's safely archived do you route its content. If a run
       crashes, nothing is lost and re-running is safe (idempotent on already-archived).
    b. Route the text per `CLAUDE.md`:
+      - **a standing instruction to the system** ("monthly", "automatically",
+        "keep an eye on", "from now on", "add a check…") → this is a **routine,
+        not a task**. Follow the "Standing instructions are routines" section of
+        `CLAUDE.md`: write the skill, wire its cadence, and leave nothing in
+        `tasks.md`. If you cannot wire it yourself, write the skill file anyway
+        and say clearly in your report what still needs doing — never fall back
+        to a checkbox. Ben asking the system to do something recurring is the
+        opposite of Ben taking on a chore.
       - `done: <text>` → find the best-matching open task in `tasks.md`, tick it
         `- [x]` and append ` ✅ <today>`. If no confident match, add a note instead.
       - mentions a known person (a `people/*.md` exists, or an obvious new one) →
@@ -32,9 +40,22 @@ Route every raw capture in `inbox/` into the right note, losing nothing. Read
       - about a known project → append to `projects/*.md`.
       - else → a note in `notes/` (journal-ish → `daily/<today>.md`).
       - genuinely unsure → `notes/unsorted/<today>.md`, original line preserved.
-3. Refresh `_meta/index.md` (active people/projects/open threads) and
+3. **Cross off any gap this batch answered.** If a capture answers an open
+   question in `_meta/gaps.md` (the evening brief asks one a day), move that
+   line to `## Answered` with today's date. Move it, never delete it. Route the
+   capture itself normally as well — the answer is content, not just a tick.
+4. **Sweep completed tasks.** Any `- [x]` line in `tasks.md` whose `✅ <date>` is
+   more than **3 days** old moves to `notes/completed-tasks.md` as
+   `- <date> — <task text>`. Moved, never deleted (golden rule 1); a ticked task
+   with no `✅` date is left alone, since there is nothing to age it against.
+
+   This is here because the dashboard's own decay only fires on writes that go
+   through its API, and skills edit `tasks.md` directly with file tools — so the
+   sweep was simply never happening. Four tasks ticked on 24–25 July were still
+   sitting in the open list on 1 August.
+5. Refresh `_meta/index.md` (active people/projects/open threads) and
    `_meta/hot-cache.md` (the captures you just filed + what changed).
-4. Report a one-line-per-capture summary of where each went.
+6. Report a one-line-per-capture summary of where each went.
 
 ## Rules
 - Never delete or reword a capture's meaning. Preserve wikilinks; add `[[links]]`

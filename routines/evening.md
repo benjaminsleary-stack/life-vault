@@ -3,7 +3,7 @@ CLAUDE.md, then run, in order:
 
 1. file-inbox     (_meta/skills/file-inbox.md)
 2. evening-brief  (_meta/skills/evening-brief.md) — writes digests/<today>-evening.md,
-   commits+pushes, delivers via ntfy.
+   commits+pushes, delivers via push.
 
 Then ping the healthcheck (`curl -fsS "$HEALTHCHECK_URL" || true`) and assert the
 evening file exists and is non-trivial; on any failure run

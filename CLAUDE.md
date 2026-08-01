@@ -21,7 +21,7 @@ Read this before touching anything. Conventions here are binding.
 4. **Only real, captured facts.** Especially for people-memory: surface things that
    were actually written down, with their capture dates. Never infer or invent.
 5. **Green ≠ done.** Every scheduled run must assert its own output exists and is
-   non-trivial, and shout (via ntfy) if not. Silence must be loud.
+   non-trivial, and shout (via push) if not. Silence must be loud.
 
 ## Folder map
 
@@ -41,10 +41,13 @@ Read this before touching anything. Conventions here are binding.
 | `attachments/` | binary files referenced by notes | you |
 | `_meta/identity.md` | "about Ben" profile (seeded by onboarding) | you + refresh |
 | `_meta/lessons.md` | routing/preference lessons | you |
+| `_meta/gaps.md` | what the vault doesn't know; one is asked each evening | `evening-brief` + `file-inbox` |
+| `_meta/day-log.jsonl` | append-only daily score against Ben's own "good day" | `evening-brief` |
 | `_meta/index.md` | map-of-content; refreshed by the morning routine | `file-inbox` |
 | `_meta/hot-cache.md` | recent-context digest; a cheap stand-in for embeddings | each run |
 | `_meta/skills/` | the skill prompt files themselves | humans |
-| `scripts/` | fetch-mail, fetch-calendar, notify, bridge | humans |
+| `scripts/` | fetch-mail, fetch-calendar, notify (Web Push), bridge | humans |
+| `_meta/push-subscriptions.json` | devices registered for notifications | dashboard |
 
 ## Areas & linking (the ordered network)
 
@@ -139,9 +142,28 @@ A capture whose text starts with `done:` is an instruction, not a note — the
 `file-inbox` skill finds the best-matching open task and ticks it (`- [x]`),
 recording the completion date. Example capture: `done: ordered the washing machine`.
 
+## Asking for data (binding)
+
+The vault is starved, not badly structured: nine captures in seventeen days, and
+briefs that re-quote a July interview because nothing newer is grounded. Two
+rules follow.
+
+1. **Harvest before you ask.** Anything already flowing through the system —
+   calendar, email, completed tasks, habit ticks — is free evidence and must be
+   turned into dated fragments before a question is put to Ben. The `harvest`
+   skill does the calendar weekly. Never ask him for something the vault could
+   have read.
+2. **When you do ask, ask one specific question.** Open prompts ("anything to
+   log?") don't get answered. `_meta/gaps.md` holds the specific ones; the
+   evening brief asks the oldest unasked, once, and stamps it. A gap is asked at
+   most three times, then parks — the same anti-nag rule as tasks (rule 3).
+
+Never ask about anything under a `## Private` heading.
+
 ## Capture routing (what `file-inbox` does)
 
 For each file in `inbox/` (oldest first): **archive the raw file first**, then route:
+- **a standing instruction to the system** → a routine, never a task (see below)
 - mentions a known person → append a dated fragment to that `people/*.md`
 - several items in one capture (`list - a, b, c`, or one per line) → split them:
   errands/shopping into a `type: list` note; durable jobs into one checkbox each
@@ -150,6 +172,42 @@ For each file in `inbox/` (oldest first): **archive the raw file first**, then r
 - `done:` prefix → tick the matching task
 - otherwise → a note under `notes/` (or `daily/` if it's a journal-style entry)
 Never lose text: if unsure, file under `notes/unsorted/` with the original line.
+
+## Standing instructions are routines, not tasks (binding)
+
+Some captures are **work for the system**, not work for Ben. They describe
+something that should happen repeatedly, by itself, forever. Filing one as a
+checkbox is a routing failure: it puts a job the system agreed to do onto Ben's
+list, where it can never honestly be ticked, and it sits there implying he has
+failed to do it.
+
+This has happened. *"Add a check, probably monthly, to find and add events in and
+near Cambridge that are family friendly… Add these to my Google calendar
+automatically"* became `- [ ] Find and add family-friendly events…` in
+`tasks.md`. Ben asked for a routine and the vault handed him a chore.
+
+**Tells** — treat a capture as a standing instruction when it says any of:
+- a cadence for the *system*: "every week", "monthly", "each morning", "a check"
+- delegation: "automatically", "remind me", "keep an eye on", "let me know when",
+  "always", "from now on"
+- it describes a *process* rather than a single outcome.
+
+Contrast: "book National Trust tickets for Saturday" is a task — one action, one
+completion. "Find me family days out every month" is a routine.
+
+**Where it goes:**
+1. Write or extend a skill in `_meta/skills/<name>.md` describing what to do.
+2. Add its cadence to `worker/wrangler.toml` (`[triggers] crons`) **and**
+   `CRON_SKILL` in `worker/worker.js` — the clock lives there, not in GitHub.
+3. Add it to `EXPECTED` in `worker/vault.js` so a routine that stops running is
+   caught, and to `SKILLS` in `dashboard/index.html` so it has a Run button.
+4. Record the originating capture's date in the skill file, so the instruction
+   keeps its provenance.
+5. **Never** also leave a task behind. The routine is the deliverable.
+
+If part of the instruction can't be automated with what the vault has, build the
+part that can, and say plainly in the skill file and to Ben what is missing and
+what it would take. Do not quietly downgrade a routine into a task instead.
 
 ## Private sections (binding)
 

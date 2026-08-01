@@ -19,7 +19,8 @@
  *   ALLOW_ORIGIN   the Pages origin allowed by CORS (default "*")
  */
 
-import { createApi } from "./vault.js";
+import { createApi, readPushSubs, addPushSub, removePushSubs } from "./vault.js";
+import { sendToAll } from "./push.js";
 
 const API = "https://api.github.com";
 
@@ -203,6 +204,18 @@ export default {
     if (!tokenOk(req, env)) return json({ error: "unauthorized" }, env, 401);
 
     const store = githubStore(env);
+
+    // Push routes live here rather than in vault.js: they need the VAPID
+    // secrets off `env`, and vault.js is deliberately host-agnostic so the dev
+    // server can share it. Everything here is already behind the unlock token.
+    if (url.pathname.startsWith("/api/push")) {
+      try {
+        return json(await handlePush(req, url, env, store), env);
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, env, 500);
+      }
+    }
+
     const handle = createApi(store, {
       // Subscribed calendars. A private .ics URL is a credential — anyone
       // holding it can read the calendar — so these are Worker secrets:
@@ -223,4 +236,120 @@ export default {
       return json({ error: String((e && e.message) || e) }, env, 500);
     }
   },
+
+  /**
+   * The clock for the scheduled routines.
+   *
+   * This used to be GitHub's own `schedule:` trigger, and GitHub was firing it
+   * 2½–3¼ hours late every single day: a 04:45 UTC cron landed between 07:19
+   * and 08:11 across five consecutive days, so a brief meant to be waiting at
+   * 06:30 arrived mid-morning. GitHub documents "may be delayed"; this repo was
+   * getting delayed by hours, every day, which makes the schedule useless for
+   * anything you plan a morning around.
+   *
+   * Cloudflare cron triggers fire within about a minute, and — the part that
+   * matters — a `workflow_dispatch` run starts immediately, where a `schedule`
+   * run queues behind GitHub's shared scheduler. So the Worker keeps time and
+   * GitHub only does the work.
+   *
+   * Needs `actions: write` on GH_TOKEN, in addition to the contents RW it
+   * already has. If the dispatch fails, shout via push rather than letting the
+   * morning pass silently (CLAUDE.md rule 5) — a schedule that quietly stopped
+   * looks exactly like a quiet day.
+   */
+  async scheduled(event, env, ctx) {
+    const skill = CRON_SKILL[event.cron];
+    if (!skill) return;
+    ctx.waitUntil((async () => {
+      try {
+        const r = await gh(env, "/actions/workflows/scheduled-skills.yml/dispatches", {
+          method: "POST",
+          body: JSON.stringify({ ref: env.GH_BRANCH || "main", inputs: { skill } }),
+        });
+        // 204 is the success code here; anything else means nothing was queued.
+        if (!r.ok) throw new Error(`dispatch ${skill}: ${r.status} ${await r.text()}`);
+      } catch (e) {
+        await shout(env, `⚠️ ${skill} never started`, String((e && e.message) || e));
+      }
+    })());
+  },
 };
+
+// Cron expression -> the skill it runs. Kept in step with [triggers] in
+// wrangler.toml; a cron with no entry here is a no-op rather than a guess.
+const CRON_SKILL = {
+  "45 4 * * *": "morning-brief",     // 05:45 BST / 04:45 GMT
+  "45 19 * * *": "evening-brief",    // 20:45 BST / 19:45 GMT
+  "0 8 * * 6": "interest-scout",     // Sat 09:00 BST
+  "0 9 * * 0": "harvest",            // Sun 10:00 BST — the weekly calendar sweep
+  "0 10 1 * *": "family-events",     // 1st of the month, 11:00 BST
+};
+
+/* -------------------------------------------------------------- push api */
+
+/**
+ * Everything the PWA and the runner need to deliver a notification.
+ *
+ *   GET  /api/push/key          the VAPID public key, so it is not hardcoded
+ *                               in the dashboard and rotating needs no redeploy
+ *   POST /api/push/subscribe    { subscription, label } — register this device
+ *   POST /api/push/unsubscribe  { endpoint } — forget it
+ *   POST /api/push/send         { title, body } — fan out to every device
+ *   GET  /api/push/devices      what is registered, without the keys
+ */
+async function handlePush(req, url, env, store) {
+  const path = url.pathname;
+  const payload = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+
+  if (path === "/api/push/key") {
+    return { ok: !!env.VAPID_PUBLIC_KEY, key: env.VAPID_PUBLIC_KEY || null };
+  }
+
+  if (path === "/api/push/devices") {
+    const { subs } = await readPushSubs(store);
+    // Never echo p256dh/auth back out — they are the device's decryption keys.
+    return { ok: true, devices: subs.map((s) => ({ label: s.label, added: s.added, endpoint: s.endpoint.slice(0, 40) + "…" })) };
+  }
+
+  if (path === "/api/push/subscribe" && req.method === "POST") {
+    const ok = await addPushSub(store, { ...(payload.subscription || {}), label: payload.label });
+    return { ok, error: ok ? undefined : "malformed subscription" };
+  }
+
+  if (path === "/api/push/unsubscribe" && req.method === "POST") {
+    return { ok: await removePushSubs(store, [payload.endpoint]) };
+  }
+
+  if (path === "/api/push/send" && req.method === "POST") {
+    const title = String(payload.title || "Life-Vault").slice(0, 120);
+    const body = String(payload.body || "").slice(0, 2400);
+    const { subs } = await readPushSubs(store);
+    if (!subs.length) {
+      // Push is the only channel now, so "nobody is subscribed" is a delivery
+      // failure and has to be reported as one — not quietly counted as success.
+      return { ok: false, sent: 0, total: 0, error: "no devices are registered for notifications" };
+    }
+    const r = await sendToAll(subs, JSON.stringify({ title, body, at: Date.now() }), env);
+    // Prune the ones the push service says are dead, or they absorb every send
+    // from here on and the failure count never comes back down.
+    if (r.gone.length) await removePushSubs(store, r.gone);
+    return {
+      ok: r.sent > 0,
+      sent: r.sent, total: r.total, pruned: r.gone.length,
+      error: r.sent > 0 ? undefined
+        : (r.failed[0] && `${r.failed[0].status}: ${r.failed[0].error}`) || "every device rejected the push",
+    };
+  }
+
+  return { ok: false, error: "not found" };
+}
+
+// Best-effort alert. The Worker is the only part of the system that can still
+// speak when the runner never started, so a failure to dispatch has to leave
+// this building somehow. Same channel as everything else now that ntfy is gone.
+async function shout(env, title, body) {
+  try {
+    const { subs } = await readPushSubs(githubStore(env));
+    if (subs.length) await sendToAll(subs, JSON.stringify({ title, body: String(body).slice(0, 2400) }), env);
+  } catch { /* nothing left to try */ }
+}

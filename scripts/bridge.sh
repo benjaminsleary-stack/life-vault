@@ -4,18 +4,18 @@
 # laptop is on. This — NOT the obsidian-git plugin — is the mechanism of record.
 #
 # Guarantees (spec §1b): pull --rebase before push; on conflict, park local work on
-# a conflict/<date> branch, push it, alert via ntfy, and STOP. Never force-push,
+# a conflict/<date> branch, push it, alert via push notification, and STOP. Never force-push,
 # never exit silently, never lose an edit.
 #
 # Usage: VAULT_DIR=~/life-vault bash scripts/bridge.sh
-# Env: VAULT_DIR (default: repo root), optional NTFY_TOPIC/NTFY_TOKEN for alerts.
+# Env: VAULT_DIR (default: repo root), optional WORKER_URL/UNLOCK_TOKEN for alerts.
 set -uo pipefail
 
 VAULT_DIR="${VAULT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$VAULT_DIR" || { echo "no vault dir: $VAULT_DIR"; exit 2; }
 
 alert() {  # best-effort; never fail the bridge because alerting failed
-  if [ -n "${NTFY_TOPIC:-}" ] && [ -x scripts/notify.sh ]; then
+  if [ -n "${WORKER_URL:-}" ] && [ -f scripts/notify.sh ]; then
     printf '%s' "$1" | bash scripts/notify.sh "⚠️ vault bridge" - || true
   fi
   echo "ALERT: $1" >&2
