@@ -35,6 +35,21 @@ his brain, get things done — plus coaching on his relationship and his health.
 - **Coaching means all three:** a specific prompt, a bare observation, and
   sometimes a question that makes him think.
 
+## Sleep — the shape of the problem
+
+Bed around 22:00, asleep around midnight, alarm at 07:00 and usually awake before
+it. The two-hour gap is **a choice, not insomnia**, and it is a collision of three
+things he wants:
+
+1. time with [[Charlotte]] — TV and talking, which is also the relationship time;
+2. an hour of his own afterwards to decompress, watching his own things;
+3. the sleep itself, which is a stated twelve-month goal.
+
+Charlotte also doesn't like him going to sleep before she does, so the first two
+stack rather than overlap. Any suggestion that treats this as sleep hygiene has
+missed it: the cost of more sleep is either couple time or his only decompression,
+and he knows that. Don't offer generic sleep advice.
+
 ## What a good day is
 
 His definition, and it is countable: **tasks completed, and something positive

@@ -21,3 +21,7 @@ updated: 2026-07-13
 ## Paperwork threads
 
 <!-- open admin situations -->
+
+## Context
+
+- [[money]] — the standing financial constraint. Context only; never surfaced unprompted.
