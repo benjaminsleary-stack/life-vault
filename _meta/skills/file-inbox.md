@@ -11,6 +11,14 @@ Route every raw capture in `inbox/` into the right note, losing nothing. Read
       filename). Only after it's safely archived do you route its content. If a run
       crashes, nothing is lost and re-running is safe (idempotent on already-archived).
    b. Route the text per `CLAUDE.md`:
+      - **a standing instruction to the system** ("monthly", "automatically",
+        "keep an eye on", "from now on", "add a check…") → this is a **routine,
+        not a task**. Follow the "Standing instructions are routines" section of
+        `CLAUDE.md`: write the skill, wire its cadence, and leave nothing in
+        `tasks.md`. If you cannot wire it yourself, write the skill file anyway
+        and say clearly in your report what still needs doing — never fall back
+        to a checkbox. Ben asking the system to do something recurring is the
+        opposite of Ben taking on a chore.
       - `done: <text>` → find the best-matching open task in `tasks.md`, tick it
         `- [x]` and append ` ✅ <today>`. If no confident match, add a note instead.
       - mentions a known person (a `people/*.md` exists, or an obvious new one) →

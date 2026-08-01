@@ -1273,6 +1273,7 @@ const EXPECTED = {
   "evening-brief": 1,      // daily
   "interest-scout": 7,     // weekly
   harvest: 7,              // weekly
+  "family-events": 31,     // monthly, 1st
 };
 
 async function health(store) {

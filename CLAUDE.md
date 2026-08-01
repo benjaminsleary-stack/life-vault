@@ -162,6 +162,7 @@ Never ask about anything under a `## Private` heading.
 ## Capture routing (what `file-inbox` does)
 
 For each file in `inbox/` (oldest first): **archive the raw file first**, then route:
+- **a standing instruction to the system** → a routine, never a task (see below)
 - mentions a known person → append a dated fragment to that `people/*.md`
 - several items in one capture (`list - a, b, c`, or one per line) → split them:
   errands/shopping into a `type: list` note; durable jobs into one checkbox each
@@ -170,6 +171,42 @@ For each file in `inbox/` (oldest first): **archive the raw file first**, then r
 - `done:` prefix → tick the matching task
 - otherwise → a note under `notes/` (or `daily/` if it's a journal-style entry)
 Never lose text: if unsure, file under `notes/unsorted/` with the original line.
+
+## Standing instructions are routines, not tasks (binding)
+
+Some captures are **work for the system**, not work for Ben. They describe
+something that should happen repeatedly, by itself, forever. Filing one as a
+checkbox is a routing failure: it puts a job the system agreed to do onto Ben's
+list, where it can never honestly be ticked, and it sits there implying he has
+failed to do it.
+
+This has happened. *"Add a check, probably monthly, to find and add events in and
+near Cambridge that are family friendly… Add these to my Google calendar
+automatically"* became `- [ ] Find and add family-friendly events…` in
+`tasks.md`. Ben asked for a routine and the vault handed him a chore.
+
+**Tells** — treat a capture as a standing instruction when it says any of:
+- a cadence for the *system*: "every week", "monthly", "each morning", "a check"
+- delegation: "automatically", "remind me", "keep an eye on", "let me know when",
+  "always", "from now on"
+- it describes a *process* rather than a single outcome.
+
+Contrast: "book National Trust tickets for Saturday" is a task — one action, one
+completion. "Find me family days out every month" is a routine.
+
+**Where it goes:**
+1. Write or extend a skill in `_meta/skills/<name>.md` describing what to do.
+2. Add its cadence to `worker/wrangler.toml` (`[triggers] crons`) **and**
+   `CRON_SKILL` in `worker/worker.js` — the clock lives there, not in GitHub.
+3. Add it to `EXPECTED` in `worker/vault.js` so a routine that stops running is
+   caught, and to `SKILLS` in `dashboard/index.html` so it has a Run button.
+4. Record the originating capture's date in the skill file, so the instruction
+   keeps its provenance.
+5. **Never** also leave a task behind. The routine is the deliverable.
+
+If part of the instruction can't be automated with what the vault has, build the
+part that can, and say plainly in the skill file and to Ben what is missing and
+what it would take. Do not quietly downgrade a routine into a task instead.
 
 ## Private sections (binding)
 

@@ -49,12 +49,12 @@ const status = (skill, extra = {}) => JSON.stringify({
   error: "", delivered: null, deliveryError: "", model: "sonnet",
   tokens: { in: 1, out: 1, cache: 1 }, cost_usd: 0.1, ...extra,
 });
-const allRan = (extra = {}) => ({
-  "inbox/_runs/morning-brief.status": status("morning-brief", extra["morning-brief"]),
-  "inbox/_runs/evening-brief.status": status("evening-brief", extra["evening-brief"]),
-  "inbox/_runs/interest-scout.status": status("interest-scout", extra["interest-scout"]),
-  "inbox/_runs/harvest.status": status("harvest", extra.harvest),
-});
+// Every cadenced skill in EXPECTED, all healthy. Keep this in step with
+// EXPECTED in vault.js — a skill missing here shows up as "overdue" and fails
+// the unrelated tests below, which is how family-events announced itself.
+const CADENCED = ["morning-brief", "evening-brief", "interest-scout", "harvest", "family-events"];
+const allRan = (extra = {}) =>
+  Object.fromEntries(CADENCED.map((s) => [`inbox/_runs/${s}.status`, status(s, extra[s])]));
 const health = async (files) => {
   const { body } = await createApi(memStore(files))("GET", "/api/health", new URLSearchParams(), null);
   return body;
@@ -116,6 +116,42 @@ test("a trigger nobody has claimed surfaces as stuck", async () => {
 test("a malformed .status file is skipped, not fatal", async () => {
   const h = await health({ ...allRan(), "inbox/_runs/weave.status": "{not json" });
   assert.ok(h.checks.length >= 4, "the readable statuses still report");
+});
+
+/* ------------------------------------------ standing instructions vs tasks */
+
+test("every scheduled routine is wired end to end", async () => {
+  // A routine is only real if all four places agree: the skill file, the
+  // Cloudflare cron, the cron->skill map, and EXPECTED (which is what notices
+  // when it stops running). family-events was originally filed as a checkbox in
+  // tasks.md instead of any of them — a job the system agreed to do, handed
+  // back to Ben as a chore. This asserts the wiring, so the next one can't be
+  // half-connected.
+  const fs = await import("node:fs");
+  const toml = fs.readFileSync("worker/wrangler.toml", "utf8");
+  const worker = fs.readFileSync("worker/worker.js", "utf8");
+  const vault = fs.readFileSync("worker/vault.js", "utf8");
+  const dash = fs.readFileSync("dashboard/index.html", "utf8");
+
+  const crons = [...toml.matchAll(/^\s*"([^"]+)",/gm)].map((m) => m[1]);
+  assert.ok(crons.length >= 5, "expected the cron list to be found");
+
+  for (const cron of crons) {
+    const m = worker.match(new RegExp(`"${cron.replace(/\*/g, "\\*")}":\\s*"([\\w-]+)"`));
+    assert.ok(m, `cron ${cron} has no entry in CRON_SKILL — it would tick and do nothing`);
+    const skill = m[1];
+    assert.ok(fs.existsSync(`_meta/skills/${skill}.md`), `${skill} has no skill file`);
+    assert.match(vault, new RegExp(`"?${skill}"?:\\s*\\d+`), `${skill} is missing from EXPECTED`);
+    assert.match(dash, new RegExp(`name:"${skill}"`), `${skill} has no row in the dashboard`);
+  }
+});
+
+test("the family-events instruction is a routine and not a task", async () => {
+  const fs = await import("node:fs");
+  const tasks = fs.readFileSync("tasks.md", "utf8");
+  assert.doesNotMatch(tasks, /family-friendly events/i,
+    "a standing instruction must never sit in tasks.md as a checkbox");
+  assert.ok(fs.existsSync("_meta/skills/family-events.md"));
 });
 
 /* --------------------------------------------------- the private-event wall */

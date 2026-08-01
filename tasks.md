@@ -8,7 +8,6 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Plan new kitchen in extension [[house-retrofit]] #house
 - [ ] Add stones to freecycle #house
 - [ ] Order [[Jasper]]'s bike #family
-- [ ] Find and add family-friendly events in/near Cambridge (National Trust, <1hr drive) to calendar, monthly #family #interests
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Do monthly LinkedIn posts #work
 - [ ] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale

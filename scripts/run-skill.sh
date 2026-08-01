@@ -53,7 +53,7 @@ case "$skill" in
   file-inbox|weave|refresh-summaries) model="haiku" ;;
   # harvest is judgement about what's worth writing down, not a transform —
   # the whole skill is "discard the noise", and haiku writes the noise down.
-  morning-brief|evening-brief|interest-scout|ask|harvest) model="sonnet" ;;
+  morning-brief|evening-brief|interest-scout|ask|harvest|family-events) model="sonnet" ;;
   *) model="sonnet" ;;
 esac
 [ -n "${SKILL_MODEL:-}" ] && model="$SKILL_MODEL"
@@ -62,7 +62,7 @@ esac
 # without a delivery receipt is recorded as undelivered, and health() turns that
 # into a failed check — writing the brief is only half the job.
 case "$skill" in
-  morning-brief|evening-brief|interest-scout) expects_delivery=1 ;;
+  morning-brief|evening-brief|interest-scout|family-events) expects_delivery=1 ;;
   *) expects_delivery=0 ;;
 esac
 receipt_file="$(mktemp 2>/dev/null || echo "/tmp/lv-delivery-$$")"
