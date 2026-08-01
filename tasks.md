@@ -8,7 +8,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Plan new kitchen in extension [[house-retrofit]] 🔽 #house
 - [ ] Add stones to freecycle #house
 - [ ] Order [[Jasper]]'s bike #family
-- [ ] Sort [[Jasper]]'s 5th birthday presents — birthday is 11 Aug, and you're on Oléron from today. Unless you're home well before then, buying on the day isn't an option: order now for delivery home, or buy them in France. 📅 2026-08-06 #family
+- [ ] Buy [[Jasper]]'s 5th birthday presents **in France** — his birthday is 11 Aug and you're on Oléron until the 13th, so ordering to the house can't work. Either they travel with you tonight or they're bought out there. 📅 2026-08-08 #family
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Do monthly LinkedIn posts #work
 - [ ] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale

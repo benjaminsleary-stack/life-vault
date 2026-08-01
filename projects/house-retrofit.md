@@ -17,6 +17,12 @@ disruptive enough that it needs a clear run — and the new kitchen in the exten
 (waiting on funds). Standing specs live in [[house-facts]].
 
 ## Log
+- 2026-08-01 — **A rare clear run: Ben is home alone from 13 Aug** for several
+  days — back from Oléron ahead of [[Charlotte]] and the boys. His stated hope is
+  to fit skirting board. Worth naming the trade-off rather than deciding it for
+  him: an empty house is the one condition [[Milo]]'s room needs, since the only
+  thing recorded against it is that it is "really disruptive". Skirting can be
+  done around a family; that job cannot. _(interview)_
 - 2026-08-01 — Not stalled: IKEA installed in the corridor and laundry this week,
   plus two new light fittings. Next target is finishing the living room and
   hallway; the hallway needs skirting, hoped for after the holiday (~11 Aug).
