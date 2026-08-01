@@ -112,10 +112,18 @@
 
   .skill{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line-row); }
   .skill:last-child{ border-bottom:0; }
-  .skill .s-body{ flex:1; min-width:0; }
+  /* The name column must keep a floor. `min-width:0` let it collapse to a
+     single character per line the moment the status column grew — which is
+     what adding "· not delivered" did. */
+  .skill .s-body{ flex:1 1 46%; min-width:112px; }
   .skill .s-name{ font-size:14.5px; font-weight:600; }
   .skill .s-desc{ font-size:12px; color:var(--muted); margin-top:1px; }
-  .skill .s-status{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+  /* Wraps onto a second line rather than shoving the name column off the page;
+     each piece inside stays unbroken. */
+  .skill .s-status{ font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums;
+    display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap;
+    gap:2px 5px; flex:0 1 auto; text-align:right; }
+  .skill .s-status > span{ white-space:nowrap; }
   .tick{ color:var(--green); font-weight:700; }
   .cross{ color:var(--red); font-weight:700; }
   .s-actions{ flex:0 0 auto; display:flex; gap:6px; }
@@ -737,6 +745,7 @@
     { name:"evening-brief",     label:"Evening",  desc:"Debrief, Charlotte, data-capture request" },
     { name:"weave",             label:"Weave",    desc:"Refresh MOCs & the index" },
     { name:"refresh-summaries", label:"Refresh",  desc:"Rewrite people / project summaries" },
+    { name:"harvest",           label:"Harvest",  desc:"Turn last week's calendar into dated fragments" },
     { name:"interest-scout",    label:"Discover", desc:"Weekly discover feed for your interests" },
     { name:"ask",               label:"Ask",      desc:"Answers from the vault (use the Ask box)", noRun:true },
   ];
@@ -1039,11 +1048,13 @@
       // that was never requested.
       if(st && st.queued){
         const mins=Math.max(0,Math.round((Date.now()-new Date(st.queued+"Z").getTime())/60000));
-        line='<span class="running"></span> queued '+(mins<1?"just now":mins+"m ago");
+        line='<span class="running"></span><span>queued '+(mins<1?"just now":mins+"m ago")+"</span>";
       }
       else if(st){
         const mark=st.ok===false?'<span class="cross">✗</span>':'<span class="tick">✓</span>';
-        line=mark+" ran "+fmtWhen(st.when);
+        // Tick and timestamp are one unbreakable unit — wrapping between them
+        // strands a lone ✓ on its own line.
+        line='<span>'+mark+" ran "+fmtWhen(st.when)+"</span>";
         // Written and pushed is not the same as received. Say so on the row —
         // this went unsaid for twelve days while every brief silently failed
         // to send.

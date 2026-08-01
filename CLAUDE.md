@@ -41,6 +41,8 @@ Read this before touching anything. Conventions here are binding.
 | `attachments/` | binary files referenced by notes | you |
 | `_meta/identity.md` | "about Ben" profile (seeded by onboarding) | you + refresh |
 | `_meta/lessons.md` | routing/preference lessons | you |
+| `_meta/gaps.md` | what the vault doesn't know; one is asked each evening | `evening-brief` + `file-inbox` |
+| `_meta/day-log.jsonl` | append-only daily score against Ben's own "good day" | `evening-brief` |
 | `_meta/index.md` | map-of-content; refreshed by the morning routine | `file-inbox` |
 | `_meta/hot-cache.md` | recent-context digest; a cheap stand-in for embeddings | each run |
 | `_meta/skills/` | the skill prompt files themselves | humans |
@@ -138,6 +140,24 @@ is permanent noise that never leaves. Cleared items append to a dated
 A capture whose text starts with `done:` is an instruction, not a note — the
 `file-inbox` skill finds the best-matching open task and ticks it (`- [x]`),
 recording the completion date. Example capture: `done: ordered the washing machine`.
+
+## Asking for data (binding)
+
+The vault is starved, not badly structured: nine captures in seventeen days, and
+briefs that re-quote a July interview because nothing newer is grounded. Two
+rules follow.
+
+1. **Harvest before you ask.** Anything already flowing through the system —
+   calendar, email, completed tasks, habit ticks — is free evidence and must be
+   turned into dated fragments before a question is put to Ben. The `harvest`
+   skill does the calendar weekly. Never ask him for something the vault could
+   have read.
+2. **When you do ask, ask one specific question.** Open prompts ("anything to
+   log?") don't get answered. `_meta/gaps.md` holds the specific ones; the
+   evening brief asks the oldest unasked, once, and stamps it. A gap is asked at
+   most three times, then parks — the same anti-nag rule as tasks (rule 3).
+
+Never ask about anything under a `## Private` heading.
 
 ## Capture routing (what `file-inbox` does)
 

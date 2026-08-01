@@ -1,1 +1,1 @@
-{"skill":"interest-scout","ok":true,"when":"2026-08-01T10:05:41Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":3968,"out":9392,"cache":1467740},"cost_usd":1.4422184000000002}
+{"skill":"interest-scout","ok":true,"when":"2026-08-01T10:05:41Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":3968,"out":9392,"cache":1467740},"cost_usd":1.4422184000000002,"delivered":false,"deliveryError":"NTFY_TOPIC not set (or empty) in this environment"}

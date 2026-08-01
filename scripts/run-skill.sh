@@ -51,7 +51,9 @@ fi
 # Override for a one-off:  SKILL_MODEL=opus bash scripts/run-skill.sh <skill>
 case "$skill" in
   file-inbox|weave|refresh-summaries) model="haiku" ;;
-  morning-brief|evening-brief|interest-scout|ask) model="sonnet" ;;
+  # harvest is judgement about what's worth writing down, not a transform —
+  # the whole skill is "discard the noise", and haiku writes the noise down.
+  morning-brief|evening-brief|interest-scout|ask|harvest) model="sonnet" ;;
   *) model="sonnet" ;;
 esac
 [ -n "${SKILL_MODEL:-}" ] && model="$SKILL_MODEL"

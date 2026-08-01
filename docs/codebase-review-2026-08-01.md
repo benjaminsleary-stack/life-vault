@@ -4,6 +4,20 @@ A read of the whole repo (worker, dashboard, runner scripts, workflows, skills)
 plus the vault's own run history as evidence. Findings are ordered by how much
 they cost you, not by how hard they are to fix.
 
+> **Status: implemented, except the two things only a human can do.** Everything
+> below has been built. The two outstanding items are both credentials:
+>
+> 1. **Set the `NTFY_TOPIC` repository secret** (GitHub → Settings → Secrets →
+>    Actions). It is currently present but empty, which is why nothing has
+>    reached your phone since 20 July. Nothing else in this list matters while
+>    that is unset.
+> 2. **Add `actions: write` to the Worker's `GH_TOKEN`**, and set `NTFY_TOPIC`
+>    as a Worker secret too. Without the first, the Cloudflare cron cannot
+>    dispatch the workflow and the schedule will not fire at all.
+>
+> The rest — §2, §3, §4a, §4c, §5, §6 — is in the tree. §5's dashboard split was
+> deliberately not done (see the note there).
+
 ---
 
 ## 1. Verdict

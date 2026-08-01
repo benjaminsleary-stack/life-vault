@@ -4,6 +4,12 @@
  *
  *   node scripts/fetch-calendar.mjs            # today + tomorrow
  *   node scripts/fetch-calendar.mjs 7          # the next 7 days
+ *   node scripts/fetch-calendar.mjs 7 --back   # the last 7 days, ending today
+ *
+ * `--back` is what the `harvest` skill runs on. Until it existed the calendar
+ * was read every morning for "what's on today" and then thrown away — three
+ * feeds' worth of factual, zero-effort evidence about who Ben actually saw and
+ * what he actually did, discarded daily while people/ notes sat empty.
  *
  * Reads the same feeds the dashboard does, from the same env vars:
  *   CAL_WORK       work Outlook published .ics
@@ -59,9 +65,14 @@ const unset = configured
   .map((f) => ({ name: f.name, ok: false, error: `${f.env} not set` }));
 
 const days = Math.max(1, parseInt(process.argv[2] || "2", 10));
+const back = process.argv.includes("--back");
 const fmt = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(d);
-const from = fmt(new Date());
-const to = fmt(new Date(Date.now() + (days - 1) * 864e5));
+const today = fmt(new Date());
+const tomorrow = fmt(new Date(Date.now() + 864e5));
+// Forward: today .. today+n. Back: today-n+1 .. today (today included, because
+// a Sunday harvest should catch Sunday morning).
+const from = back ? fmt(new Date(Date.now() - (days - 1) * 864e5)) : today;
+const to = back ? today : fmt(new Date(Date.now() + (days - 1) * 864e5));
 
 if (!feeds.length) {
   console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL / CAL_FAMILY)", events: [], sources: [] }));
@@ -80,7 +91,10 @@ await Promise.all(feeds.map(async (feed) => {
       if (/^that week$/i.test(e.title.trim())) continue;
       events.push({
         date: e.date,
-        when: e.date === from ? "today" : e.date === fmt(new Date(Date.now() + 864e5)) ? "tomorrow" : e.date,
+        // Anchored on the real today, not on the window start — with --back
+        // the first day of the window is a week ago, and labelling it "today"
+        // would put last Sunday's events in a brief as if they were now.
+        when: e.date === today ? "today" : e.date === tomorrow ? "tomorrow" : e.date,
         time: e.allDay ? "all-day" : e.time,
         title: e.title,
         location: e.location,
