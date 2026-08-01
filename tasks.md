@@ -14,3 +14,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Do monthly LinkedIn posts #work
 - [ ] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale
 - [ ] Talk to Charlotte about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and reseptive #family
+- [ ] Order worktop and slatting #house
