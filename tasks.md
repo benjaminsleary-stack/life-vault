@@ -9,6 +9,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Reply to dad about him coming to visit #family 📅 2026-07-18 ⏳3 #stale ✅ 2026-07-25
 - [ ] Add stones to freecycle #house
 - [ ] Order [[Jasper]]'s bike #family
+- [ ] Find and add family-friendly events in/near Cambridge (National Trust, <1hr drive) to calendar, monthly #family #interests
 - [ ] Order a new hearth for the fireplace #house
 - [x] IKEA and dishwasher order #house 📅 2026-07-21 ⏳3 ✅ 2026-07-24
 - [ ] Jujutsu Kaisen Season 4 — first trailer revealed 19 June 2026 at MAPPA's 15th-anniversary livestream, covering the second half of the Culling Game arc. No release window yet. Crunchyroll

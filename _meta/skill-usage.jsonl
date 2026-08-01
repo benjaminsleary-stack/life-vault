@@ -29,3 +29,4 @@
 {"when":"2026-07-31T20:49:57Z","skill":"evening-brief","model":"sonnet","ok":true,"in":2704,"out":3584,"cache":474645,"cost_usd":0.318479,"turns":13,"ms":63230}
 {"when":"2026-08-01T07:20:42Z","skill":"morning-brief","model":"sonnet","ok":true,"in":4978,"out":12760,"cache":1583537,"cost_usd":1.3719564000000002,"turns":39,"ms":431989}
 {"when":"2026-08-01T10:05:41Z","skill":"interest-scout","model":"sonnet","ok":true,"in":3968,"out":9392,"cache":1467740,"cost_usd":1.4422184000000002,"turns":41,"ms":192543}
+{"when":"2026-08-01T13:34:28Z","skill":"file-inbox","model":"haiku","ok":true,"in":82,"out":2372,"cache":288089,"cost_usd":0.07225649999999999,"turns":10,"ms":45317}
