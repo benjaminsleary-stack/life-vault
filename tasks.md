@@ -13,3 +13,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Jujutsu Kaisen Season 4 — first trailer revealed 19 June 2026 at MAPPA's 15th-anniversary livestream, covering the second half of the Culling Game arc. No release window yet. Crunchyroll ✅ 2026-08-01
 - [ ] Do monthly LinkedIn posts #work
 - [ ] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale
+- [ ] Talk to Charlotte about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and reseptive #family
