@@ -3,7 +3,8 @@
 A personal "second brain" that is a **markdown vault + Claude**, not an app.
 Phone ⇄ desktop by **Obsidian Sync**; the desktop mirrors the vault to this
 **private GitHub repo**; **Claude Code Routines** (Anthropic cloud) run the
-scheduled skills against the mirror and push briefings to your phone via **ntfy**.
+scheduled skills against the mirror and deliver briefings to your phone as
+**Web Push straight from your own PWA** (no third-party app).
 
 Built to `design/plan-life-vault-2026-07.md` **v2.0**. Read that spec for the why;
 this README is the operator's build guide.
@@ -16,12 +17,12 @@ this README is the operator's build guide.
  (review, edit)      Sync       vault folder = git repo  ◀──push──▶      ▲
  HTTP Shortcuts ───── Contents API PUT ─────────────────────────────────┤
  (capture, laptop-independent)                                          │
- ntfy client  ◀──────────── push (allowlisted) ─────── Claude Code Routine (cloud clone/run)
+ your PWA     ◀── Web Push (VAPID, encrypted) ─────── Claude Code Routine (cloud clone/run)
 ```
 
 **Accepted lag:** a *note edit* made on the phone while the laptop is off reaches
 the routines only when the laptop next syncs+pushes. **Captures don't lag** (they
-PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
+PUT straight to GitHub). **Briefings don't lag** (the push carries the content).
 
 ## What's in this repo (built for you)
 
@@ -73,12 +74,12 @@ PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
 
 ### Phase 4 — cloud environment (prove the allowlist BEFORE routines)
 - [ ] **[you]** Create a **Custom** cloud environment (not Default). Network access:
-      allowlist `ntfy.sh`, `imap.gmail.com`, `calendar.google.com`, `hc-ping.com`
+      allowlist your Worker host, `imap.gmail.com`, `calendar.google.com`, `hc-ping.com`
       (healthchecks), your web-search hosts, + keep package registries. See §6.
 - [ ] **[you]** Env vars (NOT in prompts): `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`,
-      `ICS_URL`, `NTFY_TOPIC`, `HEALTHCHECK_URL`. Setup script: `scripts/setup.sh`.
+      `ICS_URL`, `WORKER_URL`, `UNLOCK_TOKEN`, `HEALTHCHECK_URL`. Setup: `scripts/setup.sh`.
 - [ ] **[you]** Enable **Allow unrestricted branch pushes** on this repo.
-- [ ] Accept: a one-off "Run now" routine POSTs a test ntfy message **and** fetches
+- [ ] Accept: a one-off "Run now" routine sends a test push **and** fetches
       mail. This phase exists solely to prove the allowlist — do not skip it.
 
 ### Phase 5–8 — the routines
@@ -96,7 +97,7 @@ PUT straight to GitHub). **Briefings don't lag** (ntfy carries the content).
 Don't take these from memory — test each at build time: cloud allowlist hostnames;
 Obsidian Sync pricing + `.git` behaviour; Contents API create-vs-update SHA rules;
 PAT max lifetime; GitHub hosted MCP on Pro+Android; the Pro routine cap + one-off
-exemption; whether `ANTHROPIC_API_KEY` in the shell blocks `/schedule`; ntfy size
+exemption; whether `ANTHROPIC_API_KEY` in the shell blocks `/schedule`; push payload
 limit + protected topic; Gmail app-password availability (needs 2FA); the Gmail
 `rfc822msgid` deep-link; kepano skills install path.
 

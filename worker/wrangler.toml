@@ -3,7 +3,9 @@
 # Secrets (never put these here — they go in Cloudflare, encrypted):
 #   npx wrangler secret put GH_TOKEN       # fine-grained PAT: contents RW + actions RW
 #   npx wrangler secret put UNLOCK_TOKEN   # the app-unlock secret you choose
-#   npx wrangler secret put NTFY_TOPIC     # so a failed dispatch can still shout
+#   npx wrangler secret put VAPID_PUBLIC_KEY   # from scripts/vapid-keygen.mjs
+#   npx wrangler secret put VAPID_PRIVATE_KEY  # ditto — a credential, never commit
+#   npx wrangler secret put VAPID_SUBJECT      # mailto:you@example.com
 
 name = "life-vault"
 main = "worker.js"

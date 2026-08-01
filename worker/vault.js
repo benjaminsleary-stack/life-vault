@@ -344,6 +344,62 @@ async function readSkills(store) {
   return status;
 }
 
+/* ----------------------------------------------------- push subscriptions */
+// One entry per device that has enabled notifications. Kept in the repo rather
+// than a KV namespace so there is no extra Cloudflare setup to do and no second
+// place to look when a phone stops buzzing — the whole system's state stays in
+// git. An endpoint is not a secret on its own: pushing to it also requires the
+// VAPID private key, which lives only in Worker secrets.
+
+const PUSH_PATH = "_meta/push-subscriptions.json";
+
+export async function readPushSubs(store) {
+  const f = await store.readFile(PUSH_PATH);
+  if (!f) return { subs: [], sha: undefined };
+  try {
+    const j = JSON.parse(f.text);
+    return { subs: Array.isArray(j.subscriptions) ? j.subscriptions : [], sha: f.sha };
+  } catch {
+    // A corrupt file must not lock Ben out of ever re-subscribing.
+    return { subs: [], sha: f.sha };
+  }
+}
+
+async function writePushSubs(store, subs, sha, message) {
+  const body = JSON.stringify({
+    _comment: "Devices subscribed to push. Written by the dashboard; see docs/push-notifications.md.",
+    subscriptions: subs,
+  }, null, 2) + "\n";
+  await store.putFile(PUSH_PATH, body, message, sha);
+  return true;
+}
+
+// The endpoint is the identity: re-subscribing the same device returns the same
+// endpoint, so this is an upsert. Without that, every permission re-grant adds
+// a duplicate and the brief arrives twice.
+export async function addPushSub(store, sub) {
+  if (!sub || typeof sub.endpoint !== "string" || !/^https:\/\//.test(sub.endpoint)) return false;
+  if (!sub.keys || typeof sub.keys.p256dh !== "string" || typeof sub.keys.auth !== "string") return false;
+  const { subs, sha } = await readPushSubs(store);
+  const entry = {
+    endpoint: sub.endpoint,
+    keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth },
+    label: String(sub.label || "device").slice(0, 60),
+    added: today(),
+  };
+  const next = subs.filter((s) => s.endpoint !== sub.endpoint).concat([entry]);
+  return writePushSubs(store, next, sha, "dashboard: register device for notifications");
+}
+
+export async function removePushSubs(store, endpoints) {
+  const drop = new Set(endpoints || []);
+  if (!drop.size) return false;
+  const { subs, sha } = await readPushSubs(store);
+  const next = subs.filter((s) => !drop.has(s.endpoint));
+  if (next.length === subs.length) return false;
+  return writePushSubs(store, next, sha, "push: drop expired device subscriptions");
+}
+
 /* ------------------------------------------------------------------ habits */
 // habits.md: "## <Habit>" sections with "- [ ]" sub-items and a "(day:: date)"
 // marker. The checkboxes represent TODAY: when the marker is stale the file is
@@ -1326,7 +1382,7 @@ async function health(store) {
   // three different fixes, and collapsing them sends the wrong signal: once,
   // interest-scout had run on schedule and crashed, and the app reported it as
   // not having run. Undelivered is its own line for the same reason — the fix
-  // is a missing NTFY_TOPIC secret, not anything about the routine.
+  // is usually a device that never subscribed, not anything about the routine.
   const undelivered = failing.filter((c) => c.why.startsWith("written, but"));
   const broke = failing.filter((c) => c.why === "last run failed");
   const late = failing.filter((c) => !undelivered.includes(c) && !broke.includes(c));

@@ -19,7 +19,8 @@
  *   ALLOW_ORIGIN   the Pages origin allowed by CORS (default "*")
  */
 
-import { createApi } from "./vault.js";
+import { createApi, readPushSubs, addPushSub, removePushSubs } from "./vault.js";
+import { sendToAll } from "./push.js";
 
 const API = "https://api.github.com";
 
@@ -203,6 +204,18 @@ export default {
     if (!tokenOk(req, env)) return json({ error: "unauthorized" }, env, 401);
 
     const store = githubStore(env);
+
+    // Push routes live here rather than in vault.js: they need the VAPID
+    // secrets off `env`, and vault.js is deliberately host-agnostic so the dev
+    // server can share it. Everything here is already behind the unlock token.
+    if (url.pathname.startsWith("/api/push")) {
+      try {
+        return json(await handlePush(req, url, env, store), env);
+      } catch (e) {
+        return json({ ok: false, error: String((e && e.message) || e) }, env, 500);
+      }
+    }
+
     const handle = createApi(store, {
       // Subscribed calendars. A private .ics URL is a credential — anyone
       // holding it can read the calendar — so these are Worker secrets:
@@ -240,7 +253,7 @@ export default {
    * GitHub only does the work.
    *
    * Needs `actions: write` on GH_TOKEN, in addition to the contents RW it
-   * already has. If the dispatch fails, shout via ntfy rather than letting the
+   * already has. If the dispatch fails, shout via push rather than letting the
    * morning pass silently (CLAUDE.md rule 5) — a schedule that quietly stopped
    * looks exactly like a quiet day.
    */
@@ -272,17 +285,71 @@ const CRON_SKILL = {
   "0 10 1 * *": "family-events",     // 1st of the month, 11:00 BST
 };
 
-// Best-effort push. The Worker is the only part of the system that can still
+/* -------------------------------------------------------------- push api */
+
+/**
+ * Everything the PWA and the runner need to deliver a notification.
+ *
+ *   GET  /api/push/key          the VAPID public key, so it is not hardcoded
+ *                               in the dashboard and rotating needs no redeploy
+ *   POST /api/push/subscribe    { subscription, label } — register this device
+ *   POST /api/push/unsubscribe  { endpoint } — forget it
+ *   POST /api/push/send         { title, body } — fan out to every device
+ *   GET  /api/push/devices      what is registered, without the keys
+ */
+async function handlePush(req, url, env, store) {
+  const path = url.pathname;
+  const payload = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+
+  if (path === "/api/push/key") {
+    return { ok: !!env.VAPID_PUBLIC_KEY, key: env.VAPID_PUBLIC_KEY || null };
+  }
+
+  if (path === "/api/push/devices") {
+    const { subs } = await readPushSubs(store);
+    // Never echo p256dh/auth back out — they are the device's decryption keys.
+    return { ok: true, devices: subs.map((s) => ({ label: s.label, added: s.added, endpoint: s.endpoint.slice(0, 40) + "…" })) };
+  }
+
+  if (path === "/api/push/subscribe" && req.method === "POST") {
+    const ok = await addPushSub(store, { ...(payload.subscription || {}), label: payload.label });
+    return { ok, error: ok ? undefined : "malformed subscription" };
+  }
+
+  if (path === "/api/push/unsubscribe" && req.method === "POST") {
+    return { ok: await removePushSubs(store, [payload.endpoint]) };
+  }
+
+  if (path === "/api/push/send" && req.method === "POST") {
+    const title = String(payload.title || "Life-Vault").slice(0, 120);
+    const body = String(payload.body || "").slice(0, 2400);
+    const { subs } = await readPushSubs(store);
+    if (!subs.length) {
+      // Push is the only channel now, so "nobody is subscribed" is a delivery
+      // failure and has to be reported as one — not quietly counted as success.
+      return { ok: false, sent: 0, total: 0, error: "no devices are registered for notifications" };
+    }
+    const r = await sendToAll(subs, JSON.stringify({ title, body, at: Date.now() }), env);
+    // Prune the ones the push service says are dead, or they absorb every send
+    // from here on and the failure count never comes back down.
+    if (r.gone.length) await removePushSubs(store, r.gone);
+    return {
+      ok: r.sent > 0,
+      sent: r.sent, total: r.total, pruned: r.gone.length,
+      error: r.sent > 0 ? undefined
+        : (r.failed[0] && `${r.failed[0].status}: ${r.failed[0].error}`) || "every device rejected the push",
+    };
+  }
+
+  return { ok: false, error: "not found" };
+}
+
+// Best-effort alert. The Worker is the only part of the system that can still
 // speak when the runner never started, so a failure to dispatch has to leave
-// this building somehow.
+// this building somehow. Same channel as everything else now that ntfy is gone.
 async function shout(env, title, body) {
-  if (!env.NTFY_TOPIC) return;
-  const server = env.NTFY_SERVER || "https://ntfy.sh";
   try {
-    await fetch(`${server}/${env.NTFY_TOPIC}`, {
-      method: "POST",
-      headers: { Title: title, ...(env.NTFY_TOKEN ? { Authorization: `Bearer ${env.NTFY_TOKEN}` } : {}) },
-      body: body.slice(0, 3800),
-    });
+    const { subs } = await readPushSubs(githubStore(env));
+    if (subs.length) await sendToAll(subs, JSON.stringify({ title, body: String(body).slice(0, 2400) }), env);
   } catch { /* nothing left to try */ }
 }

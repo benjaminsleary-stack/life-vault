@@ -24,7 +24,7 @@ Compose today's briefing note and deliver it to the phone. Read `CLAUDE.md`.
    spread of coverage is visible. Format each as:
    `**[Headline](url)** — summary _(Source · lean)_`
    The headline links straight to the article, so the brief is readable on the phone
-   (`notify.sh` sends `Markdown: yes`, so ntfy renders the link as a tap target).
+   (the notification body is plain text, so keep the URL visible in the line).
    Link rules: the `url` must be the article URL as it appeared in the search result
    — copied, never reconstructed or guessed from the headline. No homepages, no
    search-result redirects, no AMP wrappers. If a result gives you no usable URL,
@@ -43,7 +43,7 @@ Compose today's briefing note and deliver it to the phone. Read `CLAUDE.md`.
 7. Commit and push to the default branch (the routine wrapper does the git; if you
    have shell, `git add -A && git commit -m "morning brief <today>" && git push`).
 8. **Deliver**: `bash scripts/notify.sh "Morning brief" digests/<today>-morning.md`
-   (env `NTFY_TOPIC`) — the brief content goes in the ntfy body.
+   (env `WORKER_URL`, `UNLOCK_TOKEN`) — the brief content goes in the push body.
 9. **Assert (green ≠ done)**: confirm the brief file exists, is >200 bytes, contains
    today's date, and carries all five `##` headings from step 6 — a section that
    silently went missing (News has done this) is indistinguishable from a quiet day.

@@ -1,10 +1,10 @@
 # Cloud environment for the Routines (spec §6)
 
-Create a **Custom** environment (NOT Default — Default blocks ntfy/Google and the
+Create a **Custom** environment (NOT Default — Default blocks Google and the
 run goes green having done nothing). Attach it to each routine.
 
 ## Network access: Custom — allowlist these hosts
-- `ntfy.sh`               — briefing delivery (or your NTFY_SERVER host)
+- your Worker host        — briefing delivery (Web Push via `$WORKER_URL`)
 - `imap.gmail.com`        — mail fetch
 - `calendar.google.com`   — .ics fetch
 - `hc-ping.com`           — healthchecks.io ping
@@ -16,8 +16,8 @@ run goes green having done nothing). Attach it to each routine.
 > Phase 4 exists solely to prove this allowlist with a one-off "Run now".
 
 ## Environment variables (secrets live here, never in prompts)
-`GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, `ICS_URL`, `NTFY_TOPIC`, `HEALTHCHECK_URL`
-(+ `NTFY_TOKEN` if the topic is protected). See `.env.example`.
+`GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, `ICS_URL`, `WORKER_URL`, `UNLOCK_TOKEN`,
+`HEALTHCHECK_URL`. See `.env.example`.
 
 ## Setup script
 `bash scripts/setup.sh` (installs imap-tools, icalendar, requests; cached between runs).
@@ -39,5 +39,5 @@ hidden if `ANTHROPIC_API_KEY` is set in your shell; unset it or use the web).
 Point each at the `life-vault` repo + this environment.
 
 ## Prove it before trusting it (Phase 4)
-Run a one-off routine that does exactly: POST a test line to ntfy AND run
+Run a one-off routine that does exactly: POST a test push via notify.sh AND run
 `python scripts/fetch-mail.py`. Both must succeed. Only then schedule `morning`.

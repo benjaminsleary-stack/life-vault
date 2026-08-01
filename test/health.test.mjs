@@ -11,9 +11,11 @@
  *
  *   - health() could only see whether a routine had RUN. Between 20 Jul and
  *     1 Aug 2026 every brief was written, pushed, and delivered to nobody, on
- *     an NTFY_TOPIC secret that was present but empty — and the dashboard said
+ *     a delivery secret that was present but empty — and the dashboard said
  *     "all routines on schedule" for twelve days straight. Golden rule 5 says
- *     silence must be loud; nothing asserted that it was.
+ *     silence must be loud; nothing asserted that it was. Delivery has since
+ *     moved to the vault's own Web Push, but the failure mode is identical:
+ *     a brief can be written, committed and pushed, and reach nobody.
  *
  *   - PRIVATE_EVENT is a binding CLAUDE.md rule (an event titled "That week" is
  *     Charlotte's cycle and must never surface in a brief, digest or nudge)
@@ -72,13 +74,13 @@ test("a brief that ran but never reached the phone is NOT a healthy run", async 
   // The twelve-day failure, as a test. Everything about this run succeeded
   // except the only part Ben experiences.
   const h = await health(allRan({
-    "morning-brief": { delivered: false, deliveryError: "NTFY_TOPIC not set (or empty) in this environment" },
+    "morning-brief": { delivered: false, deliveryError: "no devices are registered for notifications" },
   }));
   assert.equal(h.ok, false, "undelivered must not read as ok");
   const c = h.checks.find((x) => x.name === "morning-brief");
   assert.equal(c.ok, false);
   assert.match(c.why, /never reached your phone/);
-  assert.match(c.error, /NTFY_TOPIC/, "the reason must survive to the panel");
+  assert.match(c.error, /no devices are registered/, "the reason must survive to the panel");
 });
 
 test("undelivered is its own summary line, not 'overdue' and not 'failed'", async () => {

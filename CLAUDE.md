@@ -21,7 +21,7 @@ Read this before touching anything. Conventions here are binding.
 4. **Only real, captured facts.** Especially for people-memory: surface things that
    were actually written down, with their capture dates. Never infer or invent.
 5. **Green ≠ done.** Every scheduled run must assert its own output exists and is
-   non-trivial, and shout (via ntfy) if not. Silence must be loud.
+   non-trivial, and shout (via push) if not. Silence must be loud.
 
 ## Folder map
 
@@ -46,7 +46,8 @@ Read this before touching anything. Conventions here are binding.
 | `_meta/index.md` | map-of-content; refreshed by the morning routine | `file-inbox` |
 | `_meta/hot-cache.md` | recent-context digest; a cheap stand-in for embeddings | each run |
 | `_meta/skills/` | the skill prompt files themselves | humans |
-| `scripts/` | fetch-mail, fetch-calendar, notify, bridge | humans |
+| `scripts/` | fetch-mail, fetch-calendar, notify (Web Push), bridge | humans |
+| `_meta/push-subscriptions.json` | devices registered for notifications | dashboard |
 
 ## Areas & linking (the ordered network)
 

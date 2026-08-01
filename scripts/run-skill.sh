@@ -186,10 +186,14 @@ printf '{"when":"%s","skill":"%s","model":"%s","ok":%s,"in":%s,"out":%s,"cache":
   "$when" "$skill" "$model" "$ok" "$tok_in" "$tok_out" "$tok_cache" "$cost" "$turns" "$ms" \
   >> _meta/skill-usage.jsonl
 
-# Shout on failure (spec §5: silence must be loud), best-effort.
-if [ "$ok" = false ] && [ -n "${NTFY_TOPIC:-}" ]; then
-  curl -s -H "Title: skill $skill failed" -d "$(echo "$out" | tail -n 5)" \
-    "https://ntfy.sh/$NTFY_TOPIC" >/dev/null 2>&1 || true
+# Shout on failure (spec §5: silence must be loud), best-effort. Goes through
+# notify.sh like everything else, so it uses the one delivery channel there is.
+# LV_DELIVERY_RECEIPT is cleared first: this is an alert about the failure, not
+# the skill's own delivery, and letting it overwrite the receipt would report a
+# brief as delivered because its failure notice got through.
+if [ "$ok" = false ]; then
+  ( unset LV_DELIVERY_RECEIPT
+    printf '%s\n' "$out" | tail -n 5 | bash scripts/notify.sh "⚠️ $skill failed" - ) >/dev/null 2>&1 || true
 fi
 
 

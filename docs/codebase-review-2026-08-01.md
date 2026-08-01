@@ -4,16 +4,23 @@ A read of the whole repo (worker, dashboard, runner scripts, workflows, skills)
 plus the vault's own run history as evidence. Findings are ordered by how much
 they cost you, not by how hard they are to fix.
 
-> **Status: implemented, except the two things only a human can do.** Everything
-> below has been built. The two outstanding items are both credentials:
+> **Status: implemented, except the credentials only a human can create.**
+> Everything below has been built, and delivery has since moved off ntfy
+> entirely — briefs now go out as the vault's own Web Push, from the PWA, with
+> no third-party app (`docs/push-notifications.md`). §4b is therefore obsolete
+> as written: the fix is no longer an ntfy secret.
 >
-> 1. **Set the `NTFY_TOPIC` repository secret** (GitHub → Settings → Secrets →
->    Actions). It is currently present but empty, which is why nothing has
->    reached your phone since 20 July. Nothing else in this list matters while
->    that is unset.
-> 2. **Add `actions: write` to the Worker's `GH_TOKEN`**, and set `NTFY_TOPIC`
->    as a Worker secret too. Without the first, the Cloudflare cron cannot
->    dispatch the workflow and the schedule will not fire at all.
+> Outstanding, all one-off setup:
+>
+> 1. **VAPID keys** — `node scripts/vapid-keygen.mjs`, store as Worker secrets,
+>    deploy, then turn notifications on in the app's System panel and send a
+>    test. Until a device is registered, every brief records `delivered: false`.
+> 2. **`actions: write` on the Worker's `GH_TOKEN`.** Without it the Cloudflare
+>    cron cannot dispatch the workflow and the schedule will not fire at all.
+> 3. **`WORKER_URL` and `UNLOCK_TOKEN` as GitHub Actions secrets**, so the
+>    runner can reach the Worker to send.
+> 4. **Google Calendar write** (`docs/google-calendar.md`) — pinned for a
+>    desktop session.
 >
 > The rest — §2, §3, §4a, §4c, §5, §6 — is in the tree. §5's dashboard split was
 > deliberately not done (see the note there).

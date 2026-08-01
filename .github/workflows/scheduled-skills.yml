@@ -33,7 +33,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       WORKER_URL: ${{ secrets.WORKER_URL }}
       UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
       ICS_URL: ${{ secrets.ICS_URL }}
@@ -60,8 +59,8 @@ jobs:
       # line in the hot-cache a fortnight later.
       - name: Check delivery is configured
         run: |
-          if [ -z "${NTFY_TOPIC:-}" ]; then
-            echo "::warning title=No delivery::NTFY_TOPIC is unset or empty — the brief will be written and pushed, but will not reach the phone."
+          if [ -z "${WORKER_URL:-}" ] || [ -z "${UNLOCK_TOKEN:-}" ]; then
+            echo "::warning title=No delivery::WORKER_URL or UNLOCK_TOKEN is unset — the brief will be written and pushed to git, but cannot reach the phone."
           fi
 
       - name: Run the requested skill

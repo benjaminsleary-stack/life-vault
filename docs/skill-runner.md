@@ -28,6 +28,7 @@ never touch the trigger queue, so they can't double-run with the watcher.
 | evening-brief | `45 19 * * *` | 20:45 BST / 19:45 GMT |
 | interest-scout | `0 8 * * 6` | Sat 09:00 BST |
 | harvest | `0 9 * * 0` | Sun 10:00 BST |
+| family-events | `0 10 1 * *` | 1st of the month, 11:00 BST |
 
 To change a time, edit **both** `wrangler.toml` and `CRON_SKILL`, then
 `cd worker && npx wrangler deploy`. Trigger one by hand from **Actions →
@@ -53,9 +54,10 @@ run starts immediately where a `schedule` run queues behind GitHub's shared
 scheduler — so the Worker keeps time and GitHub only does the work.
 
 **Setup this needs, once:** `GH_TOKEN` (the Worker's existing PAT) gains
-`actions: write` alongside its contents RW. Set `NTFY_TOPIC` as a Worker secret
-too, so a failed dispatch can still shout — the Worker is the only part of the
-system still able to speak when the runner never started.
+`actions: write` alongside its contents RW. The Worker also needs the VAPID
+secrets (`docs/push-notifications.md`), so a failed dispatch can still reach the
+phone — it is the only part of the system still able to speak when the runner
+never started.
 
 ## Delivery is checked, not assumed
 
@@ -65,13 +67,14 @@ brief that was written but never sent as a **failed** check with its own line in
 the summary.
 
 This exists because it happened. From 20 July to 1 August 2026 every brief was
-composed, committed and pushed correctly, and delivered to nobody — `NTFY_TOPIC`
-was set but **empty**, which tripped the old `${NTFY_TOPIC:?}` guard exactly like
+composed, committed and pushed correctly, and delivered to nobody — the delivery
+secret was set but **empty**, which tripped the old `${VAR:?}` guard exactly like
 an unset variable. The dashboard reported "all routines on schedule" throughout.
 Green ≠ done (CLAUDE.md rule 5).
 
-If the Routines card shows **· not delivered**, check the `NTFY_TOPIC` repository
-secret first — that has been the cause every time so far.
+Delivery is now the vault's own Web Push (`docs/push-notifications.md`). If the
+Routines card shows **· not delivered**, open the app's System panel: the usual
+cause is that no device is registered, and push is the only channel there is.
 
 ## Local watcher (fast, desktop on)
 
