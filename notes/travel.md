@@ -13,9 +13,13 @@ booked jointly with [[Charlotte]].
 
 ## Trips
 
-**Île d'Oléron — 1 to ~11 August 2026**
-- Flights to La Rochelle 1 Aug (Ryanair FR 8746). Staying on Île d'Oléron with
-  family. Back around the 11th — the day [[Jasper]] turns 5.
+**Île d'Oléron — from 1 August 2026**
+- Outbound 1 Aug: flies and lands the same day, La Rochelle (Ryanair FR 8746).
+  Staying on Île d'Oléron with family.
+- **Return date unconfirmed.** Inferred as ~11 Aug from Ben's "back from holiday
+  in 10 days" (said 1 Aug) — that is a reading, not something he stated, and it
+  happens to collide with [[Jasper]]'s birthday, so it should be confirmed rather
+  than relied on.
 
 **Toulouse / Blagnac — late June 2026**
 - Ryanair, reservation KQS5UI (schedule changed 2026-06-03).
