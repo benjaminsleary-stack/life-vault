@@ -295,10 +295,13 @@ async function latestBrief(store) {
 /* -------------------------------------------------------------- skill runs */
 
 // A skill's newest output, recovered from digests/ when the runner recorded
-// none. run-skill.sh diffs `git status` for changed .md files — when the
-// scheduled workflow commits the brief before the status is written, `outputs`
-// comes back empty and the dashboard's Open button greys out even though the
-// brief is sitting right there. This maps skill -> its known output pattern.
+// none. This was load-bearing when run-skill.sh derived `outputs` from the
+// dirty working tree: the briefs commit their own work, so by the time the
+// runner looked the tree was clean and every brief recorded `outputs: []`.
+// run-skill.sh now measures from the commit it started on, so this is a
+// fallback rather than the main path — kept because `.status` files written
+// before that change are still on disk, and a greyed-out Open button over a
+// brief that plainly exists is a worse answer than a guess.
 const SKILL_OUTPUT = {
   "morning-brief": (files) => newestMatching(files, /-morning\.md$/),
   "evening-brief": (files) => newestMatching(files, /-evening\.md$/),
@@ -1269,6 +1272,7 @@ const EXPECTED = {
   "morning-brief": 1,      // daily
   "evening-brief": 1,      // daily
   "interest-scout": 7,     // weekly
+  harvest: 7,              // weekly
 };
 
 async function health(store) {
@@ -1278,12 +1282,21 @@ async function health(store) {
     const st = skills[name];
     const when = st && st.when ? st.when.slice(0, 10) : null;
     const age = when ? daysAgo(when) : null;
+    const ran = !!(st && st.ok !== false && age !== null && age <= everyDays);
+    // Written but never sent is not a successful run. run-skill.sh records
+    // `delivered` from notify.sh's receipt; between 20 Jul and 1 Aug 2026 every
+    // brief was written, pushed, and delivered to nobody, and this panel said
+    // "all routines on schedule" for twelve days straight. A check that can
+    // only see whether the file exists is exactly the silence rule 5 forbids.
+    const undelivered = !!(st && st.delivered === false);
     checks.push({
       name,
       when: st ? st.when : null,
-      ok: !!(st && st.ok !== false && age !== null && age <= everyDays),
+      ok: ran && !undelivered,
       why: !st ? "never run" : st.ok === false ? "last run failed"
-        : age === null ? "no timestamp" : age > everyDays ? `${age}d since last run` : "",
+        : age === null ? "no timestamp" : age > everyDays ? `${age}d since last run`
+        : undelivered ? "written, but never reached your phone" : "",
+      error: undelivered ? (st.deliveryError || "") : "",
     });
   }
   // Any skill whose LAST run failed, scheduled or not. Without this an
@@ -1308,14 +1321,18 @@ async function health(store) {
     if (mins > 20) stuck.push({ name, queued: st.queued, mins });
   }
   const failing = checks.filter((c) => !c.ok);
-  // "Overdue" and "errored" are different problems with different fixes, and
-  // calling both overdue sent exactly the wrong signal: interest-scout had run
-  // on schedule and crashed, and the app reported it as not having run.
+  // "Overdue", "errored" and "undelivered" are three different problems with
+  // three different fixes, and collapsing them sends the wrong signal: once,
+  // interest-scout had run on schedule and crashed, and the app reported it as
+  // not having run. Undelivered is its own line for the same reason — the fix
+  // is a missing NTFY_TOPIC secret, not anything about the routine.
+  const undelivered = failing.filter((c) => c.why.startsWith("written, but"));
   const broke = failing.filter((c) => c.why === "last run failed");
-  const late = failing.filter((c) => c.why !== "last run failed");
+  const late = failing.filter((c) => !undelivered.includes(c) && !broke.includes(c));
   const parts = [];
   if (stuck.length) parts.push(`${stuck.length} run${stuck.length > 1 ? "s" : ""} queued with no runner`);
   if (broke.length) parts.push(`${broke.map((f) => f.name).join(", ")} failed`);
+  if (undelivered.length) parts.push(`${undelivered.map((f) => f.name).join(", ")} not delivered`);
   if (late.length) parts.push(`${late.map((f) => f.name).join(", ")} overdue`);
   return {
     ok: !failing.length && !stuck.length,

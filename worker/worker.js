@@ -223,4 +223,65 @@ export default {
       return json({ error: String((e && e.message) || e) }, env, 500);
     }
   },
+
+  /**
+   * The clock for the scheduled routines.
+   *
+   * This used to be GitHub's own `schedule:` trigger, and GitHub was firing it
+   * 2½–3¼ hours late every single day: a 04:45 UTC cron landed between 07:19
+   * and 08:11 across five consecutive days, so a brief meant to be waiting at
+   * 06:30 arrived mid-morning. GitHub documents "may be delayed"; this repo was
+   * getting delayed by hours, every day, which makes the schedule useless for
+   * anything you plan a morning around.
+   *
+   * Cloudflare cron triggers fire within about a minute, and — the part that
+   * matters — a `workflow_dispatch` run starts immediately, where a `schedule`
+   * run queues behind GitHub's shared scheduler. So the Worker keeps time and
+   * GitHub only does the work.
+   *
+   * Needs `actions: write` on GH_TOKEN, in addition to the contents RW it
+   * already has. If the dispatch fails, shout via ntfy rather than letting the
+   * morning pass silently (CLAUDE.md rule 5) — a schedule that quietly stopped
+   * looks exactly like a quiet day.
+   */
+  async scheduled(event, env, ctx) {
+    const skill = CRON_SKILL[event.cron];
+    if (!skill) return;
+    ctx.waitUntil((async () => {
+      try {
+        const r = await gh(env, "/actions/workflows/scheduled-skills.yml/dispatches", {
+          method: "POST",
+          body: JSON.stringify({ ref: env.GH_BRANCH || "main", inputs: { skill } }),
+        });
+        // 204 is the success code here; anything else means nothing was queued.
+        if (!r.ok) throw new Error(`dispatch ${skill}: ${r.status} ${await r.text()}`);
+      } catch (e) {
+        await shout(env, `⚠️ ${skill} never started`, String((e && e.message) || e));
+      }
+    })());
+  },
 };
+
+// Cron expression -> the skill it runs. Kept in step with [triggers] in
+// wrangler.toml; a cron with no entry here is a no-op rather than a guess.
+const CRON_SKILL = {
+  "45 4 * * *": "morning-brief",     // 05:45 BST / 04:45 GMT
+  "45 19 * * *": "evening-brief",    // 20:45 BST / 19:45 GMT
+  "0 8 * * 6": "interest-scout",     // Sat 09:00 BST
+  "0 9 * * 0": "harvest",            // Sun 10:00 BST — the weekly calendar sweep
+};
+
+// Best-effort push. The Worker is the only part of the system that can still
+// speak when the runner never started, so a failure to dispatch has to leave
+// this building somehow.
+async function shout(env, title, body) {
+  if (!env.NTFY_TOPIC) return;
+  const server = env.NTFY_SERVER || "https://ntfy.sh";
+  try {
+    await fetch(`${server}/${env.NTFY_TOPIC}`, {
+      method: "POST",
+      headers: { Title: title, ...(env.NTFY_TOKEN ? { Authorization: `Bearer ${env.NTFY_TOKEN}` } : {}) },
+      body: body.slice(0, 3800),
+    });
+  } catch { /* nothing left to try */ }
+}

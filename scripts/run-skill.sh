@@ -16,11 +16,19 @@ set -uo pipefail
 skill="${1:?usage: run-skill.sh <skill-name> [input]}"
 input="${2:-}"                                   # optional free text handed to the skill
 
-# The .md files that are currently changed/new, excluding runner bookkeeping.
+# Paths that are the runner's own bookkeeping, or the raw material a skill
+# consumed rather than produced. None of these is ever the thing you want to
+# open from the dashboard, and listing them is what made the Routines card a
+# wall of filenames: file-inbox's "outputs" were the hot-cache, the capture it
+# filed, the archive copy of that capture, and tasks.md — four rows, nothing to
+# read.
+BOOKKEEPING_RE='^(_meta/(hot-cache|skill-usage|index)|inbox/(_runs|_archive)/|inbox/[0-9]|tasks\.md$|habits(-log)?\.md$)'
+
+# The .md files currently changed/new in the working tree.
 dirty_md() {
   git status --porcelain --untracked-files=all \
-    | sed -E 's/^.{3}//' \
-    | grep -E '\.md$' | grep -v -E '^inbox/_runs/' | sort -u
+    | sed -E 's/^(.{3})//; s/^.* -> //' \
+    | grep -E '\.md$' | sort -u
 }
 
 # Map the skill to its saved prompt: the skill file, then a routine, else /slash.
@@ -48,6 +56,25 @@ case "$skill" in
 esac
 [ -n "${SKILL_MODEL:-}" ] && model="$SKILL_MODEL"
 
+# Which skills are supposed to reach the phone. Anything here that finishes
+# without a delivery receipt is recorded as undelivered, and health() turns that
+# into a failed check — writing the brief is only half the job.
+case "$skill" in
+  morning-brief|evening-brief|interest-scout) expects_delivery=1 ;;
+  *) expects_delivery=0 ;;
+esac
+receipt_file="$(mktemp 2>/dev/null || echo "/tmp/lv-delivery-$$")"
+: > "$receipt_file"
+export LV_DELIVERY_RECEIPT="$receipt_file"
+trap 'rm -f "$receipt_file"' EXIT
+
+# Outputs are measured from a commit boundary, not just the dirty tree. The
+# briefs `git commit && git push` as one of their own steps, so by the time the
+# runner looked, the tree was clean and every brief recorded "outputs": [] —
+# which is why vault.js had to guess the file back out of digests/. Diffing
+# against the SHA we started on catches work the skill committed itself, and
+# unioning the dirty set catches work it left uncommitted.
+start_sha="$(git rev-parse HEAD 2>/dev/null || true)"
 before="$(dirty_md)"
 # --output-format json so the run reports its own token usage (logged below).
 # --dangerously-skip-permissions: unattended vault-maintenance run, no approver.
@@ -83,8 +110,18 @@ when="$(date -u +%FT%TZ)"
 [ "$code" -eq 0 ] && ok=true || ok=false
 echo "[usage] $skill model=$model in=$tok_in out=$tok_out cache=$tok_cache cost=$cost turns=$turns"
 
-# Build a JSON array of .md files that became dirty during the run (no jq).
-outputs="$(comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$(dirty_md)"))"
+# Build a JSON array of the .md files this run PRODUCED (no jq): everything it
+# committed since we started, plus anything newly dirty, minus bookkeeping.
+# digests/ leads, so outputs[0] is the artefact worth opening — the dashboard
+# hangs its "Open" button on exactly that.
+{
+  [ -n "$start_sha" ] && git diff --name-only "$start_sha" HEAD -- '*.md' 2>/dev/null
+  comm -13 <(printf '%s\n' "$before") <(printf '%s\n' "$(dirty_md)")
+} | sort -u | grep -E '\.md$' | grep -vE "$BOOKKEEPING_RE" > "$receipt_file.out" || true
+outputs="$( { grep    '^digests/' "$receipt_file.out" || true; \
+              grep -v '^digests/' "$receipt_file.out" || true; } )"
+rm -f "$receipt_file.out"
+
 arr="["; first=1
 while IFS= read -r p; do
   [ -z "$p" ] && continue
@@ -93,6 +130,25 @@ while IFS= read -r p; do
   arr+="\"$esc\""
 done <<< "$outputs"
 arr+="]"
+
+# Did it actually reach the phone? Absence of a receipt from a skill that is
+# meant to deliver counts as a failure, not as "unknown" — notify.sh writes one
+# on the way out of every path it has, including the ones that used to die
+# silently.
+delivered=null; delivery_err=""
+if [ "$expects_delivery" -eq 1 ]; then
+  delivered=false
+  if [ -s "$receipt_file" ]; then
+    IFS=$'\t' read -r d_ok d_why < "$receipt_file"
+    if [ "${d_ok:-}" = "true" ]; then delivered=true; else delivery_err="${d_why:-}"; fi
+  else
+    delivery_err="the skill never called notify.sh"
+  fi
+  # Same sanitise-don't-escape rule as `err` below: a status file that is
+  # invalid JSON is silently skipped by the dashboard, which is worse than terse.
+  delivery_err="$(printf '%s' "$delivery_err" | tr -d '\\"' | tr '\t\r\n' '   ')"
+  delivery_err="${delivery_err:0:200}"
+fi
 
 # On failure, keep the last few lines of output IN the status file. Without
 # this a failed run records only that it failed, and the reason lives solely in
@@ -114,8 +170,9 @@ if [ "$ok" = false ]; then
 fi
 
 mkdir -p inbox/_runs
-printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s,"error":"%s","model":"%s","tokens":{"in":%s,"out":%s,"cache":%s},"cost_usd":%s}\n' \
-  "$skill" "$ok" "$when" "$arr" "$err" "$model" "$tok_in" "$tok_out" "$tok_cache" "$cost" \
+printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s,"error":"%s","delivered":%s,"deliveryError":"%s","model":"%s","tokens":{"in":%s,"out":%s,"cache":%s},"cost_usd":%s}\n' \
+  "$skill" "$ok" "$when" "$arr" "$err" "$delivered" "$delivery_err" \
+  "$model" "$tok_in" "$tok_out" "$tok_cache" "$cost" \
   > "inbox/_runs/$skill.status"
 
 # Append-only usage log — one line per run, so cost per skill can be compared

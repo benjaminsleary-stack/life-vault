@@ -1,12 +1,25 @@
 # Cloudflare Worker config for the Life-Vault dashboard API.
 # Deploy:  cd worker && npx wrangler deploy
 # Secrets (never put these here — they go in Cloudflare, encrypted):
-#   npx wrangler secret put GH_TOKEN       # fine-grained PAT, life-vault repo, contents RW
+#   npx wrangler secret put GH_TOKEN       # fine-grained PAT: contents RW + actions RW
 #   npx wrangler secret put UNLOCK_TOKEN   # the app-unlock secret you choose
+#   npx wrangler secret put NTFY_TOPIC     # so a failed dispatch can still shout
 
 name = "life-vault"
 main = "worker.js"
 compatibility_date = "2024-11-01"
+
+# The clock for the scheduled routines — see `scheduled()` in worker.js for why
+# this moved off GitHub's own cron (it was firing 2½–3¼ hours late, daily).
+# Times are UTC; Cloudflare cron has no DST, same as GitHub. Keep these in step
+# with CRON_SKILL in worker.js — the map is what turns a tick into a skill.
+[triggers]
+crons = [
+  "45 4 * * *",     # morning-brief   — 05:45 BST / 04:45 GMT
+  "45 19 * * *",    # evening-brief   — 20:45 BST / 19:45 GMT
+  "0 8 * * 6",      # interest-scout  — Sat 09:00 BST
+  "0 9 * * 0",      # harvest         — Sun 10:00 BST
+]
 
 [vars]
 GH_OWNER = "benjaminsleary-stack"            # <-- your GitHub username / org
