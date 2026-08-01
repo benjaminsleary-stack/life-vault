@@ -13,14 +13,18 @@ updated: 2026-07-13
 ## People
 
 - [[Charlotte]] — wife
-- [[Jasper]] — son, age 5
+- [[Jasper]] — son, 5 on 11 Aug 2026
 - [[Milo]] — son, age 2
 - [[Hugo]] — Charlotte's brother
 - [[Pixel]] — cat
+- [[Joe]] — colleague at JGC, and a friend
+- [[Katie]] — old colleague, seen with [[Charlotte]]
 
 ## Active threads
 
 <!-- open situations worth tracking, each linking to its source note -->
+
+- [[friendships]] — the social picture, such as it is. Context, never a nudge.
 
 ## Dates & occasions
 

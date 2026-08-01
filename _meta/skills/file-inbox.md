@@ -24,6 +24,13 @@ Route every raw capture in `inbox/` into the right note, losing nothing. Read
       - mentions a known person (a `people/*.md` exists, or an obvious new one) →
         append a dated fragment to that person's `## Log` (create the note from the
         template in CLAUDE.md if new).
+        **[[Charlotte]] is the priority case.** Ben's stated single biggest problem
+        is that he cannot track what is on her mind. So: capture anything about her,
+        however small — half a sentence beats nothing — and if it carries a date or
+        a deadline of hers, keep that date *in the fragment text* so
+        `charlotte-surfacer` can find it later as an open loop. A fragment logged
+        without its date is a fragment that can never be surfaced at the right
+        moment, which is the only moment that matters.
       - **several items in one capture** (`list - a, b, c`, `shopping: x, y, z`, or
         one item per line) → split them. Comma-separated only counts when the
         capture reads as a list, not as prose containing commas.

@@ -42,6 +42,8 @@ rule in CLAUDE.md._
   week is going; not something to raise unprompted.
 
 ## Log
+- 2026-08-01 — The couples therapist is being changed. Ben's individual therapy is
+  separate and continues weekly. _(interview)_
 - 2026-08-01 — **What actually works:** paying her more attention, and remembering
   what is on her mind so he can ask about it later. Ben names not being able to
   track those things as his single biggest obstacle. _(interview)_

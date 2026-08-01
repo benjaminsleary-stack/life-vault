@@ -24,29 +24,26 @@ specific ones get answered. This is the list of specific ones.
 ## Open
 
 _Ordered by what the vault most needs. One line each; phrase it exactly as it
-should be asked._
+should be asked. Refilled 2026-08-01 after the first nine were answered in one
+sitting — a list that empties is a list that was working._
 
-- [ ] You've a half marathon goal and a sore Achilles, and there isn't a single
-      run recorded anywhere. What did you run this week — distance, and how did
-      the tendon feel? #health
-- [ ] Weight and sleep are two of your stated twelve-month goals and neither has
-      a number in the vault. Roughly what are you weighing, and how many hours
-      are you actually getting? #health
-- [ ] [[house-retrofit]] is stalled and the note doesn't say what the next
-      physical step is. What is the single next thing that has to happen — not
-      the room, the job? #house
-- [ ] [[Jasper]] has one line in his note. What's he into at the moment? #family
-- [ ] [[Milo]] has one line in his note. What's he like just now — what's
-      changed since he turned two? #family
-- [ ] The vault knows the shape of the fight with [[Charlotte]] but nothing
-      about what's actually worked. What's landed well recently, however small?
-      #family
-- [ ] [[jgc-director-path]] has no note on what the actual bar is. What do you
-      need to have done to be made co-director? #work
-- [ ] Nothing in the vault says who you'd call on a bad day. Who is that?
-      #family #health
-- [ ] There's no record of what you spend or what's committed monthly, and
-      `#admin` is one of the six areas. Worth a rough picture? #admin
+- [ ] You don't actually know what you weigh — 87kg is three weeks stale and it's
+      one of your twelve-month goals. What does the scale say? #health
+- [ ] You said you can't get to co-director until there are engineers who can
+      deliver. Name them. Who at JGC is closest, and what's missing for each? #work
+- [ ] The searchable-database side project is the biggest thing you actually push
+      at work. What would "done" look like, and who else has asked for it? #work
+- [ ] The vault knows nothing about what [[Charlotte]] does for work. What is her
+      job, and what's the state of it right now? #family
+- [ ] The couples therapist is being changed. Who to, when does it start, and was
+      that your call or hers? #family
+- [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
+      term — that came from an email on 19 Jul. Is it done? #admin
+- [ ] What did you actually do on the holiday that was worth remembering? One
+      thing, when you're back. #family
+- [ ] You run, then get injured, three times now. What does the running week
+      actually look like — days, distance, pace, surface? #health
+
 
 ## Parked
 
@@ -56,3 +53,13 @@ review as "decide or delete", the same as a stale task._
 ## Answered
 
 _Crossed off with the date the answer arrived, so a question is never asked twice._
+
+- Runs and the Achilles — answered 2026-08-01 in the interview.
+- Weight and sleep — answered 2026-08-01 in the interview.
+- The retrofit's next step — answered 2026-08-01 in the interview.
+- Jasper — answered 2026-08-01 in the interview.
+- Milo — answered 2026-08-01 in the interview.
+- What works with Charlotte — answered 2026-08-01 in the interview.
+- The director bar — answered 2026-08-01 in the interview.
+- Who he'd call — answered 2026-08-01 in the interview.
+- Money — answered 2026-08-01 in the interview.

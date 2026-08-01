@@ -18,6 +18,14 @@ himself out of delivery and into management might not work. That makes "grow
 deliverable engineers" a precondition for the promotion, not a separate concern.
 
 ## Log
+- 2026-08-01 — **The working week:** mostly email. Site work less than once a week.
+  Some admin. The largest deliberate push is a **side project inside the firm — 
+  organising JGC's database and making it searchable, with a custom interface**.
+  Worth noting against this project: that is business-functional work, which is
+  the stated criterion, rather than delivery. _(interview)_
+- 2026-08-01 — **The management pain:** he is struggling to manage people because
+  they keep being reassigned. That is the same root as the bench-depth blocker
+  below — he cannot build a delivery team he does not get to keep. _(interview)_
 - 2026-08-01 — [[Joel]] decides alone; the criterion is functional (running the
   business). Firm at 16 people, a size Joel has noted. Ben's stated obstacle:
   not enough engineers capable of delivery, so his move from delivery to

@@ -8,7 +8,7 @@ _Seeded by the onboarding interview (2026-07); expanded by a structured intervie
 Chartered MEP engineer (CEng MCIBSE MIET), 10+ years in UK new-build and retrofit —
 decarbonisation masterplans, high-performance builds, heritage, higher education.
 Currently at JGC. Lives at 30 Canterbury Street, Cambridge with wife [[Charlotte]],
-sons [[Jasper]] (5) and [[Milo]] (2), and cat [[Pixel]].
+sons [[Jasper]] (5 on 11 Aug 2026) and [[Milo]] (2), and cat [[Pixel]].
 Born 21 March.
 
 Pragmatic engineer who balances system efficiency with buildability and long-term
@@ -28,10 +28,12 @@ his brain, get things done — plus coaching on his relationship and his health.
 - **Overdue items escalate** rather than fading — they get louder after three days,
   and never silently disappear. He can demote one himself with a low-priority
   marker (`🔽`), which is the pressure valve instead of the system giving up.
-- **When he goes quiet, check in — one line, no list.** Two days with nothing
-  captured and habits untouched is his own stated signal for a bad day. The
-  response is a check-in, not a pile-on. He chose this deliberately over pushing
-  harder.
+- **When he goes quiet, check in — one line, no list.** A bad day looks like
+  **withdrawn and irritable** — his own words, 1 Aug, and the thing Charlotte
+  would notice first. The vault cannot see either directly, so its detectable
+  proxy stays "two days with nothing captured and habits untouched" — but the
+  proxy is not the thing. The response is a check-in, not a pile-on. He chose
+  this deliberately over pushing harder.
 - **Coaching means all three:** a specific prompt, a bare observation, and
   sometimes a question that makes him think.
 
