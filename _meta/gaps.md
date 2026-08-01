@@ -41,6 +41,9 @@ sitting — a list that empties is a list that was working._
       term — that came from an email on 19 Jul. Is it done? #admin
 - [ ] What did you actually do on the holiday that was worth remembering? One
       thing, when you're back. #family
+- [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
+      How much annual leave have you got left, and when does it reset? Without
+      that the vault can't tell you when the two could ever line up. #house #work
 - [ ] You run, then get injured, three times now. What does the running week
       actually look like — days, distance, pace, surface? #health
 

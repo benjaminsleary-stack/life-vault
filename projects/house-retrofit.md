@@ -12,18 +12,28 @@ Status: [[Jasper]]'s room complete (needs repaint); living rooms mostly complete
 Moving again in small pieces — IKEA units in the corridor and laundry, and two new
 light fittings, all in the week to 1 Aug. **Near-term goal: finish the living room
 and hallway.** The hallway needs skirting, planned for after the holiday (back
-~11 Aug). Longer-term: insulating [[Milo]]'s room — the next big one, but a
-**week of work minimum and gated on annual leave and money**, so it is not a
-job that a free weekend or a quiet house unlocks — and the new kitchen in the
-extension (waiting on funds). Standing specs live in [[house-facts]].
+~11 Aug). Longer-term: insulating [[Milo]]'s room — the next big one, needing a
+**week of leave or money, and the children out of the house because of the
+dust**, all at once. Neither a free weekend nor a quiet house unlocks it on its
+own. Then the new kitchen in the extension (waiting on funds). Standing specs live in [[house-facts]].
 
 ## Log
-- 2026-08-01 — **[[Milo]]'s room is a week of work, minimum**, and it is blocked
-  on **annual leave and money** — not on finding a quiet house. Ben has neither
-  the leave to do it himself nor the money to pay someone. Recorded because the
-  vault previously knew only that it was "disruptive", which made it look like a
-  scheduling problem it is not: a few free days do not touch it. Do not propose
-  it as a use for a gap in the calendar. _(interview)_
+- 2026-08-01 — **[[Milo]]'s room needs three things at once**, which is why it
+  has not happened:
+  1. **A week of work, minimum** — so a week of annual leave, or the money to pay
+     someone. Ben currently has neither.
+  2. **The children out of the house** — because of the dust. Internal wall
+     insulation means cutting wood fibre board and lime plastering; that is not
+     something to do around a 2- and a 5-year-old.
+  3. The room emptied and the family sleeping elsewhere for the duration.
+
+  The vault previously recorded only "really disruptive", which read as a
+  scheduling problem. It is not: an empty house is **necessary but nowhere near
+  sufficient**, and the binding constraint is the week of leave or money. Do not
+  propose this job for a gap in the calendar — the gap is never the missing
+  piece, and the piece that is missing is the one `notes/money.md` says not to
+  raise. The planning question, if he ever asks, is when a week of leave and the
+  children being away can be made to coincide. _(interview)_
 - 2026-08-01 — Ben is home alone from 13 Aug for several days, back from Oléron
   ahead of [[Charlotte]] and the boys. Plan for that window: **skirting board** —
   a job that fits the time actually available. _(interview)_
