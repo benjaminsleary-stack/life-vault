@@ -202,6 +202,10 @@
   .p-add:hover, .p-add:focus-visible{ border-color:var(--accent); color:var(--text); outline:none; }
   .p-noterow{ display:flex; gap:8px; padding:0 0 10px; }
   .p-noterow input{ flex:1; min-width:0; }
+  /* The weather place is a control, not a label — it was pinned to wherever you
+     first opened the app and there was no way to say otherwise. */
+  .wx-place{ cursor:pointer; border-bottom:1px dotted var(--line-key); }
+  .wx-place:hover, .wx-place:focus-visible{ color:var(--accent-text); outline:none; }
   /* Open loops — a dated thing someone said, and how near it now is. */
   .loop-head{ font-size:11px; letter-spacing:.08em; text-transform:uppercase;
     color:var(--faint); margin:2px 0 6px; }
@@ -668,7 +672,7 @@
 
     <!-- WEATHER -->
     <div class="tile t-weather">
-      <div class="section-head"><p class="label">Weather</p><span class="count" id="wxPlace">Cambridge</span></div>
+      <div class="section-head"><p class="label">Weather</p><span class="count wx-place" id="wxPlace" onclick="changeLocation()" title="Change location" tabindex="0" role="button">Locating…</span></div>
       <div id="weatherBody" class="skel"></div>
     </div>
 
@@ -2221,7 +2225,7 @@
   }
 
   // --- weather (Open-Meteo, no key needed) ---------------------------------
-  const WX={ lat:52.2053, lon:0.1218, place:"Cambridge" };   // fallback
+  const WX={ lat:52.2053, lon:0.1218, place:null, fallback:false };   // filled by getCoords()
   let wxData=null;
   function wmo(c){
     if(c===0) return ["☀️","Clear"];
@@ -2244,37 +2248,117 @@
     if(v<=80) return ["poor","var(--red)"];
     return ["very poor","var(--red)"];
   }
-  // Live location: cached → geolocation (once) → Cambridge fallback (null).
-  async function getCoords(){
-    const c=localStorage.getItem("lv_geo");
-    if(c){ try{ return JSON.parse(c); }catch{} }
+  // Location. This used to cache the first fix in localStorage FOREVER and
+  // return it before trying anything else, so the card pinned itself to
+  // wherever you happened to be the first time you opened it and never moved
+  // again — a fortnight in France still read Cambridge. Now the cache has a
+  // lifetime, a fresh fix is always attempted, and there is a manual override
+  // for when the browser won't say (denied permission, or a desktop on a VPN).
+  const GEO_TTL = 30*60*1000;                    // half an hour is plenty
+  function savedPlace(){
+    try{ return JSON.parse(localStorage.getItem("lv_place")||"null"); }catch{ return null; }
+  }
+  async function getCoords(force){
+    // A place you set by hand wins over everything. You chose it; don't argue.
+    const manual=savedPlace();
+    if(manual && !force) return manual;
+
+    let cached=null;
+    try{ cached=JSON.parse(localStorage.getItem("lv_geo")||"null"); }catch{}
+    const fresh = cached && cached.at && (Date.now()-cached.at) < GEO_TTL;
+    if(fresh && !force) return cached;
+
     if(navigator.geolocation){
       try{
-        const p=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:6000,maximumAge:36e5}));
-        const o={lat:+p.coords.latitude.toFixed(3), lon:+p.coords.longitude.toFixed(3)};
-        localStorage.setItem("lv_geo",JSON.stringify(o)); return o;
-      }catch(e){}
+        const p=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,
+          {timeout:8000, maximumAge: force?0:GEO_TTL}));
+        const o={ lat:+p.coords.latitude.toFixed(3), lon:+p.coords.longitude.toFixed(3), at:Date.now() };
+        localStorage.setItem("lv_geo",JSON.stringify(o));
+        return o;
+      }catch(e){ /* denied, or no fix — fall through */ }
     }
-    return null;
+    // A stale fix still beats the hardcoded fallback: it is at least somewhere
+    // you have actually been.
+    return cached || null;
+  }
+
+  // Open-Meteo's geocoder — same provider as the forecast, free, no key.
+  async function searchPlace(q){
+    try{
+      const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&name="+encodeURIComponent(q));
+      const j=await r.json();
+      return (j.results||[]).map((x)=>({
+        lat:+x.latitude.toFixed(3), lon:+x.longitude.toFixed(3),
+        place:[x.name, x.admin1, x.country_code].filter(Boolean).join(", "),
+      }));
+    }catch{ return []; }
+  }
+
+  // Tapping the place name: re-detect, or set one by hand.
+  async function changeLocation(){
+    let html='<p class="muted">The weather card follows your device unless you pin a place here.</p>';
+    html+='<p><button class="btn primary" onclick="redetectLocation()">Use my current location</button>';
+    if(savedPlace()) html+=' <button class="btn" onclick="clearPinnedPlace()">Unpin</button>';
+    html+="</p><hr><h3>Or pin a place</h3>";
+    html+='<div class="row"><input type="text" id="wxQ" placeholder="e.g. Île d\'Oléron" '+
+      'onkeydown="if(event.key===\'Enter\')doPlaceSearch()" /> '+
+      '<button class="btn" onclick="doPlaceSearch()">Search</button></div><div id="wxResults"></div>';
+    openPanel("Weather location", html);
+  }
+  async function doPlaceSearch(){
+    const q=($("wxQ")&&$("wxQ").value||"").trim(); if(!q) return;
+    $("wxResults").innerHTML='<div class="muted">Searching…</div>';
+    const hits=await searchPlace(q);
+    $("wxResults").innerHTML = hits.length
+      ? hits.map((h)=>'<div class="ent tappable" data-pin=\''+esc(JSON.stringify(h))+'\' tabindex="0" role="button">'+
+          '<div style="min-width:0"><div class="e-name">'+esc(h.place)+"</div>"+
+          '<div class="e-sum">'+h.lat+", "+h.lon+"</div></div><span class=\"chev\">›</span></div>").join("")
+      : '<div class="muted">Nothing found.</div>';
+    $("wxResults").querySelectorAll("[data-pin]").forEach((el)=>{
+      el.onclick=()=>{ try{ pinPlace(JSON.parse(el.dataset.pin)); }catch(e){} };
+    });
+  }
+  function pinPlace(p){
+    localStorage.setItem("lv_place", JSON.stringify(p));
+    closeModal(); toast("Weather pinned to "+p.place); loadWeather();
+  }
+  function clearPinnedPlace(){
+    localStorage.removeItem("lv_place"); closeModal(); toast("Following your location again"); redetectLocation();
+  }
+  async function redetectLocation(){
+    localStorage.removeItem("lv_place"); localStorage.removeItem("lv_geo");
+    closeModal(); toast("Finding you…");
+    await loadWeather(true);
   }
   async function placeName(lat,lon){
     try{ const r=await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+lat+"&longitude="+lon+"&localityLanguage=en");
       const j=await r.json(); return j.city||j.locality||j.principalSubdivision||"Local"; }catch{ return "Local"; }
   }
-  async function loadWeather(){
+  async function loadWeather(force){
+    const c=await getCoords(force);
+    if(c){ WX.lat=c.lat; WX.lon=c.lon; WX.place=c.place||null; WX.fallback=false; }
+    else { WX.lat=52.2053; WX.lon=0.1218; WX.place="Cambridge (default)"; WX.fallback=true; }
+    // Name the place BEFORE fetching. This used to happen after renderWeather,
+    // inside the same try, so any failed forecast left the label frozen on its
+    // last value — which reads exactly like the card being stuck somewhere it
+    // isn't. And when we are only falling back to Cambridge because the browser
+    // wouldn't give a fix, say so rather than presenting a guess as a location.
+    if($("wxPlace")) $("wxPlace").textContent = WX.place || "…";
+    if(!WX.place) placeName(WX.lat,WX.lon).then((n)=>{ if($("wxPlace")) $("wxPlace").textContent=n; });
     try{
-      const c=await getCoords();
-      if(c){ WX.lat=c.lat; WX.lon=c.lon; WX.place=null; }
-      const base="latitude="+WX.lat+"&longitude="+WX.lon+"&timezone=Europe%2FLondon";
+      // timezone=auto, not Europe/London. Hardcoding London meant that abroad
+      // the hourly axis and the "now" marker were an hour or more out — the
+      // chart said one thing and the sky said another.
+      const base="latitude="+WX.lat+"&longitude="+WX.lon+"&timezone=auto";
       const wxU="https://api.open-meteo.com/v1/forecast?"+base+"&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min&forecast_days=1";
       const aqU="https://air-quality-api.open-meteo.com/v1/air-quality?"+base+"&current=european_aqi,pm2_5";
       const [wr,ar]=await Promise.all([fetch(wxU), fetch(aqU).catch(()=>null)]);
       if(!wr.ok) throw new Error();
       const wj=await wr.json(); const aj=(ar&&ar.ok)?await ar.json():null;
       renderWeather(wj, aj);
-      if(WX.place){ $("wxPlace").textContent=WX.place; }
-      else placeName(WX.lat,WX.lon).then((n)=>{ if($("wxPlace")) $("wxPlace").textContent=n; });
-    }catch(e){ $("weatherBody").innerHTML='<div class="muted">Weather unavailable.</div>'; }
+    }catch(e){
+      $("weatherBody").innerHTML='<div class="muted">Weather unavailable — tap the place name to retry or pin a location.</div>';
+    }
   }
   function renderWeather(d, aq){
     const cur=d.current, day=d.daily, h=d.hourly;
@@ -2294,7 +2378,11 @@
       bars+='<rect x="'+(x-3).toFixed(1)+'" y="'+(H-padB-bh).toFixed(1)+'" width="6" height="'+bh.toFixed(1)+'" rx="1" fill="var(--blue)" opacity="0.25"/>'; });
     let labels="";
     [0,6,12,18].forEach((i)=>{ labels+='<text class="wx-axis" x="'+xs(i).toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+times[i].slice(11,13)+'h</text>'; });
-    const nh=Math.max(0,Math.min(23,new Date().getHours()));
+    // Anchor "now" on the API's own local time for these coordinates, not the
+    // device clock. With timezone=auto the two agree at home and disagree
+    // everywhere else, and the marker is the thing you read the chart against.
+    let nh=times.findIndex((t)=>t.slice(0,13)===String(cur.time||"").slice(0,13));
+    if(nh<0) nh=Math.max(0,Math.min(23,new Date().getHours()));
     const marker='<line x1="'+xs(nh).toFixed(1)+'" y1="'+padT+'" x2="'+xs(nh).toFixed(1)+'" y2="'+(H-padB)+'" stroke="var(--line-key)" stroke-dasharray="2 2"/>'+
       '<circle cx="'+xs(nh).toFixed(1)+'" cy="'+ys(temps[nh]).toFixed(1)+'" r="3" fill="var(--accent)"/>';
     const outlook=wxOutlook(temps,precs,times);
