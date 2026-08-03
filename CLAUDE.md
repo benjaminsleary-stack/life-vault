@@ -46,7 +46,7 @@ Read this before touching anything. Conventions here are binding.
 | `_meta/index.md` | map-of-content; refreshed by the morning routine | `file-inbox` |
 | `_meta/hot-cache.md` | recent-context digest; a cheap stand-in for embeddings | each run |
 | `_meta/skills/` | the skill prompt files themselves | humans |
-| `scripts/` | fetch-mail, fetch-calendar, notify (Web Push), bridge | humans |
+| `scripts/` | fetch-mail, fetch-calendar, fetch-strava, notify (Web Push), bridge | humans |
 | `_meta/push-subscriptions.json` | devices registered for notifications | dashboard |
 
 ## Areas & linking (the ordered network)
@@ -149,10 +149,10 @@ briefs that re-quote a July interview because nothing newer is grounded. Two
 rules follow.
 
 1. **Harvest before you ask.** Anything already flowing through the system —
-   calendar, email, completed tasks, habit ticks — is free evidence and must be
-   turned into dated fragments before a question is put to Ben. The `harvest`
-   skill does the calendar weekly. Never ask him for something the vault could
-   have read.
+   calendar, runs, email, completed tasks, habit ticks — is free evidence and
+   must be turned into dated fragments before a question is put to Ben. The
+   `harvest` skill does the calendar and Strava weekly. Never ask him for
+   something the vault could have read.
 2. **When you do ask, ask one specific question.** Open prompts ("anything to
    log?") don't get answered. `_meta/gaps.md` holds the specific ones; the
    evening brief asks the oldest unasked, once, and stamps it. A gap is asked at

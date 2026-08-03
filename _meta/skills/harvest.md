@@ -21,7 +21,31 @@ fragments and stops. Nothing it produces is delivered to the phone.
    summary and carry on with the sources that worked; do not silently harvest a
    partial week and call it the week.
 
-2. **Discard the noise before you write anything.** Drop:
+2. **Read the week's runs.** `node scripts/fetch-strava.mjs 14` — the Garmin
+   watch auto-syncs to Strava and the vault reads Strava, so runs arrive without
+   Ben doing anything. Handle the exit code:
+   - **3** — not configured. Say so once and move on; not a failure.
+   - **1** — configured but broken. Report it loudly, with the error. If the
+     output carries `refreshTokenRotated`, that is the cause and it needs a
+     human to update the `STRAVA_REFRESH_TOKEN` secret — say exactly that.
+   - **0** — write one dated fragment per run to `projects/running-fitness.md`:
+     `- <YYYY-MM-DD> — Ran <km>km in <minutes> min (<pace>/km)<, avg HR n>. _(from Strava)_`
+     Idempotent: check the log for that date and distance before appending.
+
+   Then, **only if `weeks.note` is present**, add it as its own fragment. That
+   note is the week-on-week distance change, and it exists because Ben has had
+   three injuries since restarting running against a half-marathon goal.
+   Report it as the number it is — *"weekly distance up 60% on last week
+   (10km → 16km)"* — and stop. Do not add a warning, do not suggest resting,
+   do not mention his Achilles. He is an adult with a physiotherapist and the
+   vault's job is to put the number where he can see it, not to coach him
+   through it.
+
+   If there were **no runs at all in 14 days**, write nothing. A blank fortnight
+   is not a fragment, and the running note already records that he rests when
+   injured — filing "no runs" would read as a reproach every time it happened.
+
+3. **Discard the noise before you write anything.** Drop:
    - anything already filtered as private (`That week` — the script does this,
      do not re-add it by hand from another source),
    - recurring admin with no content (standups, "focus time", "lunch", blocked
@@ -31,7 +55,7 @@ fragments and stops. Nothing it produces is delivered to the phone.
 
    What survives is what a person would mention if asked how their week went.
 
-3. **Route what's left**, using the same conservatism as `file-inbox`:
+4. **Route what's left**, using the same conservatism as `file-inbox`:
    - **Names a person with an existing `people/*.md`** → append one dated
      fragment to their `## Log`: `- <YYYY-MM-DD> — <what happened>. _(from calendar)_`
      Match on the name as written. Do **not** create new people notes from
@@ -50,16 +74,16 @@ fragments and stops. Nothing it produces is delivered to the phone.
      tenuously-relevant lines is the exact failure mode CLAUDE.md's linking
      rules exist to prevent.
 
-4. **Tick off answered gaps.** Read `_meta/gaps.md`. If this week's calendar
+5. **Tick off answered gaps.** Read `_meta/gaps.md`. If this week's calendar
    answered one of the open questions (a run appearing on the calendar answers
    "no recorded runs", a GP appointment answers a health gap), mark it answered
    with today's date rather than leaving the evening brief to ask something the
    vault now knows.
 
-5. **Update `_meta/hot-cache.md`** with one line: how many fragments you wrote,
+6. **Update `_meta/hot-cache.md`** with one line: how many fragments you wrote,
    to which notes, and anything that looked worth a human's attention.
 
-6. **Assert (green ≠ done).** State plainly in your output how many fragments
+7. **Assert (green ≠ done).** State plainly in your output how many fragments
    you wrote and where. If the calendar returned zero events across all sources
    for a full week, that is far more likely to be a broken feed than a week in
    which nothing happened — treat it as a failure and say so loudly, naming the
@@ -76,6 +100,8 @@ fragments and stops. Nothing it produces is delivered to the phone.
 - One fragment per event, at most. A recurring weekly meeting produces one line
   for the week, not five.
 - Never write to `tasks.md`. Nothing here is an action.
+- Runs are facts, not judgements. Record distance, time, pace and heart rate;
+  never how it "should" have gone.
 - Idempotent: re-running for the same week must not duplicate fragments. Check
   the target `## Log` for a line already carrying that date and substance before
   appending.
