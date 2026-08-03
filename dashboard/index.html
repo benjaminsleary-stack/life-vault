@@ -202,6 +202,23 @@
   .p-add:hover, .p-add:focus-visible{ border-color:var(--accent); color:var(--text); outline:none; }
   .p-noterow{ display:flex; gap:8px; padding:0 0 10px; }
   .p-noterow input{ flex:1; min-width:0; }
+  /* Open loops — a dated thing someone said, and how near it now is. */
+  .loop-head{ font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--faint); margin:2px 0 6px; }
+  .loop{ display:flex; gap:10px; align-items:baseline; padding:7px 6px; margin:0 -6px;
+    border-radius:8px; cursor:pointer; border-bottom:1px solid var(--line-row); }
+  .loop:last-of-type{ border-bottom:0; }
+  .loop:hover, .loop:focus-visible{ background:var(--bg1); outline:none; }
+  .loop-when{ flex:0 0 auto; min-width:56px; font-size:12px; font-variant-numeric:tabular-nums;
+    color:var(--accent-text); }
+  .loop.now .loop-when{ color:var(--yellow); font-weight:700; }
+  .loop-body{ font-size:13.5px; line-height:1.4; min-width:0; }
+  /* Two lines, hard. A fragment can be a paragraph — the retrofit ones are —
+     and four paragraphs is a wall you scroll past, which is the failure this
+     card exists to avoid. The whole fragment is one tap away. */
+  .loop-text{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    overflow:hidden; }
+  .loop-meta{ display:block; font-size:11px; color:var(--faint); margin-top:2px; }
   .occ.tappable{ cursor:pointer; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
   .occ.tappable:hover, .occ.tappable:focus-visible{ background:var(--bg1); outline:none; }
   .occ.tappable:focus-visible{ box-shadow:0 0 0 2px var(--accent); }
@@ -676,6 +693,7 @@
          each with a one-tap note box. The full directory is behind the link. -->
     <div class="tile t-people" id="sec-people">
       <div class="section-head"><p class="label">Remember</p><span class="count" id="pplCount"></span></div>
+      <div id="loops"></div>
       <div id="ppl" class="skel"></div>
     </div>
 
@@ -799,10 +817,16 @@
     const tok=$("gTok").value.trim();
     if(!tok){ $("gErr").textContent="Enter your unlock token."; $("gErr").classList.remove("hidden"); return; }
     TOKEN=tok; localStorage.setItem("lv_token",TOKEN); localStorage.setItem("lv_api",API);
+    syncCredsToSW();
     $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); load(); loadWeather();
   }
   function signOut(){ if(!confirm("Disconnect this device? The token is cleared from here.")) return;
-    localStorage.removeItem("lv_token"); TOKEN=""; showGate(); }
+    localStorage.removeItem("lv_token"); TOKEN="";
+    // Take the token out of the service worker too, or a notification reply
+    // would keep writing to the vault from a "disconnected" device.
+    if("serviceWorker" in navigator) navigator.serviceWorker.ready
+      .then((reg)=>reg.active && reg.active.postMessage({ type:"signout" })).catch(()=>{});
+    showGate(); }
 
   // --- api ------------------------------------------------------------------
   function req(path, opts={}){
@@ -1411,6 +1435,30 @@
         '<input type="text" data-noteinput="'+esc(p.slug)+'" placeholder="What just happened? Saved as a dated fragment." />'+
         '<button class="btn primary" data-notesave="'+esc(p.slug)+'">Save</button></div>' : "");
   }
+  // Open loops: things someone said that point at a date. Ben's stated single
+  // biggest problem is that he cannot track what is on Charlotte's mind — this
+  // is that made visible, rather than rationed to one line a day in the brief.
+  // Nothing here is inferred: every row is a fragment he captured, with the
+  // date it named and the day it was written.
+  function renderLoops(loops){
+    const el=$("loops"); if(!el) return;
+    const rows=(loops||[]).slice(0,3);
+    if(!rows.length){ el.innerHTML=""; return; }
+    el.innerHTML='<div class="loop-head">On their mind</div>'+rows.map((l)=>{
+      const when = l.daysAway<0 ? Math.abs(l.daysAway)+"d ago"
+        : l.daysAway===0 ? "today" : l.daysAway===1 ? "tomorrow" : "in "+l.daysAway+"d";
+      const cls = l.daysAway<=1 ? "loop now" : "loop";
+      return '<div class="'+cls+'" data-person="'+esc(l.slug)+'" tabindex="0" role="button">'+
+        '<span class="loop-when">'+esc(when)+"</span>"+
+        '<span class="loop-body"><span class="loop-text"><b>'+esc(l.who)+"</b> — "+mdInline(l.text)+"</span>"+
+        '<span class="loop-meta">noted '+fmtDate(l.logged).replace(/^\w+\s/,"")+
+        (l.exact?"":' · "'+esc(l.phrase)+'" — month assumed')+"</span></span></div>";
+    }).join("");
+  }
+  $("loops").addEventListener("click",(e)=>{
+    const r=e.target.closest("[data-person]"); if(r) openPerson(r.dataset.person);
+  });
+
   let allPeople=[];
   function renderPeople(people){
     allPeople=people||[];
@@ -1951,7 +1999,7 @@
     $("skillsCount").textContent = Object.values(d.skills||{}).filter((s)=>s.queued).length
       ? "a run is queued" : "on-demand";
     renderSkills(d.skills); renderTasks(d.tasks);
-    renderBrief(d.brief); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
+    renderBrief(d.brief); renderLoops(d.loops||[]); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
     renderHabits(d.habits); renderAsk(d);
     renderProjects(d.projects); fillProjectPicker(d.projects); renderLists(d.lists);
     // The calendar is fetched separately so a cold 5s feed never blocks the rest
@@ -2013,6 +2061,43 @@
 
   // Service worker: installability, offline app shell, and push (see sw.js).
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  // Hand the API base and token to the SW so a notification reply can POST with
+  // no page open — service workers can't read localStorage. Re-sent on every
+  // load so a changed token or a fresh SW never leaves replies failing quietly.
+  function syncCredsToSW(){
+    if(!("serviceWorker" in navigator) || !TOKEN) return;
+    navigator.serviceWorker.ready
+      .then((reg)=>reg.active && reg.active.postMessage({ type:"creds", api:API, token:TOKEN }))
+      .catch(()=>{});
+  }
+  syncCredsToSW();
+
+  // --- launch intents -------------------------------------------------------
+  // Android share sheet (share_target in the manifest) lands here as ?text=…,
+  // and the long-press shortcut as ?capture=1. Both exist for one reason: the
+  // vault was getting nine captures a fortnight, and every one of them cost
+  // opening the app first. Sharing an article or a line of text from whatever
+  // you are already in should cost nothing.
+  function handleLaunchIntent(){
+    const q=new URLSearchParams(location.search);
+    if(!q.toString()) return;
+    const shared=[q.get("title"), q.get("text"), q.get("url")].filter(Boolean).join(" — ").trim();
+    if(shared || q.get("capture")!=null){
+      const box=$("cap");
+      if(box){
+        if(shared) box.value=shared;
+        // Deliberately not auto-sent. A share sheet fires by accident easily,
+        // and a capture you didn't mean is noise file-inbox then has to route.
+        box.scrollIntoView({behavior:"smooth", block:"center"});
+        setTimeout(()=>{ box.focus(); try{ box.setSelectionRange(box.value.length, box.value.length); }catch(e){} }, 250);
+        if(shared) toast("Shared in — check it, then capture");
+      }
+    }
+    if(q.get("view")==="brief") setTimeout(openBrief, 600);
+    // Clear the query so a refresh doesn't re-fire the intent.
+    history.replaceState(null, "", location.pathname);
+  }
+  handleLaunchIntent();
   // The push service can rotate a subscription behind our back; the SW asks us
   // to re-register when it does.
   if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message",(e)=>{

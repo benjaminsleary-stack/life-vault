@@ -153,8 +153,18 @@ function parseLog(text) {
   const out = [];
   for (const line of sec[1].split("\n")) {
     const m = line.match(/^-\s+(\d{4}-\d{2}-\d{2})\s*—\s*(.+)$/);
-    if (m) out.push({ date: m[1], text: m[2].replace(/\s*_\(surfaced:[^)]*\)_\s*$/, "").trim() });
+    if (m) { out.push({ date: m[1], text: m[2].trim() }); continue; }
+    // A wrapped fragment. Markdown treats an indented continuation as part of
+    // the same list item, and so must we: taking only the first line cut
+    // sentences mid-clause wherever a fragment ran past one line, which is most
+    // of the longer ones. Belongs to the entry above it.
+    if (out.length && /^\s+\S/.test(line)) {
+      out[out.length - 1].text += " " + line.trim();
+    }
   }
+  // Strip the surfacer's bookkeeping stamp only once the whole fragment is
+  // assembled — on a wrapped fragment the stamp is on the last line, not the first.
+  for (const e of out) e.text = e.text.replace(/\s*_\(surfaced:[^)]*\)_\s*$/, "").trim();
   return out.reverse();
 }
 
@@ -181,9 +191,128 @@ async function readEntities(store, folder) {
       // "last heard" drives the People card's real job: who has gone quiet.
       last: log.length ? log[0].date : null,
       silentDays: log.length ? daysAgo(log[0].date) : null,
+      loops: openLoops(log, e.name || f.name.slice(0, -3), f.name.slice(0, -3)),
     };
   }));
   return items.filter(Boolean);
+}
+
+/* ------------------------------------------------------------- open loops */
+// Ben, 1 Aug 2026, on what actually works with Charlotte: "remembering what's on
+// her mind and talking about it — my biggest problem is I can't track these
+// things." A fragment that says "her mum's operation is on the 14th" is useless
+// on the 20th and priceless on the 13th, so the date inside the sentence is the
+// thing that matters, not the date the fragment was written.
+//
+// This reads dates OUT of fragment text. It only ever sees `## Log` (parseLog
+// stops at the next heading), so `## Private` content cannot reach it — the
+// private wall holds by construction, not by filtering.
+
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+function iso(y, m, d) {
+  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+/**
+ * Find the date a fragment is pointing at, resolved relative to the day it was
+ * written. Returns { date, phrase, exact } or null.
+ *
+ * `exact` is false where the year or month had to be inferred ("the 14th",
+ * "Thursday"). The UI says so rather than presenting a guess as a fact —
+ * golden rule 4 applies to dates as much as to anything else.
+ */
+function loopDate(text, loggedISO) {
+  const base = new Date(`${loggedISO}T12:00:00Z`);
+  if (isNaN(base)) return null;
+
+  // 2026-08-14 — unambiguous, and the form skills are told to write.
+  let m = text.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+  if (m) return { date: `${m[1]}-${m[2]}-${m[3]}`, phrase: m[0], exact: true };
+
+  // "14 August", "14th Aug", "August 14"
+  const monthNames = MONTHS.join("|");
+  m = text.match(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(${monthNames})[a-z]*\\b`, "i"))
+   || text.match(new RegExp(`\\b(${monthNames})[a-z]*\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b`, "i"));
+  if (m) {
+    const dayFirst = /^\d/.test(m[1]);
+    const day = parseInt(dayFirst ? m[1] : m[2], 10);
+    const mon = MONTHS.indexOf((dayFirst ? m[2] : m[1]).slice(0, 3).toLowerCase());
+    if (mon >= 0 && day >= 1 && day <= 31) {
+      // No year given: assume the next occurrence from when it was written.
+      let y = base.getUTCFullYear();
+      if (iso(y, mon, day) < loggedISO) y += 1;
+      return { date: iso(y, mon, day), phrase: m[0], exact: true };
+    }
+  }
+
+  // "on the 14th" — a real thing people say, and the month is implied.
+  m = text.match(/\bthe (\d{1,2})(?:st|nd|rd|th)\b/i);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    if (day >= 1 && day <= 31) {
+      let y = base.getUTCFullYear(), mo = base.getUTCMonth();
+      if (day < base.getUTCDate()) { mo += 1; if (mo > 11) { mo = 0; y += 1; } }
+      return { date: iso(y, mo, day), phrase: m[0], exact: false };
+    }
+  }
+
+  // "on Thursday" — the next one after it was written.
+  m = text.match(new RegExp(`\\b(${DAYS.join("|")})\\b`, "i"));
+  if (m) {
+    const want = DAYS.indexOf(m[1].toLowerCase());
+    const ahead = ((want - base.getUTCDay()) + 7) % 7 || 7;
+    const d = new Date(base.getTime() + ahead * 864e5);
+    return { date: iso(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()), phrase: m[1], exact: false };
+  }
+
+  return null;
+}
+
+/**
+ * Fragments that point at a date, as loops worth closing.
+ *
+ * There is deliberately no attempt to detect "already dealt with". Guessing
+ * that from later fragments would be wrong often enough to make the card
+ * untrustworthy, and a card you don't trust is one you stop opening. A loop
+ * simply ages out: anything more than 3 days past is dropped, because by then
+ * it is history rather than something to do today.
+ */
+function openLoops(log, name, slug) {
+  const t = today();
+  const horizon = addDays(t, 21);
+  const floor = addDays(t, -3);
+  // One person, one date, one row. Jasper's birthday was logged twice — once as
+  // the fact and once as a correction — and both pointed at 11 Aug, so the card
+  // showed the same thing twice. Keep the fullest telling of it.
+  const seen = new Map();
+  const out = [];
+  for (const f of log) {
+    const d = loopDate(f.text, f.date);
+    if (!d) continue;
+    if (d.date > horizon || d.date < floor) continue;
+    const key = slug + "|" + d.date;
+    const prev = seen.get(key);
+    if (prev) {
+      if (f.text.length > prev.text.length) { prev.text = f.text; prev.logged = f.date; prev.exact = d.exact; prev.phrase = d.phrase; }
+      continue;
+    }
+    const entry = {
+      who: name, slug, date: d.date, phrase: d.phrase, exact: d.exact,
+      text: f.text, logged: f.date,
+      daysAway: Math.round((new Date(d.date + "T12:00:00Z") - new Date(t + "T12:00:00Z")) / 864e5),
+    };
+    seen.set(key, entry);
+    out.push(entry);
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function addDays(isoDate, n) {
+  const d = new Date(`${isoDate}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return iso(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
 // Occasions live wherever they are written, not only on people notes. Fifteen
@@ -880,6 +1009,10 @@ async function buildData(store, feeds) {
   const pick = (i, dflt) => (settled[i].status === "fulfilled" ? settled[i].value : dflt);
   const projects = pick(0, []);
   const people = pick(1, []);
+  // Every dated thing anyone said, across all people, in one list. Charlotte is
+  // the reason this exists but the mechanism is not specific to her.
+  const loops = [...people, ...projects].flatMap((p) => p.loops || [])
+    .sort((a, b) => a.date.localeCompare(b.date));
   const occasions = pick(2, []);
   const brief = pick(3, null);
   const skills = pick(4, {});
@@ -918,6 +1051,7 @@ async function buildData(store, feeds) {
   }
 
   return {
+    loops,
     generated: new Date().toISOString(),
     today: today(),
     tasks,

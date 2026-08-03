@@ -63,6 +63,36 @@ The permission prompt only appears in response to that tap. It is never
 requested on page load, because a prompt you didn't ask for is the one you
 reflexively deny, and a denial is sticky.
 
+## Replying from the notification
+
+Every notification carries a **Reply** box. Typing into it captures straight to
+`inbox/` without opening the app — no unlock, no token, no window. The evening
+brief's one question is answerable from the lock screen, which is the entire
+reason it exists: the vault was getting nine captures a fortnight, and every one
+of them cost opening the app first.
+
+Mechanically: `sw.js` shows the notification with an action of `type: "text"`
+(Chrome on Android; other browsers ignore the field and the notification still
+works). The service worker cannot read `localStorage`, so the page hands it the
+API base and unlock token via `postMessage` on every load and it keeps them in
+the Cache API. Signing out clears them, or a "disconnected" device could still
+write to the vault.
+
+If a reply fails to send — no signal, usually — it is **re-notified with the text
+still in it** and a "Send again" box, rather than being dropped. Golden rule 1
+applies to a sentence typed at a lock screen as much as to anything else.
+
+## Sharing into the vault
+
+The manifest declares a `share_target`, so **Vault** appears in the Android share
+sheet from any app. Share a link, a quote, a line of text, and it lands in the
+capture box pre-filled. It is deliberately **not** sent automatically — a share
+sheet fires by accident easily, and a capture you didn't mean is noise
+`file-inbox` then has to route.
+
+There are also two long-press shortcuts on the app icon: **Capture** (straight to
+the box) and **Today's brief**.
+
 ## Checking it
 
 The **System** panel tells you the truth about this device:
