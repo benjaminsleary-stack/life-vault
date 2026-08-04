@@ -1,14 +1,4 @@
 {
   "_comment": "Devices subscribed to push. Written by the dashboard; see docs/push-notifications.md.",
-  "subscriptions": [
-    {
-      "endpoint": "https://fcm.googleapis.com/fcm/send/cwg1lHlKK7M:APA91bHxJJIG-XwzdH_e-yxs-qWj5e5D8SDx9-p4sq4FEoVHPveMwg81maw-zVbBS9Gp_yfNC1oeSo74fg1GKruGVMFq3a_mhLbVWj2OpC2xCWVkCQEGkrLMvysr9dHVgFIXmQHt0GPG",
-      "keys": {
-        "p256dh": "BIqlj2_HHJ5L6xwm_vjxWsN9CSVUsEChREApsi0tuRZJXRkMhqIoqDCZtNKI2xRt5fJU0WcsGMLLOetDI2cUuvc",
-        "auth": "C6cAgvPjAOro4nvyQRSYOw"
-      },
-      "label": "Android",
-      "added": "2026-08-04"
-    }
-  ]
+  "subscriptions": []
 }
