@@ -26,6 +26,10 @@ The local folder may not be named after the repo. Confirm with `git remote -v`
 rather than the folder name — an old `life-os` checkout will look plausible,
 sit at the same kind of path, and be the wrong thing.
 
+The commands below are written for **PowerShell on Windows**, which is where
+this actually gets run. Where a command differs on bash it says so. Note that
+PowerShell aliases `curl` to `Invoke-WebRequest` — always type `curl.exe`.
+
 Run scripts **from the repo root**, not from inside `worker/`:
 
 ```powershell
@@ -77,6 +81,20 @@ Check **Repository access** still says *Only select repositories* with
 ### 1c. Check it before you rely on it
 
 Prove the permission works, from the desktop, before deploying anything:
+
+**PowerShell — use `curl.exe`, not `curl`.** In PowerShell `curl` is an alias
+for `Invoke-WebRequest`, which takes entirely different flags and will fail
+confusingly:
+
+```powershell
+curl.exe -i -X POST `
+  -H "Authorization: Bearer <the token>" `
+  -H "Accept: application/vnd.github+json" `
+  https://api.github.com/repos/benjaminsleary-stack/life-vault/actions/workflows/scheduled-skills.yml/dispatches `
+  -d '{\"ref\":\"main\",\"inputs\":{\"skill\":\"morning-brief\"}}'
+```
+
+bash / WSL:
 
 ```bash
 curl -i -X POST \
