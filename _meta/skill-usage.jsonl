@@ -31,3 +31,4 @@
 {"when":"2026-08-01T10:05:41Z","skill":"interest-scout","model":"sonnet","ok":true,"in":3968,"out":9392,"cache":1467740,"cost_usd":1.4422184000000002,"turns":41,"ms":192543}
 {"when":"2026-08-01T13:34:28Z","skill":"file-inbox","model":"haiku","ok":true,"in":82,"out":2372,"cache":288089,"cost_usd":0.07225649999999999,"turns":10,"ms":45317}
 {"when":"2026-08-04T14:44:55Z","skill":"morning-brief","model":"sonnet","ok":true,"in":7191,"out":17780,"cache":2913536,"cost_usd":2.155342099999999,"turns":59,"ms":376930}
+{"when":"2026-08-04T15:01:43Z","skill":"morning-brief","model":"sonnet","ok":true,"in":5080,"out":10472,"cache":740423,"cost_usd":0.9683668,"turns":24,"ms":195437}

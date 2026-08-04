@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":true,"when":"2026-08-04T14:44:55Z","outputs":["digests/2026-08-04-morning.md"],"error":"","delivered":false,"deliveryError":"WORKER_URL not set (or empty) in this environment","model":"sonnet","tokens":{"in":7191,"out":17780,"cache":2913536},"cost_usd":2.155342099999999}
+{"skill":"morning-brief","ok":true,"when":"2026-08-04T15:01:43Z","outputs":[],"error":"","delivered":false,"deliveryError":"the skill never called notify.sh","model":"sonnet","tokens":{"in":5080,"out":10472,"cache":740423},"cost_usd":0.9683668}
