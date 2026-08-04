@@ -70,6 +70,14 @@ jobs:
         run: |
           set -uo pipefail
           skill="${{ github.event.inputs.skill }}"
+          # "Re-run all jobs" does NOT replay workflow_dispatch inputs, so the
+          # skill name comes back empty. Without this the run took 20 seconds,
+          # did absolutely nothing, and reported Success — which is exactly the
+          # silent failure the rest of this system exists to prevent.
+          if [ -z "$skill" ]; then
+            echo "::error title=No skill to run::This run has no 'skill' input, which is what happens when you use 'Re-run all jobs' on a dispatched run — GitHub does not replay the inputs. Start a fresh run instead: Actions -> scheduled-skills -> Run workflow -> pick the skill."
+            exit 1
+          fi
           echo "Running scheduled skill: $skill"
           bash scripts/run-skill.sh "$skill" || true
 

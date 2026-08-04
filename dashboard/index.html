@@ -2353,11 +2353,22 @@
       const wxU="https://api.open-meteo.com/v1/forecast?"+base+"&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min&forecast_days=1";
       const aqU="https://air-quality-api.open-meteo.com/v1/air-quality?"+base+"&current=european_aqi,pm2_5";
       const [wr,ar]=await Promise.all([fetch(wxU), fetch(aqU).catch(()=>null)]);
-      if(!wr.ok) throw new Error();
+      if(!wr.ok) throw new Error("Open-Meteo returned "+wr.status+" "+(await wr.text().catch(()=>"")).slice(0,120));
       const wj=await wr.json(); const aj=(ar&&ar.ok)?await ar.json():null;
+      if(wj.error) throw new Error(wj.reason||"Open-Meteo rejected the request");
+      if(!wj.current||!wj.hourly||!wj.daily) throw new Error("Open-Meteo returned no forecast for "+WX.lat+","+WX.lon);
       renderWeather(wj, aj);
     }catch(e){
-      $("weatherBody").innerHTML='<div class="muted">Weather unavailable — tap the place name to retry or pin a location.</div>';
+      // "Unavailable" with no reason is the same silent failure this whole app
+      // spent a day removing everywhere else. Say which part broke: a network
+      // error abroad, a rejected parameter and a 500 are three different
+      // problems and only one of them is worth waiting out.
+      const why=String((e&&e.message)||e).replace(/^TypeError:\s*/,"") ||
+        "couldn't reach the weather service";
+      $("weatherBody").innerHTML='<div class="muted">Weather unavailable.<div class="s-err" '+
+        'style="margin-top:6px">'+esc(why)+"</div>"+
+        '<button class="btn" style="margin-top:8px" onclick="loadWeather(true)">Try again</button> '+
+        '<button class="btn" onclick="changeLocation()">Pin a place</button></div>';
     }
   }
   function renderWeather(d, aq){
