@@ -71,8 +71,15 @@ jobs:
             echo "::warning title=No delivery::WORKER_URL or UNLOCK_TOKEN is unset — the brief will be written and pushed to git, but cannot reach the phone."
             exit 0
           fi
+          # Trim, for the same reason notify.sh does: a trailing newline pasted
+          # into the secrets box is invisible here and reads as a wrong token.
+          tok="$(printf '%s' "$UNLOCK_TOKEN" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          url="$(printf '%s' "$WORKER_URL" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [ "${#tok}" -ne "${#UNLOCK_TOKEN}" ]; then
+            echo "Note: UNLOCK_TOKEN had surrounding whitespace (${#UNLOCK_TOKEN} chars -> ${#tok}); using the trimmed value."
+          fi
           code="$(curl -sS -o /tmp/devices.json -w '%{http_code}' --max-time 20 \
-            -H "Authorization: Bearer ${UNLOCK_TOKEN}" "${WORKER_URL%/}/api/push/devices" || echo 000)"
+            -H "Authorization: Bearer ${tok}" "${url%/}/api/push/devices" || echo 000)"
           case "$code" in
             200)
               n="$(node -e 'try{const j=require("/tmp/devices.json");process.stdout.write(String((j.devices||[]).length))}catch(e){process.stdout.write("?")}')"
@@ -81,8 +88,8 @@ jobs:
               else
                 echo "Delivery preflight OK — $n device(s) registered."
               fi ;;
-            401) echo "::warning title=Token mismatch::The Worker rejected UNLOCK_TOKEN (401). The Actions secret does not match the Worker's UNLOCK_TOKEN secret — briefs and failure alerts will not be delivered." ;;
-            000) echo "::warning title=Worker unreachable::Could not reach ${WORKER_URL} at all. Check WORKER_URL." ;;
+            401) echo "::warning title=Token mismatch::The Worker rejected UNLOCK_TOKEN (401) even after trimming. The Actions secret (${#tok} characters) does not match the Worker's UNLOCK_TOKEN — briefs and failure alerts will not be delivered. Compare that length against the token you type to unlock the app on your phone; if they match, the value itself differs and both need setting to one fresh value. See docs/deploy-runbook.md." ;;
+            000) echo "::warning title=Worker unreachable::Could not reach ${url} at all. Check WORKER_URL." ;;
             *)   echo "::warning title=Delivery preflight failed::The Worker returned HTTP $code for /api/push/devices." ;;
           esac
 

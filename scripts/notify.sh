@@ -35,8 +35,15 @@ fail() {                                  # $1 = reason
   exit 1
 }
 
-worker="${WORKER_URL:-}"
-token="${UNLOCK_TOKEN:-}"
+# Trim surrounding whitespace off both. Pasting a secret into the GitHub
+# secrets box (or `wrangler secret put`) very easily carries a trailing newline
+# or space, and the Worker compares the token byte-for-byte after a length
+# check — so one invisible character reads as an outright wrong token and
+# returns a 401 indistinguishable from a genuinely different value. Nothing
+# legitimate in either of these has leading or trailing whitespace.
+trim() { printf '%s' "$1" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+worker="$(trim "${WORKER_URL:-}")"
+token="$(trim "${UNLOCK_TOKEN:-}")"
 [ -n "$worker" ] || fail "WORKER_URL not set (or empty) in this environment"
 [ -n "$token" ]  || fail "UNLOCK_TOKEN not set (or empty) in this environment"
 worker="${worker%/}"
