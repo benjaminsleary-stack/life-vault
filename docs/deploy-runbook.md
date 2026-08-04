@@ -10,11 +10,33 @@ merged to `main`. None of it is live until the steps below are done.
 
 Steps 1–5 are required. 6 and 7 are optional integrations that can wait.
 
+## 0. Pull first, and check you're in the right repo
+
+Every script this runbook uses was committed today. A checkout that has not been
+pulled will fail with `Cannot find module` and it will look like a broken
+instruction rather than a stale working copy.
+
+```powershell
+cd <your life-vault checkout>
+git remote -v          # must end in life-vault.git — NOT the old life-os repo
+git pull origin main
+```
+
+The local folder may not be named after the repo. Confirm with `git remote -v`
+rather than the folder name — an old `life-os` checkout will look plausible,
+sit at the same kind of path, and be the wrong thing.
+
+Run scripts **from the repo root**, not from inside `worker/`:
+
+```powershell
+node scripts\vapid-keygen.mjs        # correct
+node ..\scripts\vapid-keygen.mjs    # only if you are already inside worker\
+```
+
 ---
 
 ## 1. Give the Worker's GitHub token `actions: write`
 
-GitHub → **Settings → Developer settings → Personal access tokens →
 **Why:** the Worker's new job is to wake up on a cron and tell GitHub to run a
 workflow. That is a `POST .../actions/workflows/scheduled-skills.yml/dispatches`
 call, and it needs **Actions: write**. The token currently only has Contents,
@@ -107,10 +129,12 @@ but fine-grained is better here because it can be locked to this one repo.
 
 ## 2. Deploy the Worker
 
-```bash
-cd worker
-node ../scripts/vapid-keygen.mjs        # run ONCE, ever. Keep the output.
+Generate the keypair **from the repo root**, then set the secrets from `worker/`:
 
+```bash
+node scripts/vapid-keygen.mjs           # run ONCE, ever. Keep the output.
+
+cd worker
 npx wrangler secret put VAPID_PUBLIC_KEY
 npx wrangler secret put VAPID_PRIVATE_KEY
 npx wrangler secret put VAPID_SUBJECT   # mailto:benjaminsleary@gmail.com
@@ -125,6 +149,16 @@ Pages → life-vault → Settings → Triggers** should list five crons.
 > Generate the VAPID pair **once**. A push subscription is bound to the key it
 > was created with, so regenerating invalidates every registered device and each
 > one has to be re-enabled by hand.
+
+> **Never paste a key from anywhere but that command's output.** `wrangler
+> secret put` accepts whatever you type — there is no validation, and a wrong
+> key fails silently at send time rather than at upload. A private key that has
+> appeared in a chat window, a terminal you screen-shared, or a support thread
+> is compromised: anyone holding it can push notifications to your phone.
+> Generate a fresh pair and set all three secrets again.
+
+If you set a secret wrongly, just run the same `secret put` again — it
+overwrites. Nothing needs deleting first.
 
 ## 3. Two GitHub Actions secrets
 
