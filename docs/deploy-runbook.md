@@ -193,6 +193,46 @@ workflow log says so at the top.
 
 You can **delete `NTFY_TOPIC`** at the same time — nothing reads it any more.
 
+### 3a. Rotating the unlock token (when you've forgotten it)
+
+`wrangler secret put` is write-only and the app keeps its copy in the phone's
+`localStorage`, so a forgotten token cannot be read back from anywhere. Set a
+fresh one in all three places instead. Registered devices survive this — push
+subscriptions live in `_meta/push-subscriptions.json` and are not keyed to the
+token — so you do **not** have to re-enable notifications afterwards.
+
+**1. Generate one and save it somewhere you'll find it** (a password manager,
+not a note in this repo). In PowerShell:
+
+```powershell
+-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 40 | % {[char]$_})
+```
+
+Alphanumeric only — no spaces, quotes or URL-unsafe characters to go wrong.
+
+**2. The Worker**, from the repo root:
+
+```powershell
+cd worker
+npx wrangler secret put UNLOCK_TOKEN
+```
+
+Paste at the prompt, press Enter once. Then `cd ..`.
+
+**3. The Actions secret**: Settings → Secrets and variables → Actions →
+`UNLOCK_TOKEN` → **Update**. Paste the same value.
+
+**4. The phone**: open the app. It will 401 and show the unlock gate — enter the
+new token. If it doesn't prompt, System → Disconnect this device, then re-enter.
+
+Then run `morning-brief` from Actions. The **Check delivery works** step reports
+the verdict before the skill runs, so you'll know within seconds.
+
+Both sides trim surrounding whitespace (`tokenOk()` in `worker/worker.js`,
+`notify.sh`, and the workflow preflight), so a trailing newline picked up while
+pasting is no longer fatal. It used to be: the length check ran first, and one
+invisible character produced a 401 identical to an entirely wrong token.
+
 ## 4. Deploy the app
 
 ```bash

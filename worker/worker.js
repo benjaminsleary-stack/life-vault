@@ -42,9 +42,16 @@ function json(body, env, status = 200) {
 }
 
 // Constant-ish time compare so the unlock token isn't trivially timing-guessable.
-function tokenOk(req, env) {
-  const want = env.UNLOCK_TOKEN || "";
-  const got = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+//
+// Both sides are trimmed. The length check below is the first thing that runs,
+// so a single trailing newline — pasted into `wrangler secret put`, the GitHub
+// secrets box, or the app's unlock field — rejects the request with a 401
+// identical to a completely wrong token. That cost twelve days of briefs that
+// were written, committed and never delivered. No legitimate unlock token has
+// leading or trailing whitespace, so trimming can only ever help.
+export function tokenOk(req, env) {
+  const want = (env.UNLOCK_TOKEN || "").trim();
+  const got = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
   if (!want || got.length !== want.length) return false;
   let diff = 0;
   for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ got.charCodeAt(i);
