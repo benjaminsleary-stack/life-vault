@@ -27,7 +27,7 @@ never touch the trigger queue, so they can't double-run with the watcher.
 | morning-brief | `45 4 * * *` | 05:45 BST / 04:45 GMT |
 | evening-brief | `45 19 * * *` | 20:45 BST / 19:45 GMT |
 | interest-scout | `0 8 * * 6` | Sat 09:00 BST |
-| harvest | `0 9 * * 0` | Sun 10:00 BST |
+| harvest | `0 9 * * 7` | Sun 10:00 BST |
 | family-events | `0 10 1 * *` | 1st of the month, 11:00 BST |
 
 To change a time, edit **both** `wrangler.toml` and `CRON_SKILL`, then

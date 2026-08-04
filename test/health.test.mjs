@@ -148,6 +148,28 @@ test("every scheduled routine is wired end to end", async () => {
   }
 });
 
+test("every cron is valid for CLOUDFLARE, whose day-of-week is 1-7", async () => {
+  // Standard cron accepts 0 OR 7 for Sunday. Cloudflare accepts only 1-7 and
+  // rejects the whole deploy with "invalid cron string" — which it did, live,
+  // on `0 9 * * 0` for harvest, after the other triggers had already applied.
+  const fs = await import("node:fs");
+  const toml = fs.readFileSync("worker/wrangler.toml", "utf8");
+  const crons = [...toml.matchAll(/^\s*"([^"]+)",/gm)].map((m) => m[1]);
+  for (const cron of crons) {
+    const f = cron.trim().split(/\s+/);
+    assert.equal(f.length, 5, `${cron}: needs five fields`);
+    const dow = f[4];
+    if (dow === "*") continue;
+    for (const part of dow.split(",")) {
+      for (const n of part.split("-")) {
+        if (!/^\d+$/.test(n)) continue;             // names like SUN are fine
+        assert.ok(+n >= 1 && +n <= 7,
+          `${cron}: day-of-week ${n} is invalid on Cloudflare — Sunday is 7, not 0`);
+      }
+    }
+  }
+});
+
 test("the family-events instruction is a routine and not a task", async () => {
   const fs = await import("node:fs");
   const tasks = fs.readFileSync("tasks.md", "utf8");

@@ -281,7 +281,7 @@ const CRON_SKILL = {
   "45 4 * * *": "morning-brief",     // 05:45 BST / 04:45 GMT
   "45 19 * * *": "evening-brief",    // 20:45 BST / 19:45 GMT
   "0 8 * * 6": "interest-scout",     // Sat 09:00 BST
-  "0 9 * * 0": "harvest",            // Sun 10:00 BST — the weekly calendar sweep
+  "0 9 * * 7": "harvest",            // Sun 10:00 BST — the weekly calendar sweep
   "0 10 1 * *": "family-events",     // 1st of the month, 11:00 BST
 };
 
