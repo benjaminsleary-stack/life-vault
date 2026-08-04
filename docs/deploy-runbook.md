@@ -15,16 +15,95 @@ Steps 1–5 are required. 6 and 7 are optional integrations that can wait.
 ## 1. Give the Worker's GitHub token `actions: write`
 
 GitHub → **Settings → Developer settings → Personal access tokens →
-Fine-grained tokens** → the token the Worker uses → **Repository permissions**:
+**Why:** the Worker's new job is to wake up on a cron and tell GitHub to run a
+workflow. That is a `POST .../actions/workflows/scheduled-skills.yml/dispatches`
+call, and it needs **Actions: write**. The token currently only has Contents,
+because until now the Worker only ever read and wrote vault files. Without this
+the cron fires, the dispatch is refused with a 403, and nothing runs.
 
-| Permission | Was | Needs to be |
+### 1a. Find the token
+
+Go to **https://github.com/settings/personal-access-tokens** (Settings →
+Developer settings → Personal access tokens → **Fine-grained tokens**).
+
+You are looking for the one scoped to `benjaminsleary-stack/life-vault` — the
+setup docs call it "a fine-grained PAT scoped to the single life-vault repo".
+If several look plausible, check the **Last used** column; the Worker uses it on
+every dashboard load, so it should show recent activity.
+
+> **You cannot read the token back from Cloudflare** — secrets are write-only
+> there. If you genuinely can't tell which one it is, don't guess: skip to
+> **1d** and make a new one.
+
+### 1b. Add the permission
+
+Click the token → **Repository permissions**. Set:
+
+| Permission | Setting | Why |
 |---|---|---|
-| Contents | Read and write | Read and write |
-| **Actions** | *(none)* | **Read and write** |
+| **Actions** | **Read and write** | dispatch the scheduled-skills workflow |
+| Contents | Read and write | read and write vault files (already set) |
+| Metadata | Read-only | mandatory, selects itself |
 
-Without this the Cloudflare cron cannot dispatch the workflow and the schedule
-will not fire at all. If you regenerate the token rather than edit it, re-run
-`npx wrangler secret put GH_TOKEN` in step 2.
+Check **Repository access** still says *Only select repositories* with
+`life-vault` listed. Then **Update token** at the bottom.
+
+> **Editing permissions does not change the token value.** The same secret keeps
+> working and gains the new permission — you do **not** need to touch Cloudflare.
+> This is the easy path, which is why it is worth finding the right token.
+
+### 1c. Check it before you rely on it
+
+Prove the permission works, from the desktop, before deploying anything:
+
+```bash
+curl -i -X POST \
+  -H "Authorization: Bearer <the token>" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/benjaminsleary-stack/life-vault/actions/workflows/scheduled-skills.yml/dispatches \
+  -d '{"ref":"main","inputs":{"skill":"morning-brief"}}'
+```
+
+- **`204 No Content`** — correct. It has also just started a real morning-brief
+  run, which is a useful side effect: watch it in the Actions tab.
+- **`403`** — the Actions permission didn't save, or you used the wrong token.
+- **`404`** — the token can't see the repo at all. Check Repository access.
+
+### 1d. If you can't find or edit it, make a new one
+
+**Generate new token** → fine-grained:
+
+- **Resource owner:** `benjaminsleary-stack`
+- **Repository access:** Only select repositories → `life-vault`
+- **Repository permissions:** Actions **Read and write**, Contents **Read and
+  write** (Metadata comes along automatically)
+- **Expiration:** see below
+
+Copy it — GitHub shows it once. Then in step 2, also run:
+
+```bash
+npx wrangler secret put GH_TOKEN     # paste the new token
+```
+
+before `npx wrangler deploy`.
+
+### 1e. Expiry — the thing that will bite you in a year
+
+Fine-grained tokens expire. When this one does, the cron will fire, the dispatch
+will 403, and **every routine stops** — with no notification, because the Worker
+is what sends notifications and the failure is upstream of that. The Worker does
+push an alert on a failed dispatch, but only if it can reach your device.
+
+So: whatever expiry you pick, **write the date down**. Either pick *No
+expiration* and accept a long-lived credential, or set a date and put it in the
+vault as a task now:
+
+```
+- [ ] Renew the GitHub PAT the Worker uses — everything stops when it expires 📅 <date> #admin
+```
+
+A classic token instead of fine-grained also works — it needs the `repo` scope —
+but fine-grained is better here because it can be locked to this one repo.
 
 ## 2. Deploy the Worker
 
