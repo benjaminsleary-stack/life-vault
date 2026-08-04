@@ -146,6 +146,43 @@ if [ "$expects_delivery" -eq 1 ]; then
   else
     delivery_err="the skill never called notify.sh"
   fi
+
+  # DELIVER IT OURSELVES if the skill didn't.
+  #
+  # Every briefing skill has a "run notify.sh" step in its prompt, and on
+  # 4 Aug 2026 morning-brief simply didn't do it — wrote the brief, committed,
+  # pushed, and stopped. The status read "written, but never reached your
+  # phone", which is honest but is not the same as Ben getting his brief.
+  #
+  # Delivery is too important to depend on a model remembering the last step of
+  # a prompt. The runner already knows which skills must deliver and which file
+  # is the artefact (outputs is digests-first), so it can just do it. The
+  # skill's own call stays — it delivers sooner and with a better title — and
+  # this is the backstop for when it doesn't happen.
+  if [ "$delivered" = false ] && [ "$ok" = true ]; then
+    primary="$(printf '%s\n' "$outputs" | grep '^digests/' | head -n1)"
+    if [ -n "$primary" ] && [ -f "$primary" ]; then
+      case "$skill" in
+        morning-brief)   title="Morning brief" ;;
+        evening-brief)   title="Evening" ;;
+        interest-scout)  title="Weekly interests" ;;
+        family-events)   title="Family days out" ;;
+        *)               title="$skill" ;;
+      esac
+      echo "[delivery] the skill did not deliver — sending $primary from the runner"
+      bash scripts/notify.sh "$title" "$primary" || true
+      # notify.sh has now written the receipt either way; re-read it.
+      if [ -s "$receipt_file" ]; then
+        IFS=$'\t' read -r d_ok d_why < "$receipt_file"
+        if [ "${d_ok:-}" = "true" ]; then
+          delivered=true; delivery_err=""
+        else
+          delivery_err="${d_why:-delivery failed}"
+        fi
+      fi
+    fi
+  fi
+
   # Same sanitise-don't-escape rule as `err` below: a status file that is
   # invalid JSON is silently skipped by the dashboard, which is worse than terse.
   delivery_err="$(printf '%s' "$delivery_err" | tr -d '\\"' | tr '\t\r\n' '   ')"
