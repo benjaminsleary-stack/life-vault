@@ -229,8 +229,13 @@ printf '{"when":"%s","skill":"%s","model":"%s","ok":%s,"in":%s,"out":%s,"cache":
 # the skill's own delivery, and letting it overwrite the receipt would report a
 # brief as delivered because its failure notice got through.
 if [ "$ok" = false ]; then
+  # NOT silenced. This used to be `>/dev/null 2>&1 || true`, which meant that
+  # when the alert itself failed to send there was no trace of it anywhere —
+  # the failure of the failure-notifier, invisible. On 4 Aug two runs died on a
+  # session limit and no alert arrived, and the log had nothing to say about it.
   ( unset LV_DELIVERY_RECEIPT
-    printf '%s\n' "$out" | tail -n 5 | bash scripts/notify.sh "⚠️ $skill failed" - ) >/dev/null 2>&1 || true
+    printf '%s\n' "$out" | tail -n 5 | bash scripts/notify.sh "⚠️ $skill failed" - ) \
+    || echo "[alert] could not deliver the failure notice — see the notify: line above"
 fi
 
 

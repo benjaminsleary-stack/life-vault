@@ -60,11 +60,31 @@ jobs:
       # here for twelve days running, on a secret that was present but empty.
       # Say so at the top of the log rather than letting it surface as a quiet
       # line in the hot-cache a fortnight later.
-      - name: Check delivery is configured
+      # A preflight, not a guess. Checking the variables are non-empty only ever
+      # caught half the problem: a WRONG unlock token looks identical to a right
+      # one until the Worker returns 401, and the whole delivery path is
+      # best-effort so that 401 was invisible. This actually calls the Worker.
+      - name: Check delivery works
         run: |
+          set -uo pipefail
           if [ -z "${WORKER_URL:-}" ] || [ -z "${UNLOCK_TOKEN:-}" ]; then
             echo "::warning title=No delivery::WORKER_URL or UNLOCK_TOKEN is unset — the brief will be written and pushed to git, but cannot reach the phone."
+            exit 0
           fi
+          code="$(curl -sS -o /tmp/devices.json -w '%{http_code}' --max-time 20 \
+            -H "Authorization: Bearer ${UNLOCK_TOKEN}" "${WORKER_URL%/}/api/push/devices" || echo 000)"
+          case "$code" in
+            200)
+              n="$(node -e 'try{const j=require("/tmp/devices.json");process.stdout.write(String((j.devices||[]).length))}catch(e){process.stdout.write("?")}')"
+              if [ "$n" = "0" ]; then
+                echo "::warning title=No devices::The Worker is reachable but NO device is registered for notifications. Open the app -> System -> Notifications -> Turn on."
+              else
+                echo "Delivery preflight OK — $n device(s) registered."
+              fi ;;
+            401) echo "::warning title=Token mismatch::The Worker rejected UNLOCK_TOKEN (401). The Actions secret does not match the Worker's UNLOCK_TOKEN secret — briefs and failure alerts will not be delivered." ;;
+            000) echo "::warning title=Worker unreachable::Could not reach ${WORKER_URL} at all. Check WORKER_URL." ;;
+            *)   echo "::warning title=Delivery preflight failed::The Worker returned HTTP $code for /api/push/devices." ;;
+          esac
 
       - name: Run the requested skill
         run: |
