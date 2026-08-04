@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":false,"when":"2026-08-04T17:57:13Z","outputs":[],"error":"You've hit your session limit · resets 6:30pm (UTC)","delivered":false,"deliveryError":"the skill never called notify.sh","model":"sonnet","tokens":{"in":0,"out":0,"cache":0},"cost_usd":0}
+{"skill":"morning-brief","ok":true,"when":"2026-08-04T19:10:42Z","outputs":[],"error":"","delivered":false,"deliveryError":"the skill never called notify.sh","model":"sonnet","tokens":{"in":2694,"out":3101,"cache":278147},"cost_usd":0.2532685}
