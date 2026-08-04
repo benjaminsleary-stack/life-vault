@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":true,"when":"2026-08-01T07:20:42Z","outputs":[],"error":"","model":"sonnet","tokens":{"in":4978,"out":12760,"cache":1583537},"cost_usd":1.3719564000000002,"delivered":false,"deliveryError":"NTFY_TOPIC not set (or empty) in this environment"}
+{"skill":"morning-brief","ok":true,"when":"2026-08-04T14:44:55Z","outputs":["digests/2026-08-04-morning.md"],"error":"","delivered":false,"deliveryError":"WORKER_URL not set (or empty) in this environment","model":"sonnet","tokens":{"in":7191,"out":17780,"cache":2913536},"cost_usd":2.155342099999999}
