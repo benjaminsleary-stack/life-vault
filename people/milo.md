@@ -10,6 +10,9 @@ Son, age 2. Birthday 23 May. Language came on fast — talking a great deal now.
 Much more wilful since turning two, and sulks when thwarted, which Ben finds
 endearing rather than trying.
 
+Bright Horizons nursery, Cambridge Milton Road (manager Sam Waters, 01223 734888).
+**Open thread: working-parent funding needs reconfirming before the autumn term.**
+
 ## Dates & occasions
 - (occasion:: 2027-05-23) Milo's birthday
 

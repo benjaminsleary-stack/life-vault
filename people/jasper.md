@@ -11,6 +11,9 @@ Son. **Turns 5 on 11 August 2026** — the vault previously recorded him as alre
 Big imaginative-play streak: invents games and runs them. Currently into Paw Patrol
 and Dragon Rider Rescue.
 
+Mayfield Primary School, Warwick Road, Cambridge (Reception/Y1; team leader Pippa
+Joyce). **Swimming kit every Wednesday morning in term time.**
+
 ## Dates & occasions
 - (occasion:: 2026-08-11) Jasper's birthday
 
