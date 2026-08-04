@@ -89,8 +89,11 @@ claude setup-token
 ```
 Then GitHub → the repo → Settings → Secrets and variables → **Actions** → New:
 - `CLAUDE_CODE_OAUTH_TOKEN` = the token from `claude setup-token`.
-- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` = Web Push keys,
-  so briefs and failure alerts reach the phone. See `docs/push-notifications.md`.
+- `WORKER_URL` = your Worker URL, and `UNLOCK_TOKEN` = the same unlock token.
+  `notify.sh` needs both to POST a brief to the Worker for delivery.
+
+(The VAPID push keys are **Worker** secrets, not Actions secrets — the Worker is
+what signs and encrypts. See `docs/push-notifications.md`.)
 
 Now the **Run** buttons work end to end: the button commits a `.run` file, the
 Action executes the skill and writes its status, and the dashboard shows it.
