@@ -161,6 +161,27 @@ if [ "$expects_delivery" -eq 1 ]; then
   # this is the backstop for when it doesn't happen.
   if [ "$delivered" = false ] && [ "$ok" = true ]; then
     primary="$(printf '%s\n' "$outputs" | grep '^digests/' | head -n1)"
+
+    # Nothing in outputs does NOT mean nothing to deliver. A re-run that finds
+    # today's brief already written changes no files, so `outputs` is empty —
+    # which is exactly what happened at 19:10 on 4 Aug, leaving a brief that had
+    # existed since 15:01 still undelivered. Fall back to the artefact this
+    # skill is KNOWN to produce, the same way vault.js backfills the Open button.
+    if [ -z "$primary" ]; then
+      day="$(TZ=Europe/London date +%F)"
+      case "$skill" in
+        morning-brief)  cand="digests/${day}-morning.md" ;;
+        evening-brief)  cand="digests/${day}-evening.md" ;;
+        interest-scout) cand="$(ls -1 digests/*-interests.md 2>/dev/null | tail -n1)" ;;
+        family-events)  cand="$(ls -1 digests/*-family-events.md 2>/dev/null | tail -n1)" ;;
+        *)              cand="" ;;
+      esac
+      if [ -n "${cand:-}" ] && [ -f "$cand" ]; then
+        primary="$cand"
+        echo "[delivery] the run produced no new file; falling back to $primary"
+      fi
+    fi
+
     if [ -n "$primary" ] && [ -f "$primary" ]; then
       case "$skill" in
         morning-brief)   title="Morning brief" ;;
@@ -180,6 +201,8 @@ if [ "$expects_delivery" -eq 1 ]; then
           delivery_err="${d_why:-delivery failed}"
         fi
       fi
+    else
+      echo "[delivery] nothing to deliver — no digest found for $skill"
     fi
   fi
 
