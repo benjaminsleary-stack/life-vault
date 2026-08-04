@@ -4,26 +4,26 @@ A read of the whole repo (worker, dashboard, runner scripts, workflows, skills)
 plus the vault's own run history as evidence. Findings are ordered by how much
 they cost you, not by how hard they are to fix.
 
-> **Status: implemented, except the credentials only a human can create.**
-> Everything below has been built, and delivery has since moved off ntfy
-> entirely — briefs now go out as the vault's own Web Push, from the PWA, with
-> no third-party app (`docs/push-notifications.md`). §4b is therefore obsolete
-> as written: the fix is no longer an ntfy secret.
+> **Status: deployed and verified, 4 August 2026.**
 >
-> Outstanding, all one-off setup:
+> Everything in this review is live. Delivery moved off ntfy entirely to the
+> vault's own Web Push — §4b is obsolete as written, since the fix was never an
+> ntfy secret in the end.
 >
-> 1. **VAPID keys** — `node scripts/vapid-keygen.mjs`, store as Worker secrets,
->    deploy, then turn notifications on in the app's System panel and send a
->    test. Until a device is registered, every brief records `delivered: false`.
-> 2. **`actions: write` on the Worker's `GH_TOKEN`.** Without it the Cloudflare
->    cron cannot dispatch the workflow and the schedule will not fire at all.
-> 3. **`WORKER_URL` and `UNLOCK_TOKEN` as GitHub Actions secrets**, so the
->    runner can reach the Worker to send.
-> 4. **Google Calendar write** (`docs/google-calendar.md`) — pinned for a
->    desktop session.
+> Verified end to end on a real device: Cloudflare cron → Worker → VAPID sign →
+> RFC 8291 encrypt → push service → service worker → notification → inline reply
+> → capture in `inbox/`. The crypto was written against the specs with no way to
+> exercise it in the build container; it worked on the first real attempt.
 >
-> The rest — §2, §3, §4a, §4c, §5, §6 — is in the tree. §5's dashboard split was
-> deliberately not done (see the note there).
+> Two bugs only a real deploy could find, both now fixed and covered by tests:
+> Cloudflare's cron day-of-week is 1–7, so `0` for Sunday failed the whole
+> schedule update; and the VAPID keys were documented as GitHub Actions secrets
+> when they belong to the Worker.
+>
+> Still optional and not done: Google Calendar write (`docs/google-calendar.md`)
+> and Strava (`docs/strava.md`). Neither blocks anything.
+>
+> §5's dashboard split was deliberately not done — see the note there.
 
 ---
 
