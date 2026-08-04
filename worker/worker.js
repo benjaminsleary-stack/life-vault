@@ -49,6 +49,24 @@ function json(body, env, status = 200) {
 // identical to a completely wrong token. That cost twelve days of briefs that
 // were written, committed and never delivered. No legitimate unlock token has
 // leading or trailing whitespace, so trimming can only ever help.
+// Where tapping a notification is allowed to land: a relative path inside the
+// app, and nothing else. A notification is tapped without being read, so it must
+// not be able to carry anyone off-origin. Rejected input returns "" and the
+// service worker falls back to the app root — this never sanitises and forwards,
+// because a half-cleaned URL is the one that gets through.
+//
+// Rejects: absolute URLs ("https://…", "javascript:…"), protocol-relative
+// ("//evil.example"), backslash variants Windows and some parsers fold to "/"
+// ("/\evil.example", "\\evil.example"), and bare paths with no leading slash.
+export function safeDeepLink(raw) {
+  const s = String(raw == null ? "" : raw);
+  if (!s || s.length > 200) return "";
+  if (s.includes("\\") || s.includes("\n") || s.includes("\r")) return "";
+  if (!/^\.?\//.test(s)) return "";        // must be "/…" or "./…"
+  if (/^\/\//.test(s) || /^\.\/\//.test(s)) return "";  // protocol-relative
+  return s;
+}
+
 export function tokenOk(req, env) {
   const want = (env.UNLOCK_TOKEN || "").trim();
   const got = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
@@ -301,7 +319,10 @@ const CRON_SKILL = {
  *                               in the dashboard and rotating needs no redeploy
  *   POST /api/push/subscribe    { subscription, label } — register this device
  *   POST /api/push/unsubscribe  { endpoint } — forget it
- *   POST /api/push/send         { title, body } — fan out to every device
+ *   POST /api/push/send         { title, body, url?, kind? } — fan out to every
+ *                               device. `url` is a relative in-app destination
+ *                               for the tap (e.g. "./?view=brief"); `kind` tags
+ *                               an inline reply with the digest it answered.
  *   GET  /api/push/devices      what is registered, without the keys
  */
 async function handlePush(req, url, env, store) {
@@ -330,13 +351,23 @@ async function handlePush(req, url, env, store) {
   if (path === "/api/push/send" && req.method === "POST") {
     const title = String(payload.title || "Life-Vault").slice(0, 120);
     const body = String(payload.body || "").slice(0, 2400);
+    // Where tapping the notification lands, and which digest it came from.
+    // Relative paths only: a notification is a thing the user taps without
+    // reading, so it must not be able to carry them off-origin. Anything with a
+    // scheme, a protocol-relative "//host", or a backslash is dropped rather
+    // than sanitised — the service worker then falls back to the app root.
+    const kind = String(payload.kind || "").slice(0, 80);
+    const deepUrl = safeDeepLink(payload.url);
     const { subs } = await readPushSubs(store);
     if (!subs.length) {
       // Push is the only channel now, so "nobody is subscribed" is a delivery
       // failure and has to be reported as one — not quietly counted as success.
       return { ok: false, sent: 0, total: 0, error: "no devices are registered for notifications" };
     }
-    const r = await sendToAll(subs, JSON.stringify({ title, body, at: Date.now() }), env);
+    const msg = { title, body, at: Date.now() };
+    if (deepUrl) msg.url = deepUrl;
+    if (kind) msg.kind = kind;
+    const r = await sendToAll(subs, JSON.stringify(msg), env);
     // Prune the ones the push service says are dead, or they absorb every send
     // from here on and the failure count never comes back down.
     if (r.gone.length) await removePushSubs(store, r.gone);

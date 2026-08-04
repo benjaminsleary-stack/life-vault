@@ -1,0 +1,21 @@
+<!--
+  Life-Vault app icon — source of truth. Render with scripts/make-icons.sh.
+
+  A keyhole, not a letter. The old icon was a capital L, which said nothing and
+  read as a placeholder on the home screen and the splash. A keyhole carries the
+  name, survives being shrunk to 48px, and — the practical reason — has a
+  silhouette that still reads when Android throws away the colour and uses only
+  the alpha channel for the status-bar badge.
+
+  Palette is the app's own: #1c1813 ground, #d98a63 terracotta.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="114" fill="#1c1813"/>
+  <circle cx="256" cy="256" r="170" fill="#d98a63"/>
+  <!-- The keyhole is knocked out in the ground colour rather than drawn in a
+       third colour, so the icon stays two-tone at every size. -->
+  <g fill="#1c1813">
+    <circle cx="256" cy="226" r="55"/>
+    <path d="M234 256 h44 l20 92 a10 10 0 0 1 -10 12 h-64 a10 10 0 0 1 -10 -12 z"/>
+  </g>
+</svg>

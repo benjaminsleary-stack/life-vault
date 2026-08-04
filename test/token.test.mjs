@@ -90,3 +90,43 @@ test("compares every byte rather than stopping at the first difference", () => {
   assert.match(loop, /\|=/, "expected the loop to accumulate differences with |=");
   assert.doesNotMatch(loop, /\breturn\b/, "the loop must not return early on a differing byte");
 });
+
+// --- notification deep links -------------------------------------------------
+// A notification is tapped without being read, so the URL it carries must not be
+// able to leave the app. This is the whole allow-list.
+import { safeDeepLink } from "../worker/worker.js";
+
+test("accepts the relative in-app destinations we actually send", () => {
+  assert.equal(safeDeepLink("./?view=brief"), "./?view=brief");
+  assert.equal(safeDeepLink("./"), "./");
+  assert.equal(safeDeepLink("/?capture=1"), "/?capture=1");
+});
+
+test("rejects anything that could leave the origin", () => {
+  for (const bad of [
+    "https://evil.example",
+    "http://evil.example",
+    "javascript:alert(1)",
+    "//evil.example",             // protocol-relative
+    ".//evil.example",
+    "\\\\evil.example",           // UNC-style
+    "/\\evil.example",            // backslash some parsers fold to "/"
+    "data:text/html,<script>",
+    "brief",                      // no leading slash
+    "../../etc/passwd",
+  ]) {
+    assert.equal(safeDeepLink(bad), "", `should have rejected: ${bad}`);
+  }
+});
+
+test("rejects empty, absent and over-long values", () => {
+  assert.equal(safeDeepLink(""), "");
+  assert.equal(safeDeepLink(null), "");
+  assert.equal(safeDeepLink(undefined), "");
+  assert.equal(safeDeepLink("./" + "a".repeat(300)), "");
+});
+
+test("rejects embedded newlines, which could split a header or a payload", () => {
+  assert.equal(safeDeepLink("./?view=brief\nX-Evil: 1"), "");
+  assert.equal(safeDeepLink("./?view=brief\r\n"), "");
+});

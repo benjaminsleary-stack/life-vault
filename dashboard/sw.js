@@ -5,8 +5,11 @@
 // masquerading as current from a stale cache is worse than a network error.
 // (3) receive push notifications — the vault's only delivery channel.
 
-const SHELL = "lv-shell-v6";
-const SHELL_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const SHELL = "lv-shell-v7";
+const SHELL_FILES = [
+  "./", "./index.html", "./manifest.webmanifest",
+  "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./badge-96.png",
+];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => c.addAll(SHELL_FILES)).catch(() => {}).then(() => self.skipWaiting()));
@@ -63,7 +66,11 @@ self.addEventListener("push", (e) => {
   e.waitUntil(self.registration.showNotification(title, {
     body: (d.body || "").slice(0, 1200),
     icon: "./icon-192.png",
-    badge: "./icon-192.png",
+    // A badge is NOT a small icon. Android throws its colour away and uses only
+    // the alpha channel as a stencil, so pointing this at the full-bleed app
+    // icon — which has no transparency to stencil — drew a featureless block in
+    // the status bar. badge-96.png is a white keyhole on a transparent ground.
+    badge: "./badge-96.png",
     tag: "lv-" + title.toLowerCase().replace(/\W+/g, "-"),
     renotify: true,
     timestamp: d.at || Date.now(),
@@ -71,7 +78,10 @@ self.addEventListener("push", (e) => {
       { action: "reply", type: "text", title: "Reply", placeholder: d.placeholder || "Type to capture…" },
       { action: "open", title: "Open" },
     ],
-    data: { url: "./", kind: d.kind || "" },
+    // The sender says where the notification leads; "./" is only the fallback.
+    // Hard-coding it here meant tapping the morning brief opened the dashboard
+    // home and left you to find the brief yourself.
+    data: { url: d.url || "./", kind: d.kind || "" },
   }));
 });
 
@@ -89,13 +99,44 @@ self.addEventListener("notificationclick", (e) => {
   }
 
   e.waitUntil((async () => {
+    const target = new URL((e.notification.data || {}).url || "./", self.location.href).href;
     const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of all) {
-      if ("focus" in c) { await c.focus(); return; }
+      if (!("focus" in c)) continue;
+      await c.focus();
+      // Focusing alone left an already-open app sitting on whatever it was last
+      // showing, which is why tapping the brief did nothing visible. Three ways
+      // to get it to the right place, cheapest first: tell a live page to handle
+      // the intent itself (no reload, keeps scroll and state); navigate the
+      // client if it won't answer; give up and let the loop fall through to
+      // openWindow. navigate() throws for an uncontrolled client, so it cannot
+      // be the only route.
+      if (await handledByPage(c, target)) return;
+      try { if ("navigate" in c) { await c.navigate(target); return; } } catch { /* fall through */ }
     }
-    if (self.clients.openWindow) await self.clients.openWindow("./");
+    if (self.clients.openWindow) await self.clients.openWindow(target);
   })());
 });
+
+// Ask an open page to handle the launch intent in-place, and wait briefly for it
+// to say it did. A page from an older build won't reply, and the timeout is what
+// lets us fall back rather than hang on it.
+function handledByPage(client, url) {
+  return new Promise((resolve) => {
+    const ch = new MessageChannel();
+    const done = (v) => {
+      clearTimeout(t);
+      // Close both ends: an unclosed channel is a leak, and one per tapped
+      // notification adds up in a worker that is kept alive between pushes.
+      try { ch.port1.close(); ch.port2.close(); } catch { /* already gone */ }
+      resolve(v);
+    };
+    const t = setTimeout(() => done(false), 400);
+    ch.port1.onmessage = (ev) => done(!!(ev.data && ev.data.handled));
+    try { client.postMessage({ type: "intent", url }, [ch.port2]); }
+    catch { done(false); }
+  });
+}
 
 // A reply that fails must not vanish — that is golden rule 1, and the phone is
 // exactly where signal is worst. On failure, re-notify so the text is still on

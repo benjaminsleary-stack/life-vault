@@ -1,0 +1,18 @@
+<!--
+  Maskable variant. Android crops a maskable icon to whatever shape the launcher
+  uses — circle, squircle, teardrop — keeping only the inner 80%. The standard
+  icon was being declared maskable as well, which meant its corners were being
+  cut off and the mark sat too close to the crop line.
+
+  Here the ground is full-bleed (the corners are the launcher's business, not
+  ours) and the mark is scaled to sit comfortably inside the safe zone: the
+  circle's r=140 against a safe radius of 205.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#1c1813"/>
+  <circle cx="256" cy="256" r="140" fill="#d98a63"/>
+  <g fill="#1c1813">
+    <circle cx="256" cy="231" r="45"/>
+    <path d="M238 256 h36 l16 76 a9 9 0 0 1 -9 11 h-52 a9 9 0 0 1 -9 -11 z"/>
+  </g>
+</svg>

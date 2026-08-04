@@ -63,8 +63,28 @@ body="$(printf '%s' "$body" | head -c 2400)"
 # Build the JSON with node rather than by hand — a brief is full of quotes,
 # newlines, em dashes and markdown links, and hand-rolled escaping is how you
 # end up sending a body that is silently dropped as malformed.
-payload="$(TITLE="$title" BODY="$body" node -e '
-  process.stdout.write(JSON.stringify({ title: process.env.TITLE, body: process.env.BODY }));
+# Where tapping the notification should land. A brief that pushes you to the
+# dashboard home and leaves you to find it is a notification that hasn't
+# finished its job, and ?view=brief is a launch intent the app already handles
+# (it is the "Today's brief" home-screen shortcut in the manifest).
+#
+# `kind` rides along for the reply path: an inline reply to a notification is
+# filed with "(replied to <kind>)" so the brief it answered stays recoverable.
+# It was already read by the service worker and has never been sent until now.
+deep_url=""
+kind=""
+case "$src" in
+  digests/*.md)
+    deep_url="./?view=brief"
+    kind="$(basename "$src" .md)"
+    ;;
+esac
+
+payload="$(TITLE="$title" BODY="$body" URL="$deep_url" KIND="$kind" node -e '
+  const o = { title: process.env.TITLE, body: process.env.BODY };
+  if (process.env.URL)  o.url  = process.env.URL;
+  if (process.env.KIND) o.kind = process.env.KIND;
+  process.stdout.write(JSON.stringify(o));
 ' 2>/dev/null)"
 [ -n "$payload" ] || fail "could not encode the message (is node on PATH?)"
 

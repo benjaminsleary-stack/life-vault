@@ -1,0 +1,18 @@
+<!--
+  Notification badge — the small mark Android puts in the status bar.
+
+  This is why the notification looked like "a boring square": the badge was
+  pointed at icon-192.png. Android ignores a badge's colour entirely and uses
+  only its alpha channel, drawn as a flat white stencil. A full-bleed opaque PNG
+  therefore has no transparency to work with and comes out as a solid block.
+
+  A badge has to be a silhouette on a transparent ground. This is the same
+  keyhole as icon.svg — the identical coordinates, moved and scaled by the
+  transform below rather than redrawn, so the two can never drift apart.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <g fill="#ffffff" transform="translate(48 8) scale(0.4233) translate(-256 -171)">
+    <circle cx="256" cy="226" r="55"/>
+    <path d="M234 256 h44 l20 92 a10 10 0 0 1 -10 12 h-64 a10 10 0 0 1 -10 -12 z"/>
+  </g>
+</svg>
