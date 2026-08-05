@@ -22,3 +22,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Buy better light bulbs for living room #house
 - [ ] Skirting board living room #house
 - [ ] Skirting board corridor. #house
+- [ ] Prep for September business meeting. #work 📅 2026-08-17
