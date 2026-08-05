@@ -9,6 +9,7 @@ Edit the sections/items below to make them yours — these are starters.
 
 ## Daily
 - [x] Gym or a walk
+- [ ] Water
 
 ## Evening wind-down
 - [ ] Journal the day
