@@ -9,6 +9,6 @@ updated: 2026-07-18
 - [ ] create task list with charlotte
 - [x] do the tasks
 - [ ] tidy living room
-- [ ] tidy kitchen
-- [x] do dishes
+- [x] tidy kitchen
+- [ ] do dishes
 - [x] go for a wee
