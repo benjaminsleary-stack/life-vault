@@ -52,10 +52,17 @@
 
   /* System strip: is the agent loop actually alive, and when did we last hear
      from it. Golden rule 5 — green ≠ done, so this states its evidence. */
-  .sysbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0 18px; }
+  /* One line, never two. The health chip prints every unhappy routine by name
+     ("evening-brief, interest-scout not delivered · harvest, family-events
+     overdue"), which wrapped the whole bar onto three lines and pushed the first
+     real content most of the way down the screen. The detail is one tap away in
+     the health sheet; the bar's job is to say whether to tap. */
+  .sysbar{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; margin:6px 0 12px; min-width:0; }
   .sys-chip{ display:inline-flex; align-items:center; gap:7px; background:var(--surface); cursor:pointer;
     border:1px solid var(--line-key); border-radius:999px; padding:5px 12px; font:inherit; font-size:12.5px;
-    font-weight:600; color:var(--muted); }
+    font-weight:600; color:var(--muted); min-width:0; }
+  .sys-chip > span:not(.dot){ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sys-updated{ white-space:nowrap; }
   .sys-chip:hover{ border-color:var(--accent); color:var(--text); }
   .sys-chip .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); flex:none; }
   .sys-chip.warn{ color:#e0b969; border-color:color-mix(in srgb,var(--yellow) 45%,var(--line-key)); }
@@ -110,6 +117,14 @@
   .priority.over{ border-left-color:var(--red); }
   .priority.over .rank{ background:var(--red); color:#1c1813; }
 
+  /* Routines tile: the at-a-glance summary that replaced the nine-row list. */
+  .sk-sum{ display:flex; flex-wrap:wrap; gap:6px 10px; }
+  .sk-b{ display:inline-flex; align-items:center; gap:5px; font-size:13px; color:var(--text2);
+    border:1px solid var(--line-key); border-radius:999px; padding:4px 11px; white-space:nowrap; }
+  .sk-b.bad{ border-color:rgba(196,92,74,.45); }
+  .sk-b.muted{ color:var(--faint); }
+  .sk-last{ font-size:12px; color:var(--faint); margin-top:8px; }
+
   .skill{ display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line-row); }
   .skill:last-child{ border-bottom:0; }
   /* The name column must keep a floor. `min-width:0` let it collapse to a
@@ -136,6 +151,19 @@
   .open-btn:hover{ border-color:var(--accent); color:var(--text); }
   .open-btn.disabled{ opacity:.4; cursor:default; border-color:var(--line); }
   .open-btn.disabled:hover{ color:var(--muted); }
+  /* Three columns — name+description, status, two buttons — never fitted the
+     358px of a phone card: the Run button rendered past the right edge at every
+     phone width. Below 560 the name and description take the full line, and the
+     status sits alongside the buttons underneath.
+     This block must stay AFTER `.skill .s-body{flex:1 1 46%}` above: a media
+     query adds no specificity, so at equal weight it is source order that
+     decides, and placing it earlier silently loses. */
+  @media (max-width:560px){
+    .skill{ flex-wrap:wrap; gap:6px 10px; padding:12px 0; align-items:center; }
+    .skill .s-body{ flex:1 1 100%; min-width:0; }
+    .skill .s-status{ flex:1 1 auto; justify-content:flex-start; text-align:left; }
+    .s-actions{ margin-left:auto; }
+  }
   .running{ display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--yellow); animation:breathe 1.2s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce){ .running,.breathe-dot{ animation:none; } body{ background-image:none; } }
 
@@ -189,6 +217,11 @@
   .occ{ display:flex; align-items:baseline; gap:10px; padding:7px 0; border-bottom:1px solid var(--line-row); font-size:14px; }
   .occ:last-child{ border-bottom:0; }
   .occ .d{ color:var(--accent-text); font-variant-numeric:tabular-nums; font-size:12.5px; min-width:52px; }
+  @media (max-width:560px){ .occ .d{ min-width:44px; } .occ{ gap:8px; } }
+  /* A capture can be a paragraph — one task title ran to six lines and owned a
+     third of the Today card. Three lines, then tap the row for the whole thing. */
+  .occ .a-text{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+    overflow:hidden; min-width:0; }
   .occ .in{ color:var(--faint); font-size:12px; margin-left:auto; }
   .ent.tappable{ cursor:pointer; align-items:center; border-radius:8px; margin:0 -6px; padding-left:6px; padding-right:6px; }
   .ent.tappable:hover, .ent.tappable:focus-visible{ background:var(--bg1); outline:none; }
@@ -213,10 +246,9 @@
     border-radius:8px; cursor:pointer; border-bottom:1px solid var(--line-row); }
   .loop:last-of-type{ border-bottom:0; }
   .loop:hover, .loop:focus-visible{ background:var(--bg1); outline:none; }
-  .loop-when{ flex:0 0 auto; min-width:56px; font-size:12px; font-variant-numeric:tabular-nums;
-    color:var(--accent-text); }
+  .loop-when{ font-variant-numeric:tabular-nums; color:var(--accent-text); font-weight:600; }
   .loop.now .loop-when{ color:var(--yellow); font-weight:700; }
-  .loop-body{ font-size:13.5px; line-height:1.4; min-width:0; }
+  .loop-body{ font-size:13.5px; line-height:1.4; min-width:0; flex:1; }
   /* Two lines, hard. A fragment can be a paragraph — the retrofit ones are —
      and four paragraphs is a wall you scroll past, which is the failure this
      card exists to avoid. The whole fragment is one tap away. */
@@ -266,7 +298,12 @@
   .proj-count{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .proj-bar{ height:4px; border-radius:2px; background:var(--line-row); margin-top:8px; overflow:hidden; }
   .proj-bar span{ display:block; height:100%; background:var(--green); }
-  .proj-sum{ font-size:12.5px; color:var(--muted); margin-top:6px; }
+  /* Two lines, then a tap. The full summary was being dumped inline: three
+     projects came to 952px — a fifth of the entire mobile page — for prose you
+     scroll past, when tapping the row already opens the lot in a sheet. */
+  .proj-sum{ font-size:12.5px; color:var(--muted); margin-top:6px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  @media (min-width:720px){ .proj-sum{ -webkit-line-clamp:3; } }
   .tcat.proj-cat{ --hue:var(--accent); }
 
   /* List sheet — sized for one-handed use in a shop, not for a desk. */
@@ -435,14 +472,28 @@
 
   /* Section-jump pills (mobile only — desktop sees everything at once). */
   html{ scroll-behavior:smooth; }
-  .jump{ position:sticky; top:0; z-index:40; display:flex; gap:8px; padding:8px 0 10px;
-    margin:0 -16px 8px; padding-left:16px; padding-right:16px;
-    background:color-mix(in srgb, var(--bg2) 82%, transparent);
-    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+  /* Fixed to the BOTTOM, not sticky at the top. "Navigating means I have to
+     scroll down a lot" — with the bar at the top you had to scroll back up to
+     reach it, so it only helped if you were already near the top. At the bottom
+     it is under your thumb from anywhere on a 3.5-screen page, and it stops
+     competing with the header for the first 50px of the viewport. */
+  .jump{ position:fixed; left:0; right:0; bottom:0; top:auto; z-index:60;
+    display:flex; gap:6px; justify-content:space-between;
+    padding:9px 12px calc(9px + env(safe-area-inset-bottom, 0px));
+    margin:0; border-top:1px solid var(--line);
+    background:color-mix(in srgb, var(--bg2) 92%, transparent);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
   .jump a{ text-decoration:none; color:var(--muted); font-size:12.5px; font-weight:600;
-    border:1px solid var(--line-key); border-radius:999px; padding:6px 13px; }
+    border:1px solid var(--line-key); border-radius:999px; padding:6px 12px; white-space:nowrap; }
   .jump a:active, .jump a:hover{ color:var(--text); border-color:var(--accent); }
+  /* Clear the bar so the last tile is reachable. */
+  @media (max-width:899px){ .wrap{ padding-bottom:64px; } }
   @media (min-width:900px){ .jump{ display:none; } }
+  /* An anchor target must not land under the header. */
+  .tile{ scroll-margin-top:12px; }
+  /* The header pill and the sysbar chip both said "status" and both opened the
+     same sheet. On a phone one of them is noise. */
+  @media (max-width:560px){ .status-pill{ display:none; } }
 
 
   /* Output links under a skill. The artefact rides the Open button; these are
@@ -539,6 +590,17 @@
   .tile-sep{ height:1px; background:var(--line-row); margin:14px 0; }
   /* Today runs tall; the map spans the full width and is the visual anchor. */
   @media (min-width:720px){ .t-today{ grid-row:span 2; } .t-map{ grid-column:1 / -1; } }
+  /* Mobile order, by how often a thing is actually used rather than by how the
+     desktop grid happens to pack. Capture was seventh — about 1,400px down —
+     despite being the input the whole vault is starved of; the map and the
+     routines summary go last because they are things you look at, occasionally.
+     `order` on the grid children, so the markup stays in desktop order. */
+  @media (max-width:719px){
+    .t-today{ order:1; } .t-brief{ order:2; } .t-capture{ order:3; }
+    .t-rhythm{ order:4; } .t-people{ order:5; } .t-lists{ order:6; }
+    .t-weather{ order:7; } .t-projects{ order:8; } .t-ask{ order:9; }
+    .t-map{ order:10; } .t-skills{ order:11; }
+  }
   .expand{ font-family:var(--ui); font-size:10.5px; letter-spacing:.04em; color:var(--faint); cursor:pointer; text-transform:uppercase; }
   .expand:hover{ color:var(--accent-text); }
   .brief-clip{ max-height:190px; overflow:hidden; -webkit-mask-image:linear-gradient(#000 72%, transparent); mask-image:linear-gradient(#000 72%, transparent); }
@@ -550,6 +612,10 @@
   .live{ color:var(--honey); font-size:9.5px; margin-left:8px; }
   .live b{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--honey); box-shadow:0 0 6px var(--honey); margin-right:4px; vertical-align:middle; }
   .map-canvas{ position:relative; width:100%; height:260px; overflow:hidden; touch-action:none; }
+  .map-canvas.map-collapsed{ height:auto; touch-action:auto; }
+  .map-mini{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+    font-size:13px; color:var(--text2); }
+  .map-mini span{ color:var(--faint); font-size:12px; }
   .map-canvas canvas{ display:block; width:100%; height:100%; }
 
   /* Graph inspector sheet */
@@ -612,12 +678,16 @@
       <button class="outbox hidden" id="outbox" onclick="flushOutbox()"></button>
     </div>
 
+    <!-- Capture replaces Map here: capture is the thing done several times a
+         day, the map is a thing looked at. Routines opens its sheet directly —
+         scrolling to a two-line summary and then tapping it is two moves for
+         one intention. -->
     <nav class="jump">
       <a href="#sec-today">Today</a>
       <a href="#sec-brief">Brief</a>
-      <a href="#sec-map">Map</a>
-      <a href="#sec-skills">Routines</a>
+      <a href="#sec-capture">Capture</a>
       <a href="#sec-people">Remember</a>
+      <a href="#sec-skills" onclick="event.preventDefault(); openRoutines();">Routines</a>
     </nav>
 
     <div class="bento">
@@ -677,7 +747,7 @@
     </div>
 
     <!-- CAPTURE -->
-    <div class="tile t-capture">
+    <div class="tile t-capture" id="sec-capture">
       <div class="section-head"><p class="label">Capture</p><span class="count" id="inboxChip">→ inbox/</span></div>
       <textarea id="cap" placeholder="Dump a thought, note, or 'done: …'. Saved raw for the filing skill to sort."></textarea>
       <div class="row">
@@ -687,10 +757,13 @@
       <div id="inboxList"></div>
     </div>
 
-    <!-- ROUTINES & activity -->
-    <div class="tile t-skills" id="sec-skills">
-      <div class="section-head"><p class="label">Routines &amp; activity</p><span class="count" id="skillsCount"></span></div>
-      <div id="skills" class="skel"></div>
+    <!-- ROUTINES — a status line here, the controls in a sheet. Nine rows of
+         name + wrapped description + timestamp + two buttons came to 927px on a
+         phone, a fifth of the page, for a panel you look at when something has
+         gone wrong. What you need at a glance is whether anything HAS. -->
+    <div class="tile t-skills click" id="sec-skills" onclick="openRoutines()" tabindex="0" role="button">
+      <div class="section-head"><p class="label">Routines</p><span class="count" id="skillsCount"></span><span class="expand">expand ⤢</span></div>
+      <div id="skillsSummary" class="skel"></div>
     </div>
 
     <!-- REMEMBER — the two people the vault most wants something written about,
@@ -737,6 +810,18 @@
         <div class="gsheet-canvas" id="gsCanvas"></div>
         <div class="gsheet-inspect" id="gsInspect"><div class="muted">Tap a node to inspect it.</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Routines sheet. #skills stays a real element and simply lives in here, so
+       renderSkills and both delegated click listeners keep working untouched. -->
+  <div class="modal-back" id="routinesBack" onclick="if(event.target===this)closeRoutines()">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="m-name">Routines &amp; activity</span>
+        <button class="modal-close" onclick="closeRoutines()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" id="skills"></div>
     </div>
   </div>
 
@@ -1068,6 +1153,46 @@
     const d=new Date(iso); if(isNaN(d)) return esc(iso);
     return d.toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
   }
+  function openRoutines(){ $("routinesBack").classList.add("show"); }
+  function closeRoutines(){ $("routinesBack").classList.remove("show"); }
+  $("sec-skills").addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRoutines(); }
+  });
+
+  // What the tile shows now: whether anything is wrong, and when something last
+  // happened. Everything else is one tap away. "Not delivered" leads, because a
+  // brief that was written and reached nobody is the failure this vault has
+  // actually had, repeatedly, and it is invisible from the run status alone.
+  function renderSkillsSummary(status){
+    status=status||{};
+    const el=$("skillsSummary");
+    el.classList.remove("skel");
+    const runnable=SKILLS.filter((s)=>!s.noRun);
+    let ok=0, failed=0, undelivered=0, never=0, queued=0, last=null;
+    for(const s of runnable){
+      const st=status[s.name];
+      if(!st){ never++; continue; }
+      if(st.queued){ queued++; continue; }
+      if(st.ok===false) failed++;
+      else if(st.delivered===false) undelivered++;
+      else ok++;
+      if(st.when && (!last || st.when > last.when)) last={ when:st.when, label:s.label||s.name };
+    }
+    const bits=[];
+    if(queued)      bits.push('<span class="sk-b"><span class="running"></span>'+queued+" running</span>");
+    if(failed)      bits.push('<span class="sk-b bad"><span class="cross">✗</span> '+failed+" failed</span>");
+    if(undelivered) bits.push('<span class="sk-b bad"><span class="cross">✗</span> '+undelivered+" not delivered</span>");
+    if(ok)          bits.push('<span class="sk-b"><span class="tick">✓</span> '+ok+" ok</span>");
+    if(never)       bits.push('<span class="sk-b muted">'+never+" never run</span>");
+
+    $("skillsCount").textContent = (failed+undelivered)
+      ? (failed+undelivered)+" need attention"
+      : (queued ? queued+" running" : "all clear");
+
+    el.innerHTML='<div class="sk-sum">'+(bits.join("")||'<span class="sk-b muted">nothing has run yet</span>')+"</div>"+
+      (last?'<div class="sk-last">Last: '+esc(last.label)+" — "+fmtWhen(last.when)+"</div>":"");
+  }
+
   function renderSkills(status){
     status=status||{};
     $("skills").innerHTML = SKILLS.map((s)=>{
@@ -1452,10 +1577,13 @@
       const when = l.daysAway<0 ? Math.abs(l.daysAway)+"d ago"
         : l.daysAway===0 ? "today" : l.daysAway===1 ? "tomorrow" : "in "+l.daysAway+"d";
       const cls = l.daysAway<=1 ? "loop now" : "loop";
+      // "in 5d" moved out of a 56px left column and onto the meta line. Between
+      // that column and its gap, 66px of a 358px card was indenting text that
+      // then wrapped a word early on every single line.
       return '<div class="'+cls+'" data-person="'+esc(l.slug)+'" tabindex="0" role="button">'+
-        '<span class="loop-when">'+esc(when)+"</span>"+
         '<span class="loop-body"><span class="loop-text"><b>'+esc(l.who)+"</b> — "+mdInline(l.text)+"</span>"+
-        '<span class="loop-meta">noted '+fmtDate(l.logged).replace(/^\w+\s/,"")+
+        '<span class="loop-meta"><span class="loop-when">'+esc(when)+"</span> · noted "+
+        fmtDate(l.logged).replace(/^\w+\s/,"")+
         (l.exact?"":' · "'+esc(l.phrase)+'" — month assumed')+"</span></span></div>";
     }).join("");
   }
@@ -1659,9 +1787,14 @@
     const attr = it.kind==="task" ? 'data-task="'+esc(it.id)+'"' : 'data-person="'+esc(it.who||"")+'"';
     const mark = it.kind==="task" ? '<span style="color:var(--faint)" title="Task due">✓</span>'
       : '<span style="color:var(--a-family)" title="Occasion">◆</span>';
+    // No empty date gutter. `.d` reserves 52px plus a 10px gap, and an occasion
+    // row filled it with nothing — 17% of the width of a phone card given over
+    // to indenting text that had nowhere else to go. The word "due" went too:
+    // the row already sits under its own day heading.
+    // mdInline, not esc: a task captured with emphasis was rendering its own
+    // asterisks, so "**in France**" appeared literally on the agenda.
     return '<div class="occ tappable" '+attr+' tabindex="0" role="button">'+
-      '<span class="d">'+(it.kind==="task"?"due":"")+'</span>'+mark+
-      '<span>'+esc(it.text)+'</span></div>';
+      mark+'<span class="a-text">'+mdInline(it.text)+'</span></div>';
   }
   // A work calendar is read-only here — the vault is the source of truth, not
   // Outlook — so an event offers the two things worth doing with it instead.
@@ -2000,9 +2133,9 @@
   function render(d){
     lastData=d;
     $("gen").textContent = "updated "+new Date(d.generated).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
-    $("skillsCount").textContent = Object.values(d.skills||{}).filter((s)=>s.queued).length
-      ? "a run is queued" : "on-demand";
-    renderSkills(d.skills); renderTasks(d.tasks);
+    // skillsCount is set by renderSkillsSummary — it knows about failures and
+    // undelivered runs, which "on-demand" never said anything about.
+    renderSkills(d.skills); renderSkillsSummary(d.skills); renderTasks(d.tasks);
     renderBrief(d.brief); renderLoops(d.loops||[]); renderPeople(d.people||[]); renderAgenda(d); renderInbox(d.inbox);
     renderHabits(d.habits); renderAsk(d);
     renderProjects(d.projects); fillProjectPicker(d.projects); renderLists(d.lists);
@@ -2555,12 +2688,34 @@
       neighbors:(id)=>[...(nbr.get(id)||[])].map((x)=>byId.get(x)).filter(Boolean), destroy:()=>{ stop(); host.textContent=""; } };
   }
 
+  // The mini map is a 260px force-directed graph whose labels are unreadable
+  // below about 700px, so on a phone it was a quarter of a screen of decoration
+  // between you and the next thing. Narrow screens get the same tile as a
+  // one-line count that opens the full inspector, which is where the map is
+  // legible anyway. The graph data still loads either way — the sheet needs it.
+  const wantsMiniMap=()=>window.matchMedia("(min-width:720px)").matches;
+
   async function loadGraph(){
     const host=$("mapCanvas"); if(!host) return;
     try{ const r=await req("/api/graph"); if(!r.ok) throw new Error(); GRAPH=await r.json();
-      if(mapView) mapView.destroy(); mapView=makeGraph(host, GRAPH, { mini:true, onSelect:(id)=>openGraphSheet(id) });
+      drawMiniMap();
     }catch(e){ host.innerHTML='<div class="muted" style="padding:14px">Map unavailable.</div>'; }
   }
+
+  function drawMiniMap(){
+    const host=$("mapCanvas"); if(!host||!GRAPH) return;
+    if(mapView){ mapView.destroy(); mapView=null; }
+    if(wantsMiniMap()){
+      host.classList.remove("map-collapsed");
+      mapView=makeGraph(host, GRAPH, { mini:true, onSelect:(id)=>openGraphSheet(id) });
+    }else{
+      host.classList.add("map-collapsed");
+      const n=(GRAPH.nodes||[]).length, e=(GRAPH.edges||[]).length;
+      host.innerHTML='<div class="map-mini">'+n+" notes · "+e+" links<span>tap to explore ›</span></div>";
+    }
+  }
+  // Rotating the phone, or resizing on a desktop, crosses the threshold.
+  window.matchMedia("(min-width:720px)").addEventListener("change", drawMiniMap);
   function openGraphSheet(focusId){
     $("graphSheet").classList.add("show");
     if(sheetView) sheetView.destroy();
