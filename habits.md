@@ -9,7 +9,6 @@ Edit the sections/items below to make them yours — these are starters.
 
 ## Morning routine
 - [x] Gym or a walk
-- [x] Supplements
 
 ## Evening wind-down
 - [ ] Journal the day
