@@ -32,6 +32,7 @@ sitting — a list that empties is a list that was working._
       _(asked: 2026-08-04)_
 - [ ] You said you can't get to co-director until there are engineers who can
       deliver. Name them. Who at JGC is closest, and what's missing for each? #work
+      _(asked: 2026-08-05)_
 - [ ] The searchable-database side project is the biggest thing you actually push
       at work. What would "done" look like, and who else has asked for it? #work
 - [ ] The vault knows nothing about what [[Charlotte]] does for work. What is her
