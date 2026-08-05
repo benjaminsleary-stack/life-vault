@@ -375,11 +375,12 @@
   .habit{ background:var(--bg1); border:1px solid var(--line-row); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
   .habit:last-child{ margin-bottom:0; }
   .habit.complete{ border-color:color-mix(in srgb, var(--green) 55%, var(--line-row)); }
-  .habit-head{ display:flex; align-items:baseline; gap:8px; }
+  .habit-head{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
   .habit-name{ flex:1; font-weight:600; font-size:14.5px; }
   .habit-count{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .habit-streak{ font-size:12px; color:var(--honey); font-variant-numeric:tabular-nums; }
-  .hdots{ display:flex; gap:3px; margin-top:7px; }
+  /* Full width, so on desktop it wraps onto its own row under the name. */
+  .hdots{ display:flex; gap:3px; margin-top:7px; flex:1 0 100%; }
   .hdot{ width:100%; height:4px; border-radius:2px; background:var(--line-row); }
   .hdot.on{ background:var(--green); }
   .hdot.today{ box-shadow:0 0 0 1px var(--line-key); }
@@ -389,6 +390,27 @@
     background:var(--surface); display:grid; place-items:center; font-size:11px; color:transparent; transition:.12s; }
   .habit-item.on .hchk{ background:var(--green); border-color:var(--green); color:#14200f; }
   .habit-item.on{ color:var(--muted); }
+  /* On a phone the items become wrapping chips rather than a stacked column:
+     four one-word habits took four full-width rows and 317px of a 3.8-screen
+     page for what is a few taps a day. The tap target stays ~34px tall, which
+     is what matters — this is denser, not fiddlier. History dots move up beside
+     the name, where they read as the same glance. */
+  @media (max-width:719px){
+    /* No card chrome per habit — a background, a border, a radius and 20px of
+       padding around two chips is a box drawn around a box. A hairline does the
+       same separating job for nothing. */
+    .habit{ background:none; border:0; border-radius:0; padding:7px 0; margin-bottom:0;
+      border-bottom:1px solid var(--line-row); }
+    .habit:last-child{ border-bottom:0; }
+    .habit.complete{ border-color:var(--line-row); }
+    .habit-head{ align-items:center; gap:10px; }
+    .habit-head .hdots{ margin-top:0; flex:0 0 78px; }
+    .habit-items{ margin-top:8px; flex-direction:row; flex-wrap:wrap; gap:6px; }
+    .habit-item{ gap:6px; font-size:13px; border:1px solid var(--line-key); border-radius:999px;
+      padding:6px 12px 6px 8px; background:var(--surface); }
+    .habit-item .hchk{ width:16px; height:16px; border-radius:4px; font-size:10px; }
+    .habit-item.on{ border-color:color-mix(in srgb, var(--green) 55%, var(--line-key)); }
+  }
 
 
   /* Weather */
@@ -604,6 +626,31 @@
   .expand{ font-family:var(--ui); font-size:10.5px; letter-spacing:.04em; color:var(--faint); cursor:pointer; text-transform:uppercase; }
   .expand:hover{ color:var(--accent-text); }
   .brief-clip{ max-height:190px; overflow:hidden; -webkit-mask-image:linear-gradient(#000 72%, transparent); mask-image:linear-gradient(#000 72%, transparent); }
+  /* Pull-to-refresh. `overscroll-behavior-y:contain` turns OFF Chrome's own
+     pull-to-refresh, which reloads the entire PWA — several seconds of blank
+     screen and a fresh service-worker fetch — where load(true) re-reads the
+     vault in a few hundred milliseconds and keeps your scroll position. */
+  html, body{ overscroll-behavior-y:contain; }
+  .ptr{ position:fixed; top:0; left:50%; z-index:70; opacity:0; pointer-events:none;
+    transform:translate(-50%,-44px); width:34px; height:34px; border-radius:50%;
+    background:var(--surface); border:1px solid var(--line-key);
+    display:grid; place-items:center; box-shadow:0 6px 18px -8px rgba(0,0,0,.7); }
+  .ptr-ring{ width:15px; height:15px; border-radius:50%;
+    border:2px solid var(--line-key); border-top-color:var(--accent); }
+  .ptr.ready{ border-color:var(--accent); }
+  .ptr.spin .ptr-ring{ animation:ptr-spin .7s linear infinite; }
+  @keyframes ptr-spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .ptr.spin .ptr-ring{ animation:none; } }
+
+  .brief-line{ display:none; }
+  @media (max-width:719px){
+    .brief-line{ display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+      cursor:pointer; font-size:15px; color:var(--text2); }
+    .brief-line .bl-title{ font-family:var(--display); color:var(--accent-text); min-width:0;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .brief-line > span:last-child{ font-size:12px; color:var(--faint); flex:none; }
+    .brief-clip{ display:none; }
+  }
 
   /* Vault map tile — Operator wireframe on near-black */
   .t-map{ background:#0f0d0a; border-color:#241d12; }
@@ -724,6 +771,10 @@
     <!-- BRIEF (expand → glow popup) -->
     <div class="tile t-brief" id="sec-brief">
       <div class="section-head"><p class="label">Latest brief</p><span class="count" id="briefName">—</span><span class="expand" onclick="openBrief()">expand ⤢</span></div>
+      <!-- Phones get the headline and a tap; the clipped preview below is
+           desktop-only. It was 190px of text fading out mid-sentence — enough
+           to see there was a brief, never enough to read one. -->
+      <div class="brief-line" id="briefLine" onclick="openBrief()" tabindex="0" role="button"></div>
       <div class="md brief-clip" id="brief"><div class="muted">—</div></div>
     </div>
 
@@ -735,9 +786,8 @@
 
     <!-- RHYTHM (habits) -->
     <div class="tile t-rhythm">
-      <div class="section-head"><p class="label">Rhythm</p><span class="count" id="habitPct"></span></div>
+      <div class="section-head"><p class="label">Rhythm</p><span class="count" id="habitPct"></span><span class="expand" onclick="editHabits()">edit</span></div>
       <div id="habits" class="skel"></div>
-      <button class="link" onclick="editHabits()" style="margin-top:8px">Edit habits</button>
     </div>
 
     <!-- WEATHER -->
@@ -1526,9 +1576,23 @@
   }
   function renderBrief(b){
     $("briefName").textContent = b ? b.name.replace(/\.md$/,"") : "—";
-    if(!b){ $("brief").innerHTML='<div class="muted">No brief yet — run Morning.</div>'; return; }
+    if(!b){
+      $("brief").innerHTML='<div class="muted">No brief yet — run Morning.</div>';
+      $("briefLine").innerHTML='<span class="muted">No brief yet — run Morning.</span>';
+      return;
+    }
     $("brief").innerHTML = mdToHtml(b.text);
     decorateBrief($("brief"), b.name.replace(/\.md$/,""));
+    $("briefLine").innerHTML='<span class="bl-title">'+esc(briefHeadline(b))+"</span><span>read ›</span>";
+  }
+  // The brief's own first heading, e.g. "Evening — Tue 4 Aug". Falls back to the
+  // first line of prose, then to the filename, so this never renders empty.
+  function briefHeadline(b){
+    const lines=String(b.text||"").split("\n");
+    const head=lines.find((l)=>/^#{1,3}\s+\S/.test(l));
+    if(head) return mdPlain(head.replace(/^#{1,3}\s+/,"")).trim().slice(0,80);
+    const first=lines.find((l)=>l.trim() && !/^[-*_]{3,}$/.test(l.trim()) && !/^---/.test(l));
+    return first ? mdPlain(first).trim().slice(0,80) : b.name.replace(/\.md$/,"");
   }
   // This card used to be a directory: 17 names, 12 of them a single line long,
   // most reading "nothing captured yet". That is a poster — you read it once
@@ -1846,11 +1910,14 @@
       // last fortnight, so a slip is visible and recoverable.
       const dots=(h.history||[]).map((on,i)=>
         '<span class="hdot'+(on?" on":"")+(i===13?" today":"")+'"></span>').join("");
+      // The dots live inside the head so a phone can put them on the same line
+      // as the name; on desktop the head wraps and they take their own row, as
+      // before. CSS cannot reorder across parents, hence the markup change.
       return '<div class="habit'+(d===h.items.length?" complete":"")+'">'+
         '<div class="habit-head"><span class="habit-name">'+esc(h.name)+'</span>'+
         (h.streak>1?'<span class="habit-streak">🔥 '+h.streak+'</span>':'')+
-        '<span class="habit-count">'+d+"/"+h.items.length+'</span></div>'+
-        '<div class="hdots" title="'+(h.days30||0)+' of the last 30 days">'+dots+"</div>"+
+        '<span class="habit-count">'+d+"/"+h.items.length+'</span>'+
+        '<div class="hdots" title="'+(h.days30||0)+' of the last 30 days">'+dots+"</div></div>"+
         '<div class="habit-items">'+h.items.map((i)=>
           '<div class="habit-item'+(i.done?" on":"")+'" data-habit="'+esc(h.name)+'" data-item="'+esc(i.text)+'">'+
           '<span class="hchk">✓</span><span>'+esc(i.text)+'</span></div>').join("")+'</div></div>';
@@ -2605,6 +2672,123 @@
     const w=tip.offsetWidth||70;
     tip.style.left=Math.max(0,Math.min(r.width-w, px-w/2))+"px";
   }
+
+  // --- touch gestures -------------------------------------------------------
+  // Two things a phone expects and this app did not do: pull down to refresh,
+  // and drag a sheet away instead of aiming for the ✕. The refresh control was
+  // a 24px ↻ in the status bar, well under the 44px anyone actually hits, and
+  // the sheets already draw a grab handle that did nothing.
+  const coarse = window.matchMedia("(pointer:coarse)").matches;
+
+  (function pullToRefresh(){
+    if(!coarse) return;
+    const ind=document.createElement("div");
+    ind.className="ptr"; ind.innerHTML='<span class="ptr-ring"></span>';
+    document.body.appendChild(ind);
+
+    const TRIGGER=72, MAX=110;
+    let y0=0, dy=0, armed=false, busy=false;
+
+    const paint=(d)=>{
+      const t=Math.min(d,MAX);
+      ind.style.transform="translate(-50%,"+(t-44)+"px)";
+      ind.style.opacity=String(Math.min(1,d/TRIGGER));
+      ind.classList.toggle("ready", d>=TRIGGER);
+    };
+    const reset=()=>{ ind.style.transition="transform .2s ease, opacity .2s ease";
+      ind.style.transform=""; ind.style.opacity="0"; ind.classList.remove("ready");
+      setTimeout(()=>{ ind.style.transition=""; }, 220); };
+
+    addEventListener("touchstart",(e)=>{
+      if(busy || e.touches.length!==1) return;
+      if(window.scrollY>0) return;
+      // A pull that begins inside an open sheet belongs to the sheet.
+      if(document.querySelector(".modal-back.show, .gsheet-back.show")) return;
+      y0=e.touches[0].clientY; dy=0; armed=true; ind.style.transition="";
+    },{passive:true});
+
+    addEventListener("touchmove",(e)=>{
+      if(!armed) return;
+      dy=e.touches[0].clientY-y0;
+      // Scrolled away, or the finger went up: this was a scroll, not a pull.
+      if(dy<=0 || window.scrollY>0){ armed=false; reset(); return; }
+      paint(dy);
+    },{passive:true});
+
+    const release=()=>{
+      if(!armed) return;
+      armed=false;
+      if(dy>=TRIGGER){
+        busy=true; ind.classList.add("spin");
+        Promise.resolve(load(true)).catch(()=>{}).then(()=>{
+          setTimeout(()=>{ busy=false; ind.classList.remove("spin"); reset(); }, 350);
+        });
+      } else reset();
+    };
+    addEventListener("touchend",release,{passive:true});
+    addEventListener("touchcancel",release,{passive:true});
+  })();
+
+  // Drag a bottom sheet down to dismiss it. Only when the sheet's own scroller
+  // is already at the top, or you could never scroll back up inside one.
+  function dismissOnDrag(backId, sheetSel, close){
+    const back=$(backId); if(!back) return;
+    const sheet=back.querySelector(sheetSel); if(!sheet) return;
+    let y0=0, dy=0, dragging=false, scroller=null;
+
+    // Whatever is actually scrolling under the finger, found by asking rather
+    // than by naming classes. On a phone it is `.modal` itself that scrolls
+    // (max-height:92dvh; overflow-y:auto), not `.modal-body` — so a check for
+    // the inner element alone always read scrollTop 0 and let a sheet be thrown
+    // away mid-scroll.
+    const scrollerAt=(node)=>{
+      for(let el=node; el && el!==back; el=el.parentElement){
+        if(el.scrollHeight>el.clientHeight+1){
+          const oy=getComputedStyle(el).overflowY;
+          if(oy==="auto"||oy==="scroll") return el;
+        }
+      }
+      return null;
+    };
+
+    sheet.addEventListener("touchstart",(e)=>{
+      if(!coarse || e.touches.length!==1 || !back.classList.contains("show")) return;
+      // The map pans and pinches under the finger — never steal from it.
+      if(e.target.closest(".gsheet-canvas")) return;
+      // Typing in a sheet must not be interrupted by it sliding away.
+      if(e.target.closest("input, textarea, select, button")) return;
+      scroller=scrollerAt(e.target);
+      if(scroller && scroller.scrollTop>0) return;
+      y0=e.touches[0].clientY; dy=0; dragging=true;
+      sheet.style.transition="none";
+    },{passive:true});
+
+    sheet.addEventListener("touchmove",(e)=>{
+      if(!dragging) return;
+      dy=e.touches[0].clientY-y0;
+      if(dy<0){ dy=0; return; }                       // upward: leave it alone
+      if(scroller && scroller.scrollTop>0){           // they started scrolling
+        dragging=false; sheet.style.transition=""; sheet.style.transform=""; return;
+      }
+      // Non-passive so the sheet's own scroll doesn't fight the drag.
+      if(e.cancelable) e.preventDefault();
+      sheet.style.transform="translateY("+dy+"px)";
+      sheet.style.opacity=String(Math.max(.55, 1-dy/600));
+    },{passive:false});
+
+    const end=()=>{
+      if(!dragging) return;
+      dragging=false;
+      const go=dy>110;
+      sheet.style.transition=""; sheet.style.transform=""; sheet.style.opacity="";
+      if(go) close();
+    };
+    sheet.addEventListener("touchend",end,{passive:true});
+    sheet.addEventListener("touchcancel",end,{passive:true});
+  }
+  dismissOnDrag("modalBack",    ".modal",  closeModal);
+  dismissOnDrag("routinesBack", ".modal",  closeRoutines);
+  dismissOnDrag("graphSheet",   ".gsheet", closeGraphSheet);
 
   // --- boot -----------------------------------------------------------------
   if(DEV || (API && TOKEN)){
