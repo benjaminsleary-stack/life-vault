@@ -13,4 +13,3 @@ Edit the sections/items below to make them yours — these are starters.
 
 ## Evening
 - [ ] Journal the day
-- [ ] Plan tomorrow
