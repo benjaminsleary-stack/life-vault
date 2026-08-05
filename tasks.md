@@ -27,3 +27,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Filler pieces in the laundry and corridor #house
 - [ ] Replace screws in the front room light fitting. #house
 - [ ] Paint front door #house
+- [ ] Fix drainage from bathroom #house
