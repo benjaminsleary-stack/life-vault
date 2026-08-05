@@ -7,7 +7,7 @@ the day marker above resets them each morning (lazily, on the first tick of a
 new day). Completions append to [[habits-log]]; streaks come from that log.
 Edit the sections/items below to make them yours — these are starters.
 
-## Morning routine
+## Daily
 - [x] Gym or a walk
 
 ## Evening wind-down
