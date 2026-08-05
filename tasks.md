@@ -19,3 +19,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Buy lamps #house
+- [ ] Buy better light bulbs for living room #house
