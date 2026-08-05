@@ -21,3 +21,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Buy lamps #house
 - [ ] Buy better light bulbs for living room #house
 - [ ] Skirting board living room #house
+- [ ] Skirting board corridor. #house
