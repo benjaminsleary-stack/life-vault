@@ -24,3 +24,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Skirting board corridor. #house
 - [ ] Prep for September business meeting. #work 📅 2026-08-17
 - [ ] Sand the walls in the corridor. #house
+- [ ] Filler pieces in the laundry and corridor #house
