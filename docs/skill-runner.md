@@ -105,6 +105,42 @@ For "always on while the desktop is", run one pass every minute:
 Or run the `--watch` form once at logon and leave it. Either way, when the
 desktop sleeps the cloud fallback takes over — nothing to switch.
 
+## What a run costs, and why
+
+Every run appends a line to `_meta/skill-usage.jsonl`. Read it before changing a
+skill prompt — it is the only honest record of what an edit costs.
+
+Between 20 July and 5 August 2026 the vault spent **$29.88 across 44 runs**, and
+**$22.13 of it was `morning-brief`** — 24 runs averaging $0.92, the worst at
+$2.16, at 24–59 turns each. The thinking was never the expensive part. The
+*discovery* was: the model opened `tasks.md`, `people/charlotte.md`,
+`_meta/hot-cache.md`, the inbox listing and the calendar one tool call at a time,
+and every one of those results was then re-sent as cached context on every
+turn that followed. Spend tracks turns × context, so a 59-turn run cost nine
+times a 6-turn one for the same 20-line brief.
+
+Three things hold the line now:
+
+1. **`scripts/brief-context.mjs`** — one command returning every mechanical fact
+   a brief needs (calendar + feed health, due/overdue with the anti-nag
+   arithmetic done, inbox state, the eligible Charlotte fragments, the next gap
+   question, the day-log counts). 1.8KB in one call, against ~26KB discovered
+   across a dozen. The skills are told not to re-read what it gives them, and
+   carry an explicit turn budget.
+2. **Search budgets.** The briefs may not fetch full articles — snippets carry
+   everything the digest keeps. Pulling whole pages into a context that is then
+   re-sent every turn is the most expensive thing these skills can do.
+3. **`LV_SKIP_IF_FRESH=1`** (set on the scheduled lane only). If today's brief is
+   already written, it is delivered rather than regenerated; if it was also
+   already delivered, the run exits doing nothing. On 4 August seven dispatches
+   produced one brief and $4.55 of spend. Runs started by hand from the dashboard
+   are deliberate and are never skipped.
+
+`cacheRead` and `cacheWrite` are logged separately because they are priced an
+order of magnitude apart — the old single `cache` total could not distinguish an
+expensive run from a long one, and was hiding that roughly half of a brief's cost
+was cache creation rather than reuse.
+
 ## Notes
 - `.status` files record `{skill, ok, when, outputs, delivered, deliveryError}`.
   `outputs` is measured from the commit the run started on, unioned with the

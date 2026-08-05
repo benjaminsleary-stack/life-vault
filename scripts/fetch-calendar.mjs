@@ -75,7 +75,12 @@ const from = back ? fmt(new Date(Date.now() - (days - 1) * 864e5)) : today;
 const to = back ? today : fmt(new Date(Date.now() + (days - 1) * 864e5));
 
 if (!feeds.length) {
-  console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL / CAL_FAMILY)", events: [], sources: [] }));
+  // `sources: unset`, not `sources: []`. This path threw away the very list it
+  // had just built, so the one case where EVERY feed is missing — the worst
+  // one — reported no unhealthy sources at all, and a caller reading `sources`
+  // saw a clean bill of health on an empty calendar. That is the failure this
+  // file's own comment above says it exists to prevent.
+  console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL / CAL_FAMILY)", events: [], sources: unset }));
   process.exit(1);
 }
 

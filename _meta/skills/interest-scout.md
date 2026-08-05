@@ -25,6 +25,16 @@ Ben's interests. Needs web access in the environment.
 No hallucinated releases or dates — everything must trace to a real search result
 with a link. When unsure, drop it.
 
+## Budget
+
+**At most 6 searches, and never fetch a full page.** A search snippet carries the
+title, the date, the venue and the link, which is all step 3 keeps anyway; pulling
+whole articles in is what made this skill cost $1.44 a run — as much as a morning
+brief, for a weekly digest of six items. Read the four taste notes once, at the
+start, and don't return to them. If you are past 20 turns, stop searching and
+write up what you have: "nothing new" in a category is an allowed and honest
+answer, and a thin week is cheaper to admit than to hunt down.
+
 ## Never write to tasks.md
 
 The digest is the output. This skill has previously filed its own findings into

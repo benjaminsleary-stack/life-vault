@@ -94,6 +94,14 @@ jobs:
           esac
 
       - name: Run the requested skill
+        env:
+          # This lane is the clock, and the clock can fire more than once for the
+          # same day (a re-dispatch, a retry, a debugging session). If today's
+          # brief is already written, deliver it rather than paying to write it
+          # again — on 4 Aug that cost $4.55 for one morning's brief. Deliberate
+          # runs started from the dashboard go through the on-demand lane, which
+          # does not set this and so is never skipped.
+          LV_SKIP_IF_FRESH: "1"
         run: |
           set -uo pipefail
           skill="${{ github.event.inputs.skill }}"

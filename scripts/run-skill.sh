@@ -76,11 +76,48 @@ trap 'rm -f "$receipt_file"' EXIT
 # which is why vault.js had to guess the file back out of digests/. Diffing
 # against the SHA we started on catches work the skill committed itself, and
 # unioning the dirty set catches work it left uncommitted.
+# DON'T PAY TWICE FOR THE SAME BRIEF.
+#
+# On 4 Aug 2026 morning-brief was dispatched seven times while delivery was being
+# debugged. Four of those runs regenerated a brief that already existed and was
+# already correct: $2.16, $0.97, $0.58 and $0.84 — $4.55 for one morning, on a
+# day that needed one brief. The runner already knows which artefact each brief
+# skill produces (the delivery fallback below finds it), so it can check first.
+#
+# Only when LV_SKIP_IF_FRESH=1, which the scheduled workflow sets. A run started
+# by hand from the dashboard is a deliberate "do it again" and is never skipped.
+skip_model=0
+if [ "${LV_SKIP_IF_FRESH:-0}" = "1" ]; then
+  _day="$(TZ=Europe/London date +%F)"
+  case "$skill" in
+    morning-brief) _fresh="digests/${_day}-morning.md" ;;
+    evening-brief) _fresh="digests/${_day}-evening.md" ;;
+    *)             _fresh="" ;;
+  esac
+  if [ -n "$_fresh" ] && [ -f "$_fresh" ] && [ "$(wc -c < "$_fresh" 2>/dev/null || echo 0)" -gt 200 ]; then
+    # Already written AND already on his phone: nothing left to do at any price.
+    if [ -f "inbox/_runs/$skill.status" ] \
+       && grep -q '"delivered":true' "inbox/_runs/$skill.status" \
+       && grep -q "\"when\":\"$(date -u +%F)" "inbox/_runs/$skill.status"; then
+      echo "[skip] $_fresh is already written and already delivered today — nothing to do"
+      exit 0
+    fi
+    # Written but not delivered: deliver it, don't rewrite it. Falls through to
+    # the delivery block below, which finds today's digest on its own.
+    echo "[skip] $_fresh already written today — delivering it rather than regenerating"
+    skip_model=1
+  fi
+fi
+
 start_sha="$(git rev-parse HEAD 2>/dev/null || true)"
 before="$(dirty_md)"
 # --output-format json so the run reports its own token usage (logged below).
 # --dangerously-skip-permissions: unattended vault-maintenance run, no approver.
-raw="$(claude -p "$prompt" --dangerously-skip-permissions --output-format json --model "$model" 2>&1)"; code=$?
+if [ "$skip_model" -eq 1 ]; then
+  raw=""; code=0
+else
+  raw="$(claude -p "$prompt" --dangerously-skip-permissions --output-format json --model "$model" 2>&1)"; code=$?
+fi
 
 # Unwrap the JSON envelope: the assistant text for logs/notifications, and the
 # usage numbers for the cost log. If the CLI failed before emitting JSON (or
@@ -91,18 +128,26 @@ out="$(printf '%s' "$raw" | node -e '
     process.stdout.write(j && j.result != null ? String(j.result) : s);
   });' 2>/dev/null)"
 [ -z "$out" ] && out="$raw"
+[ "$skip_model" -eq 1 ] && out="[skipped] today's $skill was already written; delivering the existing file instead of regenerating it"
+# Cache reads and cache WRITES are reported separately, not as one number. They
+# are priced an order of magnitude apart (a write costs more than fresh input, a
+# read a tenth of it), so a single summed field can't tell an expensive run from
+# a long one — and the summed field was hiding that roughly half of a brief's
+# spend was cache creation, not cache reuse. `cache` stays as the total so the
+# existing log stays comparable.
 usage_tsv="$(printf '%s' "$raw" | node -e '
   let s=""; process.stdin.on("data",(d)=>s+=d).on("end",()=>{
     let j=null; try { j=JSON.parse(s); } catch {}
     const u=(j&&j.usage)||{}, n=(v)=>(v==null?"":v);
+    const rd=u.cache_read_input_tokens||0, wr=u.cache_creation_input_tokens||0;
     process.stdout.write([
-      u.input_tokens||0, u.output_tokens||0,
-      (u.cache_read_input_tokens||0)+(u.cache_creation_input_tokens||0),
+      u.input_tokens||0, u.output_tokens||0, rd+wr, rd, wr,
       n(j&&j.total_cost_usd), n(j&&j.num_turns), n(j&&j.duration_ms),
     ].join("\t"));
   });' 2>/dev/null)"
-IFS=$'\t' read -r tok_in tok_out tok_cache cost turns ms <<< "$usage_tsv"
+IFS=$'\t' read -r tok_in tok_out tok_cache tok_cache_r tok_cache_w cost turns ms <<< "$usage_tsv"
 tok_in="${tok_in:-0}"; tok_out="${tok_out:-0}"; tok_cache="${tok_cache:-0}"
+tok_cache_r="${tok_cache_r:-0}"; tok_cache_w="${tok_cache_w:-0}"
 [ -z "${cost:-}" ]  && cost=null
 [ -z "${turns:-}" ] && turns=null
 [ -z "${ms:-}" ]    && ms=null
@@ -110,7 +155,7 @@ tok_in="${tok_in:-0}"; tok_out="${tok_out:-0}"; tok_cache="${tok_cache:-0}"
 echo "$out" | tail -n 40
 when="$(date -u +%FT%TZ)"
 [ "$code" -eq 0 ] && ok=true || ok=false
-echo "[usage] $skill model=$model in=$tok_in out=$tok_out cache=$tok_cache cost=$cost turns=$turns"
+echo "[usage] $skill model=$model in=$tok_in out=$tok_out cache=$tok_cache (read=$tok_cache_r write=$tok_cache_w) cost=$cost turns=$turns"
 
 # Build a JSON array of the .md files this run PRODUCED (no jq): everything it
 # committed since we started, plus anything newly dirty, minus bookkeeping.
@@ -242,8 +287,9 @@ printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s,"error":"%s","delivered":
 # .status file only ever holds the LATEST run, which is no use for spotting a
 # trend or a skill that has quietly got more expensive.
 mkdir -p _meta
-printf '{"when":"%s","skill":"%s","model":"%s","ok":%s,"in":%s,"out":%s,"cache":%s,"cost_usd":%s,"turns":%s,"ms":%s}\n' \
-  "$when" "$skill" "$model" "$ok" "$tok_in" "$tok_out" "$tok_cache" "$cost" "$turns" "$ms" \
+printf '{"when":"%s","skill":"%s","model":"%s","ok":%s,"in":%s,"out":%s,"cache":%s,"cacheRead":%s,"cacheWrite":%s,"cost_usd":%s,"turns":%s,"ms":%s,"skipped":%s}\n' \
+  "$when" "$skill" "$model" "$ok" "$tok_in" "$tok_out" "$tok_cache" "$tok_cache_r" "$tok_cache_w" \
+  "$cost" "$turns" "$ms" "$([ "$skip_model" -eq 1 ] && echo true || echo false)" \
   >> _meta/skill-usage.jsonl
 
 # Shout on failure (spec §5: silence must be loud), best-effort. Goes through

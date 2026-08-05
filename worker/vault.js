@@ -101,6 +101,11 @@ export function parseTasks(text) {
     const due = dueM ? dueM[1] : null;
     const doneM = body.match(DONE_RE);
     const tags = [...body.matchAll(TAG_RE)].map((x) => x[1]);
+    // The anti-nag counter as a number, and the untouched source line. The
+    // briefing preflight (scripts/brief-context.mjs) hands both to the model so
+    // it can bump ⏳ with one exact-match edit instead of reading tasks.md and
+    // reasoning about which line it wanted.
+    const nagM = body.match(/⏳\s*(\d+)/u);
     // A task belongs to a project by wikilink, not by tag — the area tag list is
     // closed (CLAUDE.md), so "#project/house-retrofit" would be inventing one.
     // [[house-retrofit]] is how the vault already expresses "refers to".
@@ -115,6 +120,8 @@ export function parseTasks(text) {
       // a sentence anyone wrote.
       titleRaw: taskTitleRaw(body),
       links,
+      raw: tl.m[0],
+      nag: nagM ? Number(nagM[1]) : 0,
       done: checked,
       due,
       completed: doneM ? doneM[1] : null,
@@ -147,7 +154,26 @@ function parseEntity(text, fallbackName) {
 
 // Dated fragments under "## Log" — newest first. These are the truth (golden
 // rule 2), so the person drawer shows them verbatim with their capture dates.
-function parseLog(text) {
+// Occasions declared inline in a note: `(occasion:: 2026-08-11) Jasper turns 5`.
+// Exported so the briefing preflight reads them exactly as the agenda does. The
+// codebase review flagged "two calendar filters, one rule" as a smell worth not
+// repeating; this is that rule, kept in one place.
+export function occasionsIn(text) {
+  return [...String(text).matchAll(OCCASION_RE)].map((m) => ({ date: m[1], text: m[2].trim() }));
+}
+
+// Everything under a `## Private` heading, up to the next heading of the same
+// level, removed. CLAUDE.md makes this a wall: private content is never
+// surfaced in a brief, digest or nudge, not even summarised. The preflight
+// bundle is brief input, so it runs every note through this first.
+// Note the bound: Charlotte's `## Private` sits ABOVE her `## Log`, so "drop
+// everything after the heading" would silently delete the fragments the whole
+// surfacer runs on.
+export function stripPrivate(text) {
+  return String(text).replace(/(^|\n)##\s*Private\s*\n[\s\S]*?(?=\n##\s|$)/gi, "$1");
+}
+
+export function parseLog(text) {
   const sec = text.match(/##\s*Log\s*\n([\s\S]*?)(?=\n##\s|$)/i);
   if (!sec) return [];
   const out = [];
@@ -279,7 +305,7 @@ function loopDate(text, loggedISO) {
  * simply ages out: anything more than 3 days past is dropped, because by then
  * it is history rather than something to do today.
  */
-function openLoops(log, name, slug) {
+export function openLoops(log, name, slug) {
   const t = today();
   const horizon = addDays(t, 21);
   const floor = addDays(t, -3);
