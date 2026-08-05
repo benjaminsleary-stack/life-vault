@@ -11,6 +11,6 @@ Edit the sections/items below to make them yours — these are starters.
 - [x] Gym or a walk
 - [ ] Water
 
-## Evening wind-down
+## Evening
 - [ ] Journal the day
 - [ ] Plan tomorrow
