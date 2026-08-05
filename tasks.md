@@ -29,3 +29,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Paint front door #house
 - [ ] Fix drainage from bathroom #house
 - [ ] Get waterbutts? #house
+- [ ] Make a wind chime? #interests
