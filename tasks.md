@@ -17,3 +17,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Measure the bench top #house 📅 2026-08-13
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
 - [ ] Sand and fill bookshelf, change light switch. #house
+- [ ] Check why the vinyl player isn't working #interests
