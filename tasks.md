@@ -27,7 +27,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Paint front door #house
 - [ ] Fix drainage from bathroom #house
 - [ ] Get waterbutts? #house
-- [ ] Do monthly LinkedIn posts #work
 - [ ] Prep for September business meeting. #work 📅 2026-08-17
+- [ ] Do monthly LinkedIn posts #work
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
