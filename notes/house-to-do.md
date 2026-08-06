@@ -8,7 +8,7 @@ updated: 2026-07-18
 # House to do
 - [x] create task list with charlotte
 - [x] do the tasks
-- [ ] tidy living room
+- [x] tidy living room
 - [x] tidy kitchen
 - [x] do dishes
 - [x] go for a wee
