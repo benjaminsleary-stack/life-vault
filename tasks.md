@@ -12,7 +12,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Do monthly LinkedIn posts #work
 - [ ] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale
-- [ ] Talk to [[Charlotte]] about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and receptive #family
+- [x] Talk to [[Charlotte]] about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and receptive #family ✅ 2026-08-06
 - [ ] Order worktop and slatting #house
 - [ ] Measure the bench top #house 📅 2026-08-13
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
