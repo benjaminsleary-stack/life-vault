@@ -10,5 +10,5 @@ updated: 2026-07-18
 - [x] do the tasks
 - [ ] tidy living room
 - [x] tidy kitchen
-- [ ] do dishes
+- [x] do dishes
 - [x] go for a wee
