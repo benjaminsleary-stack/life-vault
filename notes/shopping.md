@@ -11,4 +11,4 @@ updated: 2026-08-07
 - [ ] Butter (unsalted)
 - [ ] Candles
 - [ ] Compost
-- [ ] Princes
+- [x] Princes
