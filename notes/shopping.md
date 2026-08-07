@@ -7,7 +7,7 @@ updated: 2026-08-07
 
 # shopping
 - [ ] Nappies
-- [ ] Sweets
+- [x] Sweets
 - [ ] Butter (unsalted)
 - [ ] Candles
 - [ ] Compost
