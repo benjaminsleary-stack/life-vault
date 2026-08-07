@@ -35,6 +35,7 @@ sitting — a list that empties is a list that was working._
       _(asked: 2026-08-05)_
 - [ ] The searchable-database side project is the biggest thing you actually push
       at work. What would "done" look like, and who else has asked for it? #work
+      _(asked: 2026-08-07)_
 - [ ] The vault knows nothing about what [[Charlotte]] does for work. What is her
       job, and what's the state of it right now? #family
 - [ ] The couples therapist is being changed. Who to, when does it start, and was
