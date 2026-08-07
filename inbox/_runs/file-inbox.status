@@ -1,1 +1,1 @@
-{"skill":"file-inbox","ok":true,"when":"2026-08-01T13:34:28Z","outputs":[],"error":"","model":"haiku","tokens":{"in":82,"out":2372,"cache":288089},"cost_usd":0.07225649999999999,"delivered":null,"deliveryError":""}
+{"skill":"file-inbox","ok":true,"when":"2026-08-07T08:31:37Z","outputs":["digests/2026-08-family-events.md","_meta/skills/digest-improvements.md","people/Charlotte.md"],"error":"","delivered":null,"deliveryError":"","model":"haiku","tokens":{"in":178,"out":6371,"cache":770879},"cost_usd":0.15947840000000002}
