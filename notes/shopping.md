@@ -10,5 +10,5 @@ updated: 2026-08-07
 - [x] Sweets
 - [ ] Butter (unsalted)
 - [ ] Candles
-- [ ] Compost
+- [x] Compost
 - [x] Princes
