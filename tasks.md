@@ -31,3 +31,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Do monthly LinkedIn posts #work
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
+- [ ] Wash hands more #health
+- [ ] Coffee ground before 730 #admin
+- [ ] Pay more attention when peeing in the night #health
+- [ ] Stop arguing in front of the boys [[Charlotte]] #family

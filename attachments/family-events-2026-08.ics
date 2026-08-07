@@ -1,0 +1,41 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//life-vault//family-events//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:family-events-2026-08-1@life-vault
+DTSTAMP:20260807T000000Z
+DTSTART;VALUE=DATE:20260808
+DTEND;VALUE=DATE:20260809
+SUMMARY:Wimpole Estate: Summer of Play (Pokémon Trail)
+LOCATION:Wimpole Estate\, Arrington\, Royston SG8 0BW
+DESCRIPTION:National Trust\, ~25 min drive. Adult £18 / child £9 / family £45\, free for NT members. Pokémon play trail\, giant chess\, craft/story days\; heavy horse carriage rides that weekend. https://www.nationaltrust.org.uk/visit/cambridgeshire/wimpole-estate/events
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-08-2@life-vault
+DTSTAMP:20260807T000000Z
+DTSTART;VALUE=DATE:20260815
+DTEND;VALUE=DATE:20260816
+SUMMARY:Anglesey Abbey: Summer of Play
+LOCATION:Anglesey Abbey\, Lode\, Cambridge CB25 9EJ
+DESCRIPTION:National Trust\, ~20 min drive. Adult £18 (£10 off-peak after 2pm)\, free for NT members. Seaside play zones\, giant sand pit\, Pokémon zones. https://www.nationaltrust.org.uk/visit/cambridgeshire/anglesey-abbey-gardens-and-lode-mill/events
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-08-3@life-vault
+DTSTAMP:20260807T000000Z
+DTSTART;VALUE=DATE:20260822
+DTEND;VALUE=DATE:20260823
+SUMMARY:Audley End House and Gardens: Great British Summer
+LOCATION:Audley End\, Saffron Walden CB11 4JF
+DESCRIPTION:English Heritage\, ~35 min drive. Included with general admission\, free for EH members. Fairground games\, circus skills\, puppet shows\, mini golf. https://www.english-heritage.org.uk/visit/whats-on/audley-end-great-british-summer-sat-18-jul-to-sun-6-sep/
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-08-4@life-vault
+DTSTAMP:20260807T000000Z
+DTSTART;VALUE=DATE:20260913
+DTEND;VALUE=DATE:20260914
+SUMMARY:Wimpole Estate: Harv'Fest
+LOCATION:Wimpole Estate\, Arrington\, Royston SG8 0BW
+DESCRIPTION:National Trust\, ~25 min drive. Adult £18 / child £9 / family £45\, free for NT members. Harvest celebration on the working farm\, shire horses. https://www.nationaltrust.org.uk/visit/cambridgeshire/wimpole-estate/events
+END:VEVENT
+END:VCALENDAR
