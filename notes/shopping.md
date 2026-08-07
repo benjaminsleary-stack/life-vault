@@ -9,6 +9,6 @@ updated: 2026-08-07
 - [ ] Nappies
 - [x] Sweets
 - [ ] Butter (unsalted)
-- [ ] Candles
+- [x] Candles
 - [x] Compost
 - [x] Princes
