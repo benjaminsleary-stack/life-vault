@@ -2,7 +2,7 @@
 type: person
 name: Charlotte
 tags: [family]
-updated: 2026-07-20
+updated: 2026-08-07
 ---
 
 ## What to know
@@ -42,6 +42,7 @@ rule in CLAUDE.md._
   week is going; not something to raise unprompted.
 
 ## Log
+- 2026-08-06 — Trying "phone bowl" ritual when we get home: hug for 2 mins, leg massage 5 mins per leg. Attempting to stop arguments by 11pm and improve how we argue in front of the boys. _(surfaced: 2026-08-08)_
 - 2026-08-01 — The couples therapist is being changed. Ben's individual therapy is
   separate and continues weekly. _(interview)_ _(surfaced: 2026-08-05)_
 - 2026-08-01 — **What actually works:** paying her more attention, and remembering
