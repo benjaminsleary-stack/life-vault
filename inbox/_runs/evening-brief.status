@@ -1,1 +1,1 @@
-{"skill":"evening-brief","ok":true,"when":"2026-08-07T19:47:58Z","outputs":["digests/2026-08-07-evening.md","_meta/gaps.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":5441,"out":8468,"cache":1211675},"cost_usd":0.7562124999999997}
+{"skill":"evening-brief","ok":true,"when":"2026-08-08T19:48:15Z","outputs":["digests/2026-08-08-evening.md","_meta/gaps.md","people/Charlotte.md","people/charlotte.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":3010,"out":8921,"cache":1349902},"cost_usd":0.7413781999999999}
