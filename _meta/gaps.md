@@ -41,6 +41,7 @@ sitting — a list that empties is a list that was working._
       _(asked: 2026-08-08)_
 - [ ] The couples therapist is being changed. Who to, when does it start, and was
       that your call or hers? #family
+      _(asked: 2026-08-09)_
 - [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
       term — that came from an email on 19 Jul. Is it done? #admin
 - [ ] What did you actually do on the holiday that was worth remembering? One
