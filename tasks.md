@@ -11,12 +11,12 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale ✅ 2026-08-09
 - [x] Buy raincoat #family ✅ 2026-08-09
 - [ ] Skirting board living room #house
+- [ ] Skirting board corridor. #house
 - [ ] Sand the walls in the corridor. #house
 - [ ] Add stones to freecycle #house
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Order worktop and slatting #house
 - [ ] Measure the bench top #house 📅 2026-08-13
-- [ ] Skirting board corridor. #house
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Buy lamps #house
