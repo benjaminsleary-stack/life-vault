@@ -34,3 +34,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Make a wind chime? #interests
 - [ ] Coffee ground before 730 #admin
 - [x] Stop arguing in front of the boys [[Charlotte]] #family ✅ 2026-08-09
+- [ ] Paint jaspers room #house
