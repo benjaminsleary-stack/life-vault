@@ -36,3 +36,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Stop arguing in front of the boys [[Charlotte]] #family ✅ 2026-08-09
 - [ ] Paint jaspers room #house
 - [ ] Jaspers picture frame string #house
+- [ ] Plant pots do #family
