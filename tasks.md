@@ -18,9 +18,9 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Skirting board corridor. #house
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
 - [ ] Sand and fill bookshelf, change light switch. #house
+- [ ] Skirting board living room #house
 - [ ] Buy lamps #house
 - [ ] Buy better light bulbs for living room #house
-- [ ] Skirting board living room #house
 - [ ] Filler pieces in the laundry and corridor #house
 - [ ] Replace screws in the front room light fitting. #house
 - [ ] Paint front door #house
