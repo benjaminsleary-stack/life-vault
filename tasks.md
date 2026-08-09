@@ -29,7 +29,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Prep for September business meeting. #work 📅 2026-08-17
 - [ ] Do monthly LinkedIn posts #work
 - [x] Wash hands more #health ✅ 2026-08-09
-- [ ] Pay more attention when peeing in the night #health
+- [x] Pay more attention when peeing in the night #health ✅ 2026-08-09
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
 - [x] Coffee ground before 730 #admin ✅ 2026-08-09
