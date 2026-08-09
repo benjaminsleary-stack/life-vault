@@ -10,11 +10,11 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Buy [[Jasper]]'s 5th birthday presents **in France** — his birthday is 11 Aug and you're on Oléron until the 13th, so ordering to the house can't work. Either they travel with you tonight or they're bought out there. 📅 2026-08-08 #family ⏫ ⏳2 ✅ 2026-08-09
 - [x] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale ✅ 2026-08-09
 - [x] Buy raincoat #family ✅ 2026-08-09
+- [ ] Sand the walls in the corridor. #house
 - [ ] Add stones to freecycle #house
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Order worktop and slatting #house
 - [ ] Measure the bench top #house 📅 2026-08-13
-- [ ] Sand the walls in the corridor. #house
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Buy lamps #house
