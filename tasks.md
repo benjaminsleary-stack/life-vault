@@ -32,7 +32,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Pay more attention when peeing in the night #health
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
-- [ ] Coffee ground before 730 #admin
+- [x] Coffee ground before 730 #admin ✅ 2026-08-09
 - [x] Stop arguing in front of the boys [[Charlotte]] #family ✅ 2026-08-09
 - [ ] Paint jaspers room #house
 - [ ] Jaspers picture frame string #house
