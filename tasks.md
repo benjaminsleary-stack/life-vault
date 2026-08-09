@@ -20,7 +20,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Buy better light bulbs for living room #house
 - [ ] Skirting board living room #house
 - [ ] Skirting board corridor. #house
-- [ ] Sand the walls in the corridor. #house
+- [ ] Sand the walls in the corridor. #house ⏫
 - [ ] Filler pieces in the laundry and corridor #house
 - [ ] Replace screws in the front room light fitting. #house
 - [ ] Paint front door #house
