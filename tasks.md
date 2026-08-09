@@ -19,8 +19,8 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Buy lamps #house
 - [ ] Buy better light bulbs for living room #house
-- [ ] Skirting board living room #house
 - [ ] Skirting board corridor. #house
+- [ ] Skirting board living room #house
 - [ ] Filler pieces in the laundry and corridor #house
 - [ ] Replace screws in the front room light fitting. #house
 - [ ] Paint front door #house
