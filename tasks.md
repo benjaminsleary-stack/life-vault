@@ -6,13 +6,12 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 
 - [ ] Insulate [[Milo]]'s room — a week's work; needs leave or money **and** the boys out of the house for the dust [[house-retrofit]] 🔽 #house
 - [ ] Plan new kitchen in extension [[house-retrofit]] 🔽 #house
-- [ ] Order [[Jasper]]'s bike #family ⏫
+- [x] Order [[Jasper]]'s bike #family ⏫ ✅ 2026-08-09
 - [ ] Buy [[Jasper]]'s 5th birthday presents **in France** — his birthday is 11 Aug and you're on Oléron until the 13th, so ordering to the house can't work. Either they travel with you tonight or they're bought out there. 📅 2026-08-08 #family ⏫ ⏳2
 - [ ] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale
 - [ ] Buy raincoat #family
 - [ ] Add stones to freecycle #house
 - [ ] Order a new hearth for the fireplace #house
-- [x] Talk to [[Charlotte]] about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and receptive #family ✅ 2026-08-06
 - [ ] Order worktop and slatting #house
 - [ ] Measure the bench top #house 📅 2026-08-13
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
