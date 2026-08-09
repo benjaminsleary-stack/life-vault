@@ -33,4 +33,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Wash hands more #health
 - [ ] Coffee ground before 730 #admin
 - [ ] Pay more attention when peeing in the night #health
-- [ ] Stop arguing in front of the boys [[Charlotte]] #family
+- [x] Stop arguing in front of the boys [[Charlotte]] #family ✅ 2026-08-09
