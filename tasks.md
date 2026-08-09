@@ -15,12 +15,12 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Order worktop and slatting #house
 - [ ] Measure the bench top #house 📅 2026-08-13
 - [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
+- [ ] Sand the walls in the corridor. #house
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Buy lamps #house
 - [ ] Buy better light bulbs for living room #house
 - [ ] Skirting board living room #house
 - [ ] Skirting board corridor. #house
-- [ ] Sand the walls in the corridor. #house
 - [ ] Filler pieces in the laundry and corridor #house
 - [ ] Replace screws in the front room light fitting. #house
 - [ ] Paint front door #house
@@ -28,9 +28,9 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Get waterbutts? #house
 - [ ] Prep for September business meeting. #work 📅 2026-08-17
 - [ ] Do monthly LinkedIn posts #work
+- [ ] Wash hands more #health
+- [ ] Pay more attention when peeing in the night #health
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
-- [ ] Wash hands more #health
 - [ ] Coffee ground before 730 #admin
-- [ ] Pay more attention when peeing in the night #health
 - [x] Stop arguing in front of the boys [[Charlotte]] #family ✅ 2026-08-09
