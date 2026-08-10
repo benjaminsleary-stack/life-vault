@@ -44,6 +44,7 @@ sitting — a list that empties is a list that was working._
       _(asked: 2026-08-09)_
 - [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
       term — that came from an email on 19 Jul. Is it done? #admin
+      _(asked: 2026-08-10)_
 - [ ] What did you actually do on the holiday that was worth remembering? One
       thing, when you're back. #family
 - [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
