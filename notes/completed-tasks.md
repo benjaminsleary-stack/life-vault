@@ -18,3 +18,4 @@ Ticked tasks, filed here 3 days after completion so tasks.md stays current. Noth
 - 2026-07-24 — Cyberpunk: Edgerunners 2 — Netflix/Trigger confirmed a Fall 2026 release window with a new teaser, standalone story in Night City with a new cast. Crunchyroll
 - 2026-07-24 — Dune: Part Three — new full trailer dropped 8 July 2026; confirmed cinema release 18 December 2026, closing Villeneuve's trilogy (adapted from Dune Messiah), with Timothée Chalamet, Zendaya, Florence Pugh returning and Robert Pattinson joining the cast. FirstShowing.net · Deadline
 - 2026-07-24 — Waveshaper — "Alternate Reality" (released 1 May 2026). Swedish synthwave artist Tom Andersson's latest — retro-80s, sci-fi/soundtrack-leaning, 10 tracks. Solidly in your synthwave lane, not covered last week. Bandcamp
+- 2026-08-06 — Talk to Charlotte about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and receptive

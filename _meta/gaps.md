@@ -32,14 +32,19 @@ sitting — a list that empties is a list that was working._
       _(asked: 2026-08-04)_
 - [ ] You said you can't get to co-director until there are engineers who can
       deliver. Name them. Who at JGC is closest, and what's missing for each? #work
+      _(asked: 2026-08-05)_
 - [ ] The searchable-database side project is the biggest thing you actually push
       at work. What would "done" look like, and who else has asked for it? #work
+      _(asked: 2026-08-07)_
 - [ ] The vault knows nothing about what [[Charlotte]] does for work. What is her
       job, and what's the state of it right now? #family
+      _(asked: 2026-08-08)_
 - [ ] The couples therapist is being changed. Who to, when does it start, and was
       that your call or hers? #family
+      _(asked: 2026-08-09)_
 - [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
       term — that came from an email on 19 Jul. Is it done? #admin
+      _(asked: 2026-08-10)_
 - [ ] What did you actually do on the holiday that was worth remembering? One
       thing, when you're back. #family
 - [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
