@@ -28,7 +28,7 @@ years ago — her father had a long-running affair and is now with that woman.
 
 ## Dates & occasions
 - (occasion:: 2026-11-19) Charlotte's birthday
-- (occasion:: 2026-08-31) Civil wedding anniversary
+- (occasion:: 2026-08-31) Civil wedding anniversary _(surfaced: 2026-08-11)_
 - (occasion:: 2026-09-17) Wedding anniversary
 
 ## Private
