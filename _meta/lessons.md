@@ -22,3 +22,4 @@ returned no lessons, so don't assume the export captured them (spec §10.1)._
   `family-events` skill. See "Standing instructions are routines" in `CLAUDE.md`.
 - 2026-07-18 — [2026-07-18-morning · News] more like: China launches WAICO, a 29-nation AI alliance — Xi Jinping unveiled the World Artificial Intelligence Cooperation Organisation in Shanghai, positioning China as a counterweight to US dominance in AI governance. (Al Jazeera · left-leaning)
 - 2026-08-11 — [2026-08-11-evening · Advice] less like: The 19 Jul fragment flagged things as "better between Jasper and Milo; hard since Milo was born" — worth a quick check-in with her on whether that's still true now.
+- 2026-08-11 — [2026-08-11-evening · Advice] more like: The civil wedding anniversary (31 Aug) is now three weeks out — if nothing's booked yet, tonight's a good moment to sort it rather than let it become a fire drill.
