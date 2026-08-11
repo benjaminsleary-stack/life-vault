@@ -47,6 +47,7 @@ sitting — a list that empties is a list that was working._
       _(asked: 2026-08-10)_
 - [ ] What did you actually do on the holiday that was worth remembering? One
       thing, when you're back. #family
+      _(asked: 2026-08-11)_
 - [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
       How much annual leave have you got left, and when does it reset? Without
       that the vault can't tell you when the two could ever line up. #house #work
