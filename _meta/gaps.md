@@ -45,9 +45,6 @@ sitting — a list that empties is a list that was working._
 - [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
       term — that came from an email on 19 Jul. Is it done? #admin
       _(asked: 2026-08-10)_
-- [ ] What did you actually do on the holiday that was worth remembering? One
-      thing, when you're back. #family
-      _(asked: 2026-08-11)_
 - [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
       How much annual leave have you got left, and when does it reset? Without
       that the vault can't tell you when the two could ever line up. #house #work
@@ -67,6 +64,7 @@ review as "decide or delete", the same as a stale task._
 
 _Crossed off with the date the answer arrived, so a question is never asked twice._
 
+- What did you actually do on the holiday that was worth remembering? — answered 2026-08-11 in today's capture (Jasper's birthday, beach play, family time at Les Garniers).
 - Runs and the Achilles — answered 2026-08-01 in the interview.
 - Weight and sleep — answered 2026-08-01 in the interview.
 - The retrofit's next step — answered 2026-08-01 in the interview.

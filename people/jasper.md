@@ -18,6 +18,7 @@ Joyce). **Swimming kit every Wednesday morning in term time.**
 - (occasion:: 2026-08-11) Jasper's birthday
 
 ## Log
+- 2026-08-11 — Birthday celebration: played on the beach, then at grandparents' house (Les Garniers, Blenau) with [[Charlotte]] and the boys. Walkie talkies play was lovely. Family watching the eclipse together. _(surfaced: —)_
 - 2026-08-01 — Correction: he turns **5** on 11 Aug 2026, so he is 4 until then.
   The onboarding note said 5 already. _(interview)_
 - 2026-07-13 — Age 5.
