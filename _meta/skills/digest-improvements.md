@@ -12,7 +12,13 @@ Tighten digest output and add interactivity.
 
 ## What's implemented
 - Tightening: morning-brief already says "Keep it scannable. If a section is empty, write '—'."
-- Narrative removal: morning-brief currently writes longer descriptions in some sections (News has multi-line summaries, Email includes full sender/summary).
+- **Narrative removal — done 2026-08-11.** Both brief skills are now told never to
+  narrate a search that found nothing. The obligation that produced the narration
+  in the first place (golden rule 5: a dead calendar feed must not look like a
+  free day) is met by a single terse line at the foot of the brief —
+  `⚠ mail not connected · work calendar failing`, facts separated by ` · `, no
+  sentences, no causes. Visible, not explained. The 11 Aug brief's two-sentence
+  paragraph about Gmail credentials is the shape that is now banned.
 
 ## What's missing
 - Checkbox acknowledgment feature requires backend storage (which digest items have been seen/acked by Ben). This needs:

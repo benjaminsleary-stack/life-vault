@@ -26,7 +26,7 @@ briefs cost $22 in a fortnight.
 ## Step 2 — compose `digests/<today>-evening.md`
 
 - **Tomorrow** — from `calendar.tomorrow`, labelled by which calendar each came
-  from. Name any source with `ok: false` rather than printing an empty evening.
+  from.
 - **Filed today** — one line on what `file-inbox` routed (counts + notable items).
 - **## Charlotte** — anything captured or logged about her *today*, with its
   capture date. Only real, captured facts, never inferred. If nothing, "—".
@@ -34,6 +34,12 @@ briefs cost $22 in a fortnight.
   week, each grounded in a fragment from the bundle (not platitudes). One bullet
   each, so a single item can be saved.
 - **## One question** — exactly one line, ending in a question mark. See below.
+
+**Never narrate a search that found nothing** (Ben, 7 Aug 2026: *"lots of 'I
+looked for this and that and found nothing'. Say nothing instead."*). An empty
+section is "—" and no more. Anything unhealthy — a failing feed, an unchecked
+mailbox — goes in one terse line at the foot, facts separated by ` · `:
+`⚠ mail not connected`. Never as prose inside a section, never explained.
 
 ## Step 3 — the one question
 

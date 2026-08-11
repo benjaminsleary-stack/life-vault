@@ -971,6 +971,14 @@
   function req(path, opts={}){
     return fetch(API+path, { ...opts, headers:{ "Authorization":"Bearer "+TOKEN, "Content-Type":"application/json", ...(opts.headers||{}) } });
   }
+  // Resolves the first time real vault data has rendered. A tapped notification
+  // used to open the brief on a fixed 600ms timer, which is a race it loses on a
+  // cold start — the panel read the brief card before /api/data had filled it,
+  // found the placeholder, and said "No brief yet". Waiting on the data instead
+  // of guessing at it is the difference between a notification that works and
+  // one that works when the network is quick.
+  let loadedOnce=false, markLoaded;
+  const firstLoad = new Promise((r)=>{ markLoaded=r; });
   async function load(manual){
     const btn=$("refreshBtn");
     if(manual) btn.classList.add("spin");
@@ -979,6 +987,7 @@
       if(r.status===401){ showGate("Token rejected. Check the unlock token."); return; }
       if(!r.ok) throw new Error("HTTP "+r.status);
       render(await r.json());
+      loadedOnce=true; markLoaded();
       setStatus(true);
       loadGraph();
       if(manual) toast("Up to date");
@@ -1315,17 +1324,35 @@
   }
   function closeModal(){ $("modalBack").classList.remove("show"); const m=$("modalBack").querySelector(".modal"); if(m) m.classList.remove("glow-soft"); }
   function focusCapture(){ const e=$("cap"); if(!e) return; e.scrollIntoView({behavior:"smooth", block:"center"}); setTimeout(()=>e.focus(), 260); }
-  // Read the latest brief full-screen, with a soft glow.
-  function openBrief(){
-    const html=$("brief").innerHTML;
-    openPanel("Latest brief", (html && !/^\s*<div class="muted">—<\/div>\s*$/.test(html)) ? html : '<div class="muted">No brief yet — run Morning or Evening.</div>');
+  // Read the latest brief full-screen, with a soft glow. Opens immediately so
+  // the tap feels answered, then fills in when the data lands.
+  const BRIEF_PANEL="Latest brief";
+  async function openBrief(){
+    openPanel(BRIEF_PANEL, '<div class="muted">Loading…</div>', { reply:true });
     const m=$("modalBack").querySelector(".modal"); if(m) m.classList.add("glow-soft");
+    // Cap the wait: offline, firstLoad never resolves, and a spinner that never
+    // stops is its own kind of lie.
+    await Promise.race([firstLoad, new Promise((r)=>setTimeout(r, 8000))]);
+    // The panel may have been closed, or replaced by another one, while we
+    // waited — don't write into someone else's sheet.
+    if($("modalName").textContent!==BRIEF_PANEL) return;
+    const html=$("brief").innerHTML;
+    $("modalBody").innerHTML = !loadedOnce
+      ? '<div class="muted">Couldn\'t reach the vault. Pull down to refresh.</div>'
+      : (html && !/^\s*<div class="muted">—<\/div>\s*$/.test(html))
+        ? html
+        : '<div class="muted">No brief yet — run Morning or Evening.</div>';
   }
   // The sheet does double duty: a file with a reply box, or a plain panel.
-  function openPanel(title, html){
+  // `reply` is opt-in per panel — the brief needs it, because the evening brief
+  // asks a question and for five days there was nowhere in the app to answer it:
+  // the box existed, but only on the file viewer, and reading the brief went
+  // through here instead. Six questions asked, none answered, no reply box.
+  function openPanel(title, html, opts){
     $("modalName").textContent=title;
     $("modalBody").innerHTML=html;
-    $("modalReply").classList.add("hidden");
+    if(opts && opts.reply){ $("replyText").value=""; $("modalReply").classList.remove("hidden"); }
+    else $("modalReply").classList.add("hidden");
     $("modalBack").classList.add("show");
   }
   // Reply to an open brief → capture + immediately run File to action it.
@@ -2301,9 +2328,15 @@
         if(shared) toast("Shared in — check it, then capture");
       }
     }
-    // On a cold launch the panel needs the first render to have happened; when
-    // the page is already open and warm it should feel instant.
-    if(q.get("view")==="brief") setTimeout(openBrief, live ? 600 : 0);
+    // A notification names the exact digest it is about, so tapping last night's
+    // evening brief opens THAT one rather than whatever happens to be latest.
+    // The file viewer fetches its own content, so there is no first-render race
+    // to lose here at all — and it carries the reply box.
+    const file=q.get("file");
+    if(file && /^digests\/[\w.-]+\.md$/.test(file)) openFile(file);
+    // The manifest shortcut and older notifications have no file, so this stays.
+    // No timer any more: openBrief waits on the data itself.
+    else if(q.get("view")==="brief") openBrief();
     // Clear the query so a refresh doesn't re-fire the intent.
     if(live) history.replaceState(null, "", location.pathname);
     return true;

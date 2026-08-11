@@ -75,7 +75,13 @@ deep_url=""
 kind=""
 case "$src" in
   digests/*.md)
-    deep_url="./?view=brief"
+    # Name the file, not just the intent. `?view=brief` opens "the latest brief",
+    # which is a different thing from the brief this notification is about — tap
+    # last night's evening push after the morning run and you get the wrong one.
+    # It also made the app race its own first data load, and lose: the panel read
+    # the brief card before /api/data had filled it and said "No brief yet".
+    # The file viewer fetches what it names, so there is nothing to race.
+    deep_url="./?view=brief&file=$src"
     kind="$(basename "$src" .md)"
     ;;
 esac

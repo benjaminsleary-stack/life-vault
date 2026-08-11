@@ -169,12 +169,42 @@ test("replying inline does not open or navigate anything", async () => {
 test("notify.sh, the manifest and the app all agree on ?view=brief", () => {
   const read = (p) => readFileSync(new URL(p, import.meta.url), "utf8");
 
-  assert.match(read("../scripts/notify.sh"), /deep_url="\.\/\?view=brief"/,
+  assert.match(read("../scripts/notify.sh"), /deep_url="\.\/\?view=brief&file=\$src"/,
     "notify.sh must send the intent the app answers to");
   assert.match(read("../dashboard/index.html"), /q\.get\("view"\)==="brief"/,
     "the app must still handle view=brief");
   assert.match(read("../dashboard/manifest.webmanifest"), /"\.\/\?view=brief"/,
     "the home-screen shortcut must use the same intent");
+});
+
+test("the notification names the digest, and the app opens the one it names", () => {
+  // `?view=brief` alone means "the latest brief", which is not the same thing as
+  // the brief the notification is about: tap last night's evening push after the
+  // morning run and you get the wrong file. It also made the app race its own
+  // first data load and lose, which is what "opens to a no-brief window" was.
+  const read = (p) => readFileSync(new URL(p, import.meta.url), "utf8");
+  const app = read("../dashboard/index.html");
+
+  assert.match(read("../scripts/notify.sh"), /file=\$src/,
+    "the push must name the digest it is about");
+  assert.match(app, /const file=q\.get\("file"\);/,
+    "the app must read the named file out of the launch intent");
+  assert.match(app, /\^digests\\\/\[\\w\.-\]\+\\\.md\$/,
+    "and must only open digests through it");
+  assert.ok(!/setTimeout\(openBrief/.test(app),
+    "the brief panel must wait on the data, not on a timer it can lose");
+});
+
+test("the brief panel carries a reply box", () => {
+  // Six specific questions were asked over six days and none were answered.
+  // The reply box existed — on the file viewer — but reading the brief went
+  // through openPanel, which hid it. A question with nowhere to answer it is
+  // not a question.
+  const app = readFileSync(new URL("../dashboard/index.html", import.meta.url), "utf8");
+  assert.match(app, /openPanel\(BRIEF_PANEL,[^)]*\{ reply:true \}\)/s,
+    "openBrief must ask for the reply box");
+  assert.match(app, /if\(opts && opts\.reply\)\{[^}]*modalReply"\)\.classList\.remove\("hidden"\)/s,
+    "openPanel must honour it");
 });
 
 test("notify.sh only deep-links things the app can actually show", () => {

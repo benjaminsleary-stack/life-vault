@@ -45,8 +45,9 @@ of coverage is visible.
   section needs; pulling whole pages into the context is the single most
   expensive thing this skill can do. On 5 August it tried six paywalled or
   blocked outlets in turn and still ended up with one source.
-- If outlets are unreachable, say so in one line rather than presenting a
-  narrow spread as a balanced one. That note is honest and it is cheap.
+- If outlets are unreachable, that is a `⚠ news: one source only` at the foot,
+  not a paragraph under the headlines. Don't present a narrow spread as a
+  balanced one, and don't write an essay about why it's narrow.
 - The `url` must be the article URL as it appeared in the search result —
   copied, never reconstructed. No homepages, no redirects, no AMP wrappers. If a
   result gives no usable URL, drop it and pick another. Never invent a link or a
@@ -81,9 +82,25 @@ beats everything; commentary and generic advice are worse than silence).
 ## News
 ```
 
-Keep it scannable; "—" for an empty section. Name any calendar source with
-`ok: false` and its error — a feed that stopped syncing looks exactly like a
-free day. Same for email: "not checked" is not "nothing needs you".
+Keep it scannable; "—" for an empty section, and nothing else.
+
+**Never narrate a search that found nothing.** Ben, 7 August 2026: *"The digests
+have too much text, lots of 'I looked for this and that and found nothing'. Say
+nothing instead."* No "I checked X and…", no explaining why a section is thin, no
+apologising for it. An empty section is one character long.
+
+That still leaves a real obligation — a feed that stopped syncing looks exactly
+like a free day, and mail that wasn't checked is not mail that was clear. So
+anything unhealthy goes in **one terse line at the foot of the brief**, never as
+prose inside a section:
+
+```
+⚠ mail not connected · work calendar failing
+```
+
+Facts separated by ` · `, no sentences, no causes, no remedies. That line is the
+whole of what golden rule 5 requires here: visible, not explained. If everything
+is healthy, there is no line at all.
 
 ## Step 5 — the nag counters
 
