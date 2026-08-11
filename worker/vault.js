@@ -159,7 +159,14 @@ function parseEntity(text, fallbackName) {
 // codebase review flagged "two calendar filters, one rule" as a smell worth not
 // repeating; this is that rule, kept in one place.
 export function occasionsIn(text) {
-  return [...String(text).matchAll(OCCASION_RE)].map((m) => ({ date: m[1], text: m[2].trim() }));
+  return [...String(text).matchAll(OCCASION_RE)].map((m) => ({
+    date: m[1],
+    // The surfacer stamps whatever it used, occasions included, and the stamp is
+    // bookkeeping: on 11 Aug this read "Civil wedding anniversary _(surfaced:
+    // 2026-08-11)_", which is what would have gone into the brief and onto the
+    // agenda card. Same treatment parseLog gives a log fragment.
+    text: m[2].replace(/\s*_\(surfaced:[^)]*\)_\s*/g, "").trim(),
+  }));
 }
 
 // Everything under a `## Private` heading, up to the next heading of the same

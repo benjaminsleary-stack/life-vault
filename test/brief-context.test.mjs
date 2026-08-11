@@ -64,6 +64,14 @@ test("occasionsIn reads inline occasion markers", () => {
   assert.deepEqual(found, [{ date: "2026-08-31", text: "Civil wedding anniversary" }]);
 });
 
+test("an occasion the surfacer has stamped keeps its stamp out of the text", () => {
+  // Live on 11 Aug 2026: the morning brief surfaced the anniversary and stamped
+  // the occasion line, so the next read of it carried the bookkeeping into the
+  // brief and onto the dashboard's agenda card.
+  const found = occasionsIn("- (occasion:: 2026-08-31) Civil wedding anniversary _(surfaced: 2026-08-11)_\n");
+  assert.deepEqual(found, [{ date: "2026-08-31", text: "Civil wedding anniversary" }]);
+});
+
 /* ------------------------------------------------------- the nag arithmetic */
 
 test("parseTasks exposes the nag counter and the untouched source line", () => {
