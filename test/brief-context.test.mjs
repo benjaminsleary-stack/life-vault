@@ -97,7 +97,7 @@ function fixture(files) {
     mkdirSync(join(dir, dirname(p)), { recursive: true });
     writeFileSync(join(dir, p), text);
   }
-  for (const p of ["scripts/brief-context.mjs", "scripts/fetch-calendar.mjs", "worker/vault.js", "worker/ical.js"]) {
+  for (const p of ["scripts/brief-context.mjs", "scripts/fetch-calendar.mjs", "worker/vault.js", "worker/ical.js", "worker/calendar.js"]) {
     mkdirSync(join(dir, dirname(p)), { recursive: true });
     cpSync(join(ROOT, p), join(dir, p));
   }

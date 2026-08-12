@@ -222,8 +222,9 @@ nothing that leaves the vault unprompted.
 
 The same wall applies to **calendar events used as private markers**: an event
 titled `That week` (Charlotte's cycle) is filtered out of the agenda and every
-brief, in both `worker/vault.js` and `scripts/fetch-calendar.mjs`. It stays on
-the calendar; it never surfaces.
+brief by `PRIVATE_EVENT` in `worker/calendar.js` — the one calendar-read module
+the dashboard, the dev server and the brief CLI all go through. It stays on the
+calendar; it never surfaces.
 
 ## Style
 

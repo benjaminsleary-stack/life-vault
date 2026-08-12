@@ -27,14 +27,17 @@
  * This replaces scripts/fetch-ics.py, which needed `icalendar` and `requests`
  * (neither of which was actually installed, so every brief since setup has
  * reported the calendar as unavailable) and parsed .ics a second, different way
- * from the dashboard. It now shares worker/ical.js, so what the brief says and
- * what the app shows cannot disagree.
+ * from the dashboard. It is now a thin adapter over worker/calendar.js — the
+ * same module the dashboard reads through — so the feed list and the private
+ * wall are defined once and what the brief says and what the app shows cannot
+ * disagree. This file keeps only what is CLI-specific: the .env loader, the
+ * date window (including --back), and the brief's own event shape.
  */
 
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseICS, expandEvents } from "../worker/ical.js";
+import { selectFeeds, readCalendarEvents } from "../worker/calendar.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const TZ = process.env.TZ_NAME || "Europe/London";
@@ -48,21 +51,11 @@ try {
   }
 } catch { /* no .env is fine — CI supplies real env vars */ }
 
-// Same three feeds the dashboard subscribes to. Family was missing here, so
-// shared-calendar events (birthdays, trips, the boys' things) never reached a
-// brief even though the app showed them.
-const configured = [
-  { name: "work", url: process.env.CAL_WORK, env: "CAL_WORK" },
-  { name: "personal", url: process.env.CAL_PERSONAL || process.env.ICS_URL, env: "CAL_PERSONAL" },
-  { name: "family", url: process.env.CAL_FAMILY, env: "CAL_FAMILY" },
-];
-const feeds = configured.filter((f) => f.url);
-// An unset feed used to vanish entirely, so "secret missing" and "free day" were
-// the same empty list. Report it as a source that is not ok — the brief is told
-// to print an unhealthy source rather than an empty calendar.
-const unset = configured
-  .filter((f) => !f.url)
-  .map((f) => ({ name: f.name, ok: false, error: `${f.env} not set` }));
+// The one feed definition (shared with the Worker and the dev server). Unset
+// feeds are kept here, not filtered: readCalendarEvents reports each as
+// ok:false naming its env var, so the brief can say which calendar is not
+// connected instead of showing a spuriously empty day.
+const feeds = selectFeeds(process.env);
 
 const days = Math.max(1, parseInt(process.argv[2] || "2", 10));
 const back = process.argv.includes("--back");
@@ -74,47 +67,38 @@ const tomorrow = fmt(new Date(Date.now() + 864e5));
 const from = back ? fmt(new Date(Date.now() - (days - 1) * 864e5)) : today;
 const to = back ? today : fmt(new Date(Date.now() + (days - 1) * 864e5));
 
-if (!feeds.length) {
-  // `sources: unset`, not `sources: []`. This path threw away the very list it
-  // had just built, so the one case where EVERY feed is missing — the worst
-  // one — reported no unhealthy sources at all, and a caller reading `sources`
-  // saw a clean bill of health on an empty calendar. That is the failure this
-  // file's own comment above says it exists to prevent.
-  console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL / CAL_FAMILY)", events: [], sources: unset }));
+if (!feeds.some((f) => f.url)) {
+  // `sources` names each missing feed, never `[]`. The one case where EVERY feed
+  // is missing — the worst one — must still report unhealthy sources, or a caller
+  // reading `sources` sees a clean bill of health on an empty calendar, which is
+  // the failure this file exists to prevent. (readCalendarEvents reports unset
+  // feeds too; this early-exit path names them itself.)
+  const sources = feeds.map((f) => ({ name: f.name, ok: false, error: `${f.key} not set` }));
+  console.log(JSON.stringify({ error: "no calendar feeds set (CAL_WORK / CAL_PERSONAL / CAL_FAMILY)", events: [], sources }));
   process.exit(1);
 }
 
-const events = [];
-const sources = [...unset];
-await Promise.all(feeds.map(async (feed) => {
-  try {
-    const r = await fetch(feed.url, { headers: { "User-Agent": "life-vault" } });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    for (const e of expandEvents(parseICS(await r.text()), from, to, { zone: TZ })) {
-      // Private calendar markers never reach a brief — see PRIVATE_EVENT in
-      // worker/vault.js and the ## Private rule in CLAUDE.md.
-      if (/^that week$/i.test(e.title.trim())) continue;
-      events.push({
-        date: e.date,
-        // Anchored on the real today, not on the window start — with --back
-        // the first day of the window is a week ago, and labelling it "today"
-        // would put last Sunday's events in a brief as if they were now.
-        when: e.date === today ? "today" : e.date === tomorrow ? "tomorrow" : e.date,
-        time: e.allDay ? "all-day" : e.time,
-        title: e.title,
-        location: e.location,
-        minutes: e.minutes,
-        calendar: feed.name,
-      });
-    }
-    sources.push({ name: feed.name, ok: true });
-  } catch (e) {
-    // Never echo the URL: it is the credential.
-    sources.push({ name: feed.name, ok: false, error: String((e && e.message) || e) });
-  }
+const fetchText = async (feed) => {
+  const r = await fetch(feed.url, { headers: { "User-Agent": "life-vault" } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.text();
+};
+const { events: occ, sources } = await readCalendarEvents(feeds, from, to, fetchText, { zone: TZ });
+
+// Map the shared module's canonical occurrences to the brief's own shape.
+const events = occ.map((e) => ({
+  date: e.date,
+  // Anchored on the real today, not on the window start — with --back the first
+  // day of the window is a week ago, and labelling it "today" would put last
+  // Sunday's events in a brief as if they were now.
+  when: e.date === today ? "today" : e.date === tomorrow ? "tomorrow" : e.date,
+  time: e.allDay ? "all-day" : e.time,
+  title: e.title,
+  location: e.location,
+  minutes: e.minutes,
+  calendar: e.source,
 }));
 
-events.sort((a, b) => a.date.localeCompare(b.date) || String(a.time).localeCompare(String(b.time)));
 console.log(JSON.stringify({ count: events.length, from, to, sources, events }, null, 2));
 
 // Loud failure: a calendar that silently stopped syncing looks like a free week.

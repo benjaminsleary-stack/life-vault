@@ -20,6 +20,7 @@
  */
 
 import { createApi, readPushSubs, addPushSub, removePushSubs } from "./vault.js";
+import { selectFeeds } from "./calendar.js";
 import { sendToAll } from "./push.js";
 
 const API = "https://api.github.com";
@@ -242,15 +243,14 @@ export default {
     }
 
     const handle = createApi(store, {
-      // Subscribed calendars. A private .ics URL is a credential — anyone
-      // holding it can read the calendar — so these are Worker secrets:
+      // Subscribed calendars, from the one feed definition in calendar.js. A
+      // private .ics URL is a credential — anyone holding it can read the
+      // calendar — so these are Worker secrets:
       //   npx wrangler secret put CAL_WORK
       //   npx wrangler secret put CAL_PERSONAL
-      calendars: [
-        env.CAL_WORK && { name: "work", url: env.CAL_WORK },
-        env.CAL_PERSONAL && { name: "personal", url: env.CAL_PERSONAL },
-        env.CAL_FAMILY && { name: "family", url: env.CAL_FAMILY },
-      ].filter(Boolean),
+      // The dashboard hides feeds that aren't configured (the brief reports
+      // them instead), so unset feeds are filtered out here.
+      calendars: selectFeeds(env).filter((f) => f.url),
     });
 
     try {

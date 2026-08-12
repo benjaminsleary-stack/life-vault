@@ -20,7 +20,8 @@
  * URLs are credentials and belong in the host's secret store, never here.
  */
 
-import { parseICS, expandEvents } from "./ical.js";
+import { parseICS } from "./ical.js";
+import { expandForWindow, sortEvents } from "./calendar.js";
 
 /* -------------------------------------------------------- markdown parsing */
 
@@ -965,12 +966,10 @@ async function fetchCalendar(feed, force, cachedOnly) {
   return entry;
 }
 
-// Calendar titles that are private markers, not appointments. They are the
-// user's own shorthand — "That week" tracks Charlotte's cycle — and must not
-// reach the agenda or a brief, exactly like a ## Private note (CLAUDE.md). The
-// event stays on the calendar; it just never surfaces here.
-const PRIVATE_EVENT = /^that week$/i;
-
+// The private-marker wall and the expand+sort rules now live in calendar.js,
+// shared with the brief CLI (imported as expandForWindow / sortEvents). This
+// function keeps only what is Worker-specific: the ~1MB cache and the
+// cachedOnly/pending cold-start dance.
 async function readCalendar(feeds, fromDay, toDay, force, cachedOnly) {
   if (!feeds || !feeds.length) return { events: [], sources: [], pending: false };
   const events = [];
@@ -987,9 +986,7 @@ async function readCalendar(feeds, fromDay, toDay, force, cachedOnly) {
       // steady-state cost of a cache HIT was still tens of milliseconds.
       const key = `${fromDay}|${toDay}`;
       if (entry.window !== key) {
-        entry.expanded = expandEvents(entry.events, fromDay, toDay)
-          .filter((o) => !PRIVATE_EVENT.test(o.title.trim()))
-          .map((o) => ({ ...o, source: feed.name }));
+        entry.expanded = expandForWindow(entry.events, fromDay, toDay, feed.name);
         entry.window = key;
       }
       for (const occ of entry.expanded) events.push(occ);
@@ -1002,10 +999,7 @@ async function readCalendar(feeds, fromDay, toDay, force, cachedOnly) {
       sources.push({ name: feed.name, ok: false, error: String((e && e.message) || e) });
     }
   }));
-  events.sort((a, b) =>
-    a.date.localeCompare(b.date) ||
-    (a.allDay === b.allDay ? String(a.time).localeCompare(String(b.time)) : (a.allDay ? -1 : 1))
-  );
+  sortEvents(events);
   return { events, sources, pending };
 }
 

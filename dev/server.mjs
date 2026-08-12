@@ -22,6 +22,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApi, readPushSubs, addPushSub, removePushSubs } from "../worker/vault.js";
+import { selectFeeds } from "../worker/calendar.js";
 import { sendToAll } from "../worker/push.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -79,11 +80,9 @@ function loadEnvFile() {
 }
 loadEnvFile();
 
-const calendars = [
-  process.env.CAL_WORK && { name: "work", url: process.env.CAL_WORK },
-  process.env.CAL_PERSONAL && { name: "personal", url: process.env.CAL_PERSONAL },
-  process.env.CAL_FAMILY && { name: "family", url: process.env.CAL_FAMILY },
-].filter(Boolean);
+// Same feed definition as the Worker and the brief CLI (calendar.js). Unset
+// feeds are filtered out — the dashboard hides them; the brief reports them.
+const calendars = selectFeeds(process.env).filter((f) => f.url);
 
 const handle = createApi(store, { calendars });
 
