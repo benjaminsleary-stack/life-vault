@@ -6,10 +6,6 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 
 - [ ] Plan new kitchen in extension [[house-retrofit]] 🔽 #house
 - [ ] Insulate [[Milo]]'s room — a week's work; needs leave or money **and** the boys out of the house for the dust [[house-retrofit]] 🔽 #house
-- [x] Order [[Jasper]]'s bike #family ⏫ ✅ 2026-08-09
-- [x] Buy [[Jasper]]'s 5th birthday presents **in France** — his birthday is 11 Aug and you're on Oléron until the 13th, so ordering to the house can't work. Either they travel with you tonight or they're bought out there. 📅 2026-08-08 #family ⏫ ⏳2 ✅ 2026-08-09
-- [x] Jasper raincoat #family 📅 2026-07-25 ⏳3 #stale ✅ 2026-08-09
-- [x] Buy raincoat #family ✅ 2026-08-09
 - [ ] Skirting board living room #house
 - [ ] Skirting board corridor. #house
 - [ ] Sand the walls in the corridor. #house
@@ -28,12 +24,9 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Get waterbutts? #house
 - [ ] Prep for September business meeting. #work 📅 2026-08-17
 - [ ] Do monthly LinkedIn posts #work
-- [x] Wash hands more #health ✅ 2026-08-09
-- [x] Pay more attention when peeing in the night #health ✅ 2026-08-09
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
-- [x] Coffee ground before 730 #admin ✅ 2026-08-09
-- [x] Stop arguing in front of the boys [[Charlotte]] #family ✅ 2026-08-09
 - [ ] Paint jaspers room #house
 - [ ] Jaspers picture frame string #house
 - [ ] Plant pots do #family
+- [ ] She said what she needs is to feel known and understood — a short text about something specific to her, not logistics, does more than a bigger gesture later.
