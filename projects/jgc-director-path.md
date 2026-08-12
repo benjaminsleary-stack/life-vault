@@ -2,7 +2,7 @@
 type: project
 name: JGC Director Path
 tags: [work]
-updated: 2026-07-13
+updated: 2026-08-10
 ---
 
 ## What to know
@@ -16,6 +16,13 @@ size Joel has singled out.
 He doesn't think there are enough engineers capable of delivery yet, so moving
 himself out of delivery and into management might not work. That makes "grow
 deliverable engineers" a precondition for the promotion, not a separate concern.
+The management pain has the same root: he can't build a delivery team he keeps,
+because people keep being reassigned.
+
+**Evidence pointing the right way:** his biggest deliberate push is a side project
+inside the firm — organising JGC's database and making it searchable with a custom
+interface. That is business-functional work, i.e. the stated criterion, rather than
+delivery.
 
 ## Log
 - 2026-08-01 — **The working week:** mostly email. Site work less than once a week.
