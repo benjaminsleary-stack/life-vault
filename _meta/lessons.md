@@ -24,3 +24,4 @@ returned no lessons, so don't assume the export captured them (spec §10.1)._
 - 2026-08-11 — [2026-08-11-evening · Advice] less like: The 19 Jul fragment flagged things as "better between Jasper and Milo; hard since Milo was born" — worth a quick check-in with her on whether that's still true now.
 - 2026-08-11 — [2026-08-11-evening · Advice] more like: The civil wedding anniversary (31 Aug) is now three weeks out — if nothing's booked yet, tonight's a good moment to sort it rather than let it become a fire drill.
 - 2026-08-11 — [2026-08-11-evening · Advice] more like: "What actually works" per the 1 Aug interview is paying her more attention and remembering what's on her mind so you can ask about it later — pick one thing from today and ask her about it.
+- 2026-08-12 — [2026-08-12-evening · Advice] more like: She said what she needs is to feel known and understood — a short text about something specific to her, not logistics, does more than a bigger gesture later.
