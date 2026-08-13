@@ -52,6 +52,7 @@ sitting — a list that empties is a list that was working._
 - [ ] The GitHub token the Worker uses has an expiry date, and when it passes
       every routine stops silently. What date is it? Then it becomes a dated
       task instead of a surprise. #admin
+      _(asked: 2026-08-13)_
 - [ ] You run, then get injured, three times now. What does the running week
       actually look like — days, distance, pace, surface? #health
 
