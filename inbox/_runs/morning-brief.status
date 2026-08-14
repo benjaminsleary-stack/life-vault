@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":true,"when":"2026-08-13T04:47:27Z","outputs":["digests/2026-08-13-morning.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":3398,"out":6620,"cache":642159},"cost_usd":0.618909}
+{"skill":"morning-brief","ok":true,"when":"2026-08-14T04:47:44Z","outputs":["digests/2026-08-14-morning.md","people/charlotte.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":2875,"out":7867,"cache":1136310},"cost_usd":0.7883632999999999}
