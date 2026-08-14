@@ -16,7 +16,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [x] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13 ⏳1 ✅ 2026-08-14
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Buy lamps #house
-- [ ] Buy better light bulbs for living room #house
+- [x] Buy better light bulbs for living room #house ✅ 2026-08-14
 - [ ] Filler pieces in the laundry and corridor #house
 - [ ] Replace screws in the front room light fitting. #house
 - [ ] Paint front door #house
