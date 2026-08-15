@@ -5,6 +5,15 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-08-15 (harvest): 1 fragment written — [[jgc-director-path]] got a single
+  weekly line for the "Business Operations Discussion" (10 Aug, business-functional,
+  bears on the director criterion). Calendar 7 days, all 3 sources ok, 10 events.
+  Everything else was noise: recurring standups (Team JGC, NCRT catchup, Girton
+  breakfast), a canceled Design Team meeting, two travel legs (Paris → Cambridge,
+  13 Aug) with no person/project attached, and Dad's/Jasper's birthdays — both
+  already fully recorded in their notes (Jasper's from the 11 Aug capture, Dad's
+  from 19 Jul). Strava not configured (exit 3) — unchanged. No open gap answered
+  by this week's calendar.
 - 2026-08-11 (file-inbox): 1 capture filed — Jasper's birthday celebration at grandparents' house (Les Garniers, Blenau) with family, beach play, walkie talkies, eclipse watching. Fragment added to [[Charlotte]] and [[Jasper]] notes; daily entry created at `daily/2026-08-11.md`. Inbox now empty.
 - 2026-08-10 (evening-brief): brief written to [[2026-08-10-evening]]. Inbox was empty — nothing filed today. No Charlotte fragment today. Tomorrow: Private Appointment 09:00, [[Jasper]]'s Birthday (all-day). Advice grounded in the 6 Aug "phone bowl" ritual, the 31 Aug anniversary now 3 weeks out, and the still-unanswered therapist-change gap (asked 9 Aug). Asked the oldest unasked gap — [[Milo]]'s working-parent funding — and stamped it. No tasks, habits, or fragments today; day-log line appended (goodDay: false).
 - 2026-08-08 (harvest): 0 fragments written. Calendar (7 days, all 3 sources ok) held only recurring standups (Team JGC, NCRT catchup), a bank holiday/AWAY all-day marker, an unlabelled "Private Appointment", "JGC Tidy Time and Sort Out", and one Girton College site-progress meeting — none named a known person, none met the directors'-meeting/client-win/presentation bar for [[jgc-director-path]], and site visits are explicitly excluded. Strava not configured (exit 3) — unchanged since last check. No gaps answered. Genuinely quiet week, not a feed failure.

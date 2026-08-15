@@ -2,7 +2,7 @@
 type: project
 name: JGC Director Path
 tags: [work]
-updated: 2026-08-10
+updated: 2026-08-15
 ---
 
 ## What to know
@@ -25,6 +25,9 @@ interface. That is business-functional work, i.e. the stated criterion, rather t
 delivery.
 
 ## Log
+- 2026-08-10 — Business Operations Discussion, 60 min, Main Meeting Room 12B —
+  a business-functional meeting, the stated criterion for the director bar
+  rather than delivery work. _(from calendar)_
 - 2026-08-01 — **The working week:** mostly email. Site work less than once a week.
   Some admin. The largest deliberate push is a **side project inside the firm — 
   organising JGC's database and making it searchable, with a custom interface**.
