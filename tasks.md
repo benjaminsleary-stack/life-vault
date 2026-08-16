@@ -8,7 +8,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Insulate [[Milo]]'s room — a week's work; needs leave or money **and** the boys out of the house for the dust [[house-retrofit]] 🔽 #house
 - [ ] Skirting board living room #house
 - [x] Skirting board corridor. #house ✅ 2026-08-16
-- [ ] Sand the walls in the corridor. #house
+- [x] Sand the walls in the corridor. #house ✅ 2026-08-16
 - [ ] Add stones to freecycle #house
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Order worktop and slatting #house
