@@ -7,7 +7,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Plan new kitchen in extension [[house-retrofit]] 🔽 #house
 - [ ] Insulate [[Milo]]'s room — a week's work; needs leave or money **and** the boys out of the house for the dust [[house-retrofit]] 🔽 #house
 - [ ] Skirting board living room #house
-- [ ] Skirting board corridor. #house
+- [x] Skirting board corridor. #house ✅ 2026-08-16
 - [ ] Sand the walls in the corridor. #house
 - [ ] Add stones to freecycle #house
 - [ ] Order a new hearth for the fireplace #house
