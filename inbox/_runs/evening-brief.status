@@ -1,1 +1,1 @@
-{"skill":"evening-brief","ok":true,"when":"2026-08-15T19:46:28Z","outputs":["digests/2026-08-15-evening.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":2722,"out":3475,"cache":522054},"cost_usd":0.3515442999999999}
+{"skill":"evening-brief","ok":true,"when":"2026-08-16T19:46:39Z","outputs":["digests/2026-08-16-evening.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":2726,"out":4134,"cache":597316},"cost_usd":0.38181480000000007}
