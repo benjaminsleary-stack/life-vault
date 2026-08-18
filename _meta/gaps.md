@@ -30,6 +30,7 @@ sitting — a list that empties is a list that was working._
 - [ ] You don't actually know what you weigh — 87kg is three weeks stale and it's
       one of your twelve-month goals. What does the scale say? #health
       _(asked: 2026-08-04)_
+      _(asked: 2026-08-18)_
 - [ ] You said you can't get to co-director until there are engineers who can
       deliver. Name them. Who at JGC is closest, and what's missing for each? #work
       _(asked: 2026-08-05)_
