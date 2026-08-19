@@ -1,1 +1,1 @@
-{"skill":"evening-brief","ok":true,"when":"2026-08-18T19:46:47Z","outputs":["digests/2026-08-18-evening.md","_meta/gaps.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":2867,"out":4942,"cache":874938},"cost_usd":0.4855266999999999}
+{"skill":"evening-brief","ok":false,"when":"2026-08-19T19:46:01Z","outputs":[],"error":"You've hit your session limit · resets 8:10pm (UTC)","delivered":false,"deliveryError":"the skill never called notify.sh","model":"sonnet","tokens":{"in":2577,"out":1530,"cache":153775},"cost_usd":0.1803628}
