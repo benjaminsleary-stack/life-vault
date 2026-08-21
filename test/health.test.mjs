@@ -83,6 +83,36 @@ test("a brief that ran but never reached the phone is NOT a healthy run", async 
   assert.match(c.error, /no devices are registered/, "the reason must survive to the panel");
 });
 
+test("a brief that arrived empty is NOT a healthy run", async () => {
+  // 16–21 Aug 2026: six consecutive morning briefs with an empty News section,
+  // one of them 164 bytes, every one delivered on time — and this panel said
+  // "all routines on schedule" throughout, because it only ever asked "did it
+  // run?" and "did it arrive?". Both answers were yes. The brief was still empty.
+  const h = await health(allRan({
+    "morning-brief": { delivered: true, assertOk: false, assertWhy: "the News section is empty" },
+  }));
+  assert.equal(h.ok, false, "a hollow brief must not read as ok");
+  const c = h.checks.find((x) => x.name === "morning-brief");
+  assert.equal(c.ok, false);
+  assert.match(c.why, /came out hollow/);
+  assert.match(c.error, /News section is empty/, "the reason must survive to the panel");
+});
+
+test("hollow is its own summary line — a different fix from undelivered", async () => {
+  const h = await health(allRan({
+    "morning-brief": { delivered: true, assertOk: false, assertWhy: "the News section is empty" },
+  }));
+  assert.match(h.summary, /morning-brief came out empty/);
+  assert.doesNotMatch(h.summary, /not delivered/);
+  assert.doesNotMatch(h.summary, /overdue/);
+});
+
+test("a passing assert leaves the run healthy", async () => {
+  const h = await health(allRan({ "morning-brief": { delivered: true, assertOk: true } }));
+  assert.equal(h.ok, true);
+  assert.equal(h.summary, "all routines on schedule");
+});
+
 test("undelivered is its own summary line, not 'overdue' and not 'failed'", async () => {
   // These are three different problems with three different fixes. Undelivered
   // is a missing secret; overdue is a dead scheduler; failed is a broken skill.

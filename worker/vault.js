@@ -1507,14 +1507,21 @@ async function health(store) {
     // "all routines on schedule" for twelve days straight. A check that can
     // only see whether the file exists is exactly the silence rule 5 forbids.
     const undelivered = !!(st && st.delivered === false);
+    // Delivered, on time, and empty. Between 16 and 21 Aug 2026 the morning
+    // brief shipped six consecutive days with no News section — one of them
+    // 164 bytes — and this panel said "all routines on schedule" throughout,
+    // because every question it asked ("did it run?", "did it arrive?") had the
+    // answer yes. A brief that reaches you carrying nothing has not worked.
+    const hollow = !!(st && st.assertOk === false);
     checks.push({
       name,
       when: st ? st.when : null,
-      ok: ran && !undelivered,
+      ok: ran && !undelivered && !hollow,
       why: !st ? "never run" : st.ok === false ? "last run failed"
         : age === null ? "no timestamp" : age > everyDays ? `${age}d since last run`
-        : undelivered ? "written, but never reached your phone" : "",
-      error: undelivered ? (st.deliveryError || "") : "",
+        : undelivered ? "written, but never reached your phone"
+        : hollow ? "delivered, but came out hollow" : "",
+      error: undelivered ? (st.deliveryError || "") : hollow ? (st.assertWhy || "") : "",
     });
   }
   // Any skill whose LAST run failed, scheduled or not. Without this an
@@ -1545,12 +1552,14 @@ async function health(store) {
   // not having run. Undelivered is its own line for the same reason — the fix
   // is usually a device that never subscribed, not anything about the routine.
   const undelivered = failing.filter((c) => c.why.startsWith("written, but"));
+  const hollow = failing.filter((c) => c.why.startsWith("delivered, but"));
   const broke = failing.filter((c) => c.why === "last run failed");
-  const late = failing.filter((c) => !undelivered.includes(c) && !broke.includes(c));
+  const late = failing.filter((c) => !undelivered.includes(c) && !hollow.includes(c) && !broke.includes(c));
   const parts = [];
   if (stuck.length) parts.push(`${stuck.length} run${stuck.length > 1 ? "s" : ""} queued with no runner`);
   if (broke.length) parts.push(`${broke.map((f) => f.name).join(", ")} failed`);
   if (undelivered.length) parts.push(`${undelivered.map((f) => f.name).join(", ")} not delivered`);
+  if (hollow.length) parts.push(`${hollow.map((f) => f.name).join(", ")} came out empty`);
   if (late.length) parts.push(`${late.map((f) => f.name).join(", ")} overdue`);
   return {
     ok: !failing.length && !stuck.length,

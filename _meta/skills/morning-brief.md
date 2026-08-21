@@ -40,19 +40,38 @@ genuinely current items. Format each as:
 with the lean marked **left / centre / right**, Ground-News style, so the spread
 of coverage is visible.
 
-- **Budget: at most 3 searches, and no fetching of full articles.** Search
-  snippets carry the headline, the gist and the URL, which is everything this
-  section needs; pulling whole pages into the context is the single most
-  expensive thing this skill can do. On 5 August it tried six paywalled or
-  blocked outlets in turn and still ended up with one source.
-- If outlets are unreachable, that is a `⚠ news: one source only` at the foot,
-  not a paragraph under the headlines. Don't present a narrow spread as a
-  balanced one, and don't write an essay about why it's narrow.
+- **Budget: up to 6 searches, and no fetching of full articles.** Snippets carry
+  the headline, the gist and the URL, which is everything this section needs;
+  pulling whole pages into a context that is re-sent every turn is the single
+  most expensive thing this skill can do. Six is what `interest-scout` gets, and
+  `interest-scout` comes back with real linked results every week — so six is
+  demonstrably enough to find things. Three was not.
+- **An empty News section is a bug, not a quiet day.** There is always news. If
+  your first query returns nothing usable, the query was wrong — change its
+  shape and search again (a different phrasing, a different outlet, "UK news
+  today", a topic Ben follows) until the budget is spent. Do not stop at the
+  first empty result, and do not treat "no sources found" as an answer you are
+  allowed to give while you still have searches left.
+- The lean label is **best effort**. Mark it `left / centre / right` where you
+  can tell, Ground-News style, so the spread is visible — but a headline you
+  cannot confidently place keeps its source and drops the label. **Never drop a
+  real story for want of a lean.** That rule was costing items, not adding
+  balance.
 - The `url` must be the article URL as it appeared in the search result —
   copied, never reconstructed. No homepages, no redirects, no AMP wrappers. If a
   result gives no usable URL, drop it and pick another. Never invent a link or a
   story.
-- Never omit the section: if searching genuinely returns nothing, write "—".
+- A thin spread is worth a `⚠ news: one source only` at the foot — a plain fact,
+  not a paragraph under the headlines, and never a narrow spread presented as a
+  balanced one.
+
+**Why this is spelled out.** Between 16 and 21 August the News section came back
+empty six mornings running, on a three-search budget, while `interest-scout`
+searched successfully the whole time. The prompt had made giving up tidy: a
+one-line `⚠ news: no sources found` was clean, sanctioned output, so the cheapest
+path was to take it. The wording drifted run to run — "one source only", "no
+usable sources found", "search unreachable" — which is what improvising an excuse
+looks like. Reporting no news is only honest after the budget is spent.
 
 ## Step 3 — the Charlotte line
 

@@ -178,6 +178,28 @@ while IFS= read -r p; do
 done <<< "$outputs"
 arr+="]"
 
+# IS IT ACTUALLY A BRIEF? Both brief prompts end with "assert your own output",
+# and on 21 Aug 2026 the morning brief came out at 164 bytes with every section
+# empty and recorded ok:true — the sixth consecutive morning with no News and
+# nothing said so. Asking the failing component to grade itself does not work,
+# for the same reason delivery could not be left to the prompt. So the runner
+# grades it. This never flips `ok` (a thin brief is still worth delivering) —
+# it records a verdict health() can turn red, exactly like `delivered`.
+assert_ok=null; assert_why=""
+case "$skill" in
+  morning-brief|evening-brief)
+    if [ "$ok" = true ]; then
+      assert_out="$(node scripts/assert-brief.mjs "$skill" 2>&1)"
+      if [ $? -eq 0 ]; then assert_ok=true; else
+        assert_ok=false
+        assert_why="$(printf '%s' "$assert_out" | tr -d '\\"' | tr '\t\r\n' '   ')"
+        assert_why="${assert_why:0:300}"
+        echo "[assert] FAILED — $assert_why"
+      fi
+    fi
+    ;;
+esac
+
 # Did it actually reach the phone? Absence of a receipt from a skill that is
 # meant to deliver counts as a failure, not as "unknown" — notify.sh writes one
 # on the way out of every path it has, including the ones that used to die
@@ -277,8 +299,8 @@ if [ "$ok" = false ]; then
 fi
 
 mkdir -p inbox/_runs
-printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s,"error":"%s","delivered":%s,"deliveryError":"%s","model":"%s","tokens":{"in":%s,"out":%s,"cache":%s},"cost_usd":%s}\n' \
-  "$skill" "$ok" "$when" "$arr" "$err" "$delivered" "$delivery_err" \
+printf '{"skill":"%s","ok":%s,"when":"%s","outputs":%s,"error":"%s","delivered":%s,"deliveryError":"%s","assertOk":%s,"assertWhy":"%s","model":"%s","tokens":{"in":%s,"out":%s,"cache":%s},"cost_usd":%s}\n' \
+  "$skill" "$ok" "$when" "$arr" "$err" "$delivered" "$delivery_err" "$assert_ok" "$assert_why" \
   "$model" "$tok_in" "$tok_out" "$tok_cache" "$cost" \
   > "inbox/_runs/$skill.status"
 
@@ -297,6 +319,15 @@ printf '{"when":"%s","skill":"%s","model":"%s","ok":%s,"in":%s,"out":%s,"cache":
 # LV_DELIVERY_RECEIPT is cleared first: this is an alert about the failure, not
 # the skill's own delivery, and letting it overwrite the receipt would report a
 # brief as delivered because its failure notice got through.
+# A brief that came out hollow is a failure the run itself won't report — `ok`
+# is true, the file exists, it was delivered. Without this the only trace is a
+# field in a status file nobody opens on a normal morning.
+if [ "$assert_ok" = false ]; then
+  ( unset LV_DELIVERY_RECEIPT
+    printf '%s\n' "$assert_why" | bash scripts/notify.sh "⚠️ $skill came out hollow" - ) \
+    || echo "[alert] could not deliver the hollow-brief notice"
+fi
+
 if [ "$ok" = false ]; then
   # NOT silenced. This used to be `>/dev/null 2>&1 || true`, which meant that
   # when the alert itself failed to send there was no trace of it anywhere —
