@@ -5,6 +5,7 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-08-21 (file-inbox): 1 capture filed — technical design question about AI search and passing information without API calls filed to `notes/unsorted/2026-08-21.md`. Inbox now empty.
 - 2026-08-15 (harvest): 1 fragment written — [[jgc-director-path]] got a single
   weekly line for the "Business Operations Discussion" (10 Aug, business-functional,
   bears on the director criterion). Calendar 7 days, all 3 sources ok, 10 events.

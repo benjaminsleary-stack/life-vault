@@ -1,1 +1,1 @@
-{"skill":"file-inbox","ok":true,"when":"2026-08-11T20:24:09Z","outputs":["_meta/gaps.md","daily/2026-08-11.md","people/charlotte.md","people/jasper.md"],"error":"","delivered":null,"deliveryError":"","model":"haiku","tokens":{"in":146,"out":4967,"cache":603757},"cost_usd":0.13259820000000003}
+{"skill":"file-inbox","ok":true,"when":"2026-08-21T20:10:04Z","outputs":["notes/unsorted/2026-08-21.md"],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"haiku","tokens":{"in":114,"out":3792,"cache":444189},"cost_usd":0.10600530000000001}
