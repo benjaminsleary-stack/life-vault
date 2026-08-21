@@ -27,3 +27,8 @@ Ticked tasks, filed here 3 days after completion so tasks.md stays current. Noth
 - 2026-08-09 — Pay more attention when peeing in the night
 - 2026-08-09 — Coffee ground before 730
 - 2026-08-09 — Stop arguing in front of the boys Charlotte
+- 2026-08-14 — Measure the bench top
+- 2026-08-14 — Wooden slats for the bookshelf. Decide if level or staggered.
+- 2026-08-16 — Skirting board corridor.
+- 2026-08-16 — Sand the walls in the corridor.
+- 2026-08-16 — Buy better light bulbs for living room
