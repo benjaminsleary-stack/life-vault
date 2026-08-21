@@ -65,11 +65,29 @@ it in step 4, then redeploy, to lock CORS to just the dashboard.)
 ### 4. Deploy the PWA to Cloudflare Pages
 The PWA is static files — don't use the "import a repository / Workers Builds"
 wizard (that's for building a Worker and will clash with the Worker's name). Just
-direct-upload the folder:
+stamp it and direct-upload the folder:
 ```
+node scripts/stamp-build.mjs
 cd dashboard
-npx wrangler pages deploy . --project-name life-vault-app
+npx wrangler pages deploy . --project-name life-vault-app --branch main
 ```
+
+**Stamp first, every time.** It writes a build identity into `index.html` and
+`build.json`; the app compares the two and tells you when a tab is stale instead
+of silently running old code. Skip it and a deployed fix that never reaches the
+phone looks exactly like a fix that was never deployed — which cost a day on
+21 Aug 2026. `node scripts/stamp-build.mjs --check` prints the current stamp.
+
+**`--branch main` is load-bearing.** Without it wrangler takes the branch from
+your git context, and anything that isn't the production branch is published as a
+*preview* — a `<hash>.life-vault-app.pages.dev` URL — while the real one carries
+on serving the previous build. Read the URL wrangler prints: if it isn't the bare
+`life-vault-app.pages.dev`, nothing you just did is live.
+
+**Run it from inside `dashboard/`, deploying `.`** — the whole vault sits one
+level up and the Pages URL is public with no auth on static files. A deploy from
+the repo root would publish every note in it. `curl`ing
+`life-vault-app.pages.dev/people/charlotte.md` should give a 404.
 This creates a **Pages** project `life-vault-app` (a different name from the
 Worker, so no collision) and prints a URL like `https://life-vault-app.pages.dev`.
 Re-run the same command any time you change the dashboard.

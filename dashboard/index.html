@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="lv-build" content="2026-08-21T15:38:36Z" />
 <meta name="theme-color" content="#1c1813" />
 <link rel="manifest" href="manifest.webmanifest" />
 <title>Life-Vault</title>
@@ -1042,6 +1043,15 @@
     // Notifications sit above the sign-out, because "why am I not getting my
     // brief" is the question this panel exists to answer.
     html+='<h3>Notifications</h3><div id="pushRow"><div class="muted">Checking…</div></div>';
+    // "Which version is this phone actually running" used to be answerable only
+    // by fetching the live HTML from a laptop and grepping it for a fragment of
+    // JavaScript. Now it is a line in the panel.
+    html+="<h3>App version</h3>"+
+      '<div class="hrow"><span class="'+(isStale()?"cross":"tick")+'">'+(isStale()?"✗":"✓")+'</span>'+
+      '<span class="hname">'+esc(BUILD || "unstamped")+
+        (isStale()?'<div class="s-err">deployed: '+esc(deployedBuild||"?")+'</div>':"")+'</span>'+
+      '<span class="hwhy">'+(isStale()?"update available":deployedBuild?"up to date":"not checked")+'</span></div>'+
+      (isStale()?'<p><button class="btn" onclick="location.reload()">Reload to update</button></p>':"");
     html+='<hr><p><button class="btn" onclick="signOut()">Disconnect this device</button></p>';
     openPanel("System", html);
     renderPushRow();
@@ -2290,6 +2300,35 @@
     return html;
   }
 
+  // --- which version am I? ---------------------------------------------------
+  // BUILD is the identity of the page RUNNING right now, baked in at stamp time.
+  // build.json is the identity of the page DEPLOYED, read past every cache. When
+  // they differ, this tab is stale.
+  //
+  // This exists because on 21 Aug 2026 two verified fixes were reported shipped
+  // and the bugs were still on the phone, and "the deploy never landed" and "the
+  // deploy landed but the phone kept the old copy" are indistinguishable from
+  // the outside. Finding out took a round trip and a hand-written request
+  // grepping the live HTML for a fragment of JavaScript.
+  const BUILD = (document.querySelector('meta[name="lv-build"]')||{}).content || "";
+  let deployedBuild = null;
+  const isStale = () => !!(BUILD && deployedBuild && BUILD !== deployedBuild);
+  async function checkBuild(announce){
+    try{
+      const r = await fetch("build.json?t="+Date.now(), {cache:"no-store"});
+      if(!r.ok) return null;
+      deployedBuild = (await r.json()).build || null;
+    }catch{ return null; }               // offline is not stale; say nothing
+    if(announce && isStale())
+      showToast("A newer version of the app is available", false, "Reload", ()=>location.reload());
+    return deployedBuild;
+  }
+  checkBuild(true);
+  // Re-check when the app comes back to the foreground: that is exactly the
+  // moment a phone that has been sitting in the background for a week returns,
+  // and the moment it is most likely to be running something old.
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) checkBuild(true); });
+
   // Service worker: installability, offline app shell, and push (see sw.js).
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
   // Hand the API base and token to the SW so a notification reply can POST with
@@ -2355,8 +2394,19 @@
       let handled=false;
       try{
         const u=new URL(d.url, location.href);
-        handled=handleLaunchIntent(u.search);
-        if(handled) window.focus();
+        // A stale tab handling the intent in place is the failure mode that hid
+        // two shipped fixes for ten days: the SW prefers focusing an open window
+        // over navigating, so a PWA left in the background keeps answering
+        // notifications with old code and never re-fetches. Reloading AT the
+        // intent URL both refreshes the app and lands on the right brief.
+        if(isStale()){ window.focus(); location.href=d.url; handled=true; }
+        else {
+          handled=handleLaunchIntent(u.search);
+          if(handled) window.focus();
+          // Not stale as far as we know — but "as far as we know" may be a week
+          // old, so find out now for next time.
+          checkBuild(false);
+        }
       }catch(err){ handled=false; }
       if(e.ports && e.ports[0]) e.ports[0].postMessage({handled});
     }
