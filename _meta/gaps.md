@@ -42,6 +42,7 @@ sitting — a list that empties is a list that was working._
 - [ ] The vault knows nothing about what [[Charlotte]] does for work. What is her
       job, and what's the state of it right now? #family
       _(asked: 2026-08-08)_
+      _(asked: 2026-08-22)_
 - [ ] The couples therapist is being changed. Who to, when does it start, and was
       that your call or hers? #family
       _(asked: 2026-08-09)_
