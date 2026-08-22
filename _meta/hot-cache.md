@@ -5,6 +5,7 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-08-22 (harvest): 0 fragments written. Calendar (7 days, all 3 sources ok, 12 events) held only all-day birthday/gardening reminders (Lucy Chicken Money, Andrew, Prune Espalier Apple — no matching people notes), recurring/routine work meetings (Team JGC, NCRT Weekly Catchup, Girton College breakfast catch-up), and a run of Girton College "New Courts" delivery meetings (Ventilation Coordination, QMC Report Action Tracker, Decarbonisation kick-off, DTM, catch-up with Hannah) plus an unlabelled "Private Appointment" — none named a known person or existing project, and none met the directors'-meeting/client-win/presentation bar for [[jgc-director-path]] (these were delivery/coordination work, the opposite pole from the business-functional criterion). Strava not configured (exit 3) — unchanged. No open gap answered by this week's calendar. Genuinely quiet week for harvesting, not a feed failure.
 - 2026-08-21 (file-inbox): 1 capture filed — technical design question about AI search and passing information without API calls filed to `notes/unsorted/2026-08-21.md`. Inbox now empty.
 - 2026-08-15 (harvest): 1 fragment written — [[jgc-director-path]] got a single
   weekly line for the "Business Operations Discussion" (10 Aug, business-functional,
