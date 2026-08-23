@@ -39,13 +39,10 @@ sitting — a list that empties is a list that was working._
       at work. What would "done" look like, and who else has asked for it? #work
       _(asked: 2026-08-07)_
       _(asked: 2026-08-21)_
-- [ ] The vault knows nothing about what [[Charlotte]] does for work. What is her
-      job, and what's the state of it right now? #family
-      _(asked: 2026-08-08)_
-      _(asked: 2026-08-22)_
 - [ ] The couples therapist is being changed. Who to, when does it start, and was
       that your call or hers? #family
       _(asked: 2026-08-09)_
+      _(asked: 2026-08-23)_
 - [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
       term — that came from an email on 19 Jul. Is it done? #admin
       _(asked: 2026-08-10)_
@@ -70,6 +67,7 @@ review as "decide or delete", the same as a stale task._
 
 _Crossed off with the date the answer arrived, so a question is never asked twice._
 
+- What is Charlotte's job? — answered 2026-08-23 in today's capture (project manager at Bidwells, hoping for promotion to senior PM, her boss dragging his feet).
 - What did you actually do on the holiday that was worth remembering? — answered 2026-08-11 in today's capture (Jasper's birthday, beach play, family time at Les Garniers).
 - Runs and the Achilles — answered 2026-08-01 in the interview.
 - Weight and sleep — answered 2026-08-01 in the interview.
