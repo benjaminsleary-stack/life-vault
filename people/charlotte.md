@@ -42,8 +42,9 @@ rule in CLAUDE.md._
   week is going; not something to raise unprompted.
 
 ## Log
+- 2026-08-23 — Her job: project manager at Bidwells. Hoping to be promoted to senior PM soon, but her boss is dragging his feet on it. _(surfaced: 2026-08-24)_
 - 2026-08-11 — Spent the day at her grandparents' house (Les Garniers, Blenau) with the boys on Jasper's birthday. Played on the beach together; Jasper's walkie talkies play was particularly lovely. Going to watch the eclipse. _(surfaced: 2026-08-12)_
-- 2026-08-06 — Trying "phone bowl" ritual when we get home: hug for 2 mins, leg massage 5 mins per leg. Attempting to stop arguments by 11pm and improve how we argue in front of the boys. _(surfaced: 2026-08-08)_
+- 2026-08-06 — Trying "phone bowl" ritual when we get home: hug for 2 mins, leg massage 5 mins per leg. Attempting to stop arguments by 11pm and improve how we argue in front of the boys. _(surfaced: 2026-08-22)_
 - 2026-08-01 — The couples therapist is being changed. Ben's individual therapy is
   separate and continues weekly. _(interview)_ _(surfaced: 2026-08-05)_
 - 2026-08-01 — **What actually works:** paying her more attention, and remembering
