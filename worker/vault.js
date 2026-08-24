@@ -136,7 +136,7 @@ export function parseTasks(text) {
   return out;
 }
 
-function parseEntity(text, fallbackName) {
+export function parseEntity(text, fallbackName) {
   let name = fallbackName, tags = [], updated = null, summary = "";
   const fm = text.match(/^---\n([\s\S]*?)\n---\n/);
   if (fm) {

@@ -4,8 +4,20 @@ Route every raw capture in `inbox/` into the right note, losing nothing. Read
 `CLAUDE.md` first — its routing table and golden rules are binding.
 
 ## Steps
-1. List `inbox/*.md` (ignore `inbox/_archive/`), **oldest first**. Handle the whole
-   batch — an admin day can produce 30+ files. If none, say so and stop.
+1. **Preflight, one command:**
+
+   ```
+   node scripts/inbox-context.mjs
+   ```
+
+   That JSON holds every capture waiting (oldest first, with its arrival time),
+   the open gaps, the people, projects and list notes a capture could belong to
+   with **the words each one calls itself by**, and the open tasks a `done:`
+   could match. If `count` is 0, say so and stop.
+
+   **Don't crawl to find a target.** The `terms` on each entity are there so
+   routing is a lookup, not a search — and `summary` says what the note is for.
+   Read a full note only when you have decided to write to it.
 2. For each capture, in order:
    a. **Archive the raw file first**: move it verbatim to `inbox/_archive/` (same
       filename). Only after it's safely archived do you route its content. If a run
@@ -44,13 +56,37 @@ Route every raw capture in `inbox/` into the right note, losing nothing. Read
         tidy kitchen, do dishes" is three things, and one checkbox can only be
         half-true.
       - an action ± a date → add an inline checkbox to `tasks.md` (`📅` date, `#tag`).
-      - about a known project → append to `projects/*.md`.
+      - about a known project → append to `projects/*.md`. Check the preflight's
+        `terms` before deciding a capture belongs nowhere: the 21 August capture
+        about making information searchable went to `notes/unsorted/` while
+        `jgc-director-path` — whose own summary says *"organising JGC's database
+        and making it searchable"* — sat right there unmatched.
       - else → a note in `notes/` (journal-ish → `daily/<today>.md`).
       - genuinely unsure → `notes/unsorted/<today>.md`, original line preserved.
-3. **Cross off any gap this batch answered.** If a capture answers an open
-   question in `_meta/gaps.md` (the evening brief asks one a day), move that
-   line to `## Answered` with today's date. Move it, never delete it. Route the
-   capture itself normally as well — the answer is content, not just a tick.
+        **This is the last resort, not the safe default.** A capture parked here
+        is one nobody will read again; if a project or person plausibly matches,
+        file it there instead and let the summary be slightly wrong.
+3. **Cross off any gap this batch answered.** Each capture carries a `mayAnswer`
+   list: the questions that were outstanding when it arrived, most recent first.
+   **Read it before you file the capture, not after.** If one of them is answered
+   — even partly, even sideways — move that gap's line to `## Answered` in
+   `_meta/gaps.md` with today's date, using its `raw` as an exact-match target.
+   Move it, never delete it. Route the capture itself normally as well: the
+   answer is content, not just a tick.
+
+   This step already existed and was still missed. On 21 August the evening brief
+   asked at 19:47 what "done" looks like for the searchable-database project;
+   at 20:08 Ben captured *"I need to find a way to get ai to search through the
+   information provided by the search… without needing a licence or API calls."*
+   That is the answer, twenty-one minutes later. It was filed to
+   `notes/unsorted/` and the gap left open — so the same question was queued to
+   be asked again a fortnight later, having already been answered. A capture
+   arriving hours after a question is the likeliest thing in the vault to be its
+   answer; `mayAnswer` exists so that connection is handed to you rather than
+   left to be noticed.
+
+   A partial answer still counts. If it answers half the question, cross it off
+   and note what is still unknown as a new, narrower gap under `## Open`.
 4. **Sweep completed tasks.** Any `- [x]` line in `tasks.md` whose `✅ <date>` is
    more than **3 days** old moves to `notes/completed-tasks.md` as
    `- <date> — <task text>`. Moved, never deleted (golden rule 1); a ticked task
