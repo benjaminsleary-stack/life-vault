@@ -2,13 +2,20 @@
 type: person
 name: Charlotte
 tags: [family]
-updated: 2026-08-07
+updated: 2026-08-20
 ---
 
 ## What to know
 Wife. French. Relationship is at breaking point and in therapy — Ben names it as
 both what he most wants to fix and what he would most regret not fixing.
-Birthday 19 November.
+Individual (weekly) and couples therapy both continue; the couples therapist is
+being changed, current focus is what Ben himself can do. Birthday 19 November.
+Civil anniversary 31 August, wedding anniversary 17 September — both coming up.
+
+**What they are trying now:** a "phone bowl" ritual on getting home (2-min hug,
+leg massage), a rule to stop arguments by 11pm and to argue better in front of the
+boys. What actually works, in Ben's words: paying her more attention and remembering
+what is on her mind so he can ask later — tracking that is his single biggest obstacle.
 
 **Better, in Ben's words:** happier, fighting less, her being affectionate to him.
 
@@ -43,20 +50,20 @@ rule in CLAUDE.md._
 
 ## Log
 - 2026-08-11 — Spent the day at her grandparents' house (Les Garniers, Blenau) with the boys on Jasper's birthday. Played on the beach together; Jasper's walkie talkies play was particularly lovely. Going to watch the eclipse. _(surfaced: 2026-08-12)_
-- 2026-08-06 — Trying "phone bowl" ritual when we get home: hug for 2 mins, leg massage 5 mins per leg. Attempting to stop arguments by 11pm and improve how we argue in front of the boys. _(surfaced: 2026-08-08)_
+- 2026-08-06 — Trying "phone bowl" ritual when we get home: hug for 2 mins, leg massage 5 mins per leg. Attempting to stop arguments by 11pm and improve how we argue in front of the boys. _(surfaced: 2026-08-24)_
 - 2026-08-01 — The couples therapist is being changed. Ben's individual therapy is
-  separate and continues weekly. _(interview)_ _(surfaced: 2026-08-05)_
+  separate and continues weekly. _(interview)_ _(surfaced: 2026-08-20)_
 - 2026-08-01 — **What actually works:** paying her more attention, and remembering
   what is on her mind so he can ask about it later. Ben names not being able to
-  track those things as his single biggest obstacle. _(interview)_
+  track those things as his single biggest obstacle. _(interview)_ _(surfaced: 2026-08-14)_
 - 2026-08-01 — Therapy is weekly. The current focus is what Ben himself can do to
-  improve the relationship. _(interview)_
+  improve the relationship. _(interview)_ _(surfaced: 2026-08-17)_
 - 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-31)_
 - 2026-07-19 — Contact: charlottemfkeime@gmail.com. Travel and appointments are usually booked jointly. _(from Gmail)_
-- 2026-07-19 — Interview: "we're at breaking point". Wants: happier, fight less, affection. _(surfaced: 2026-07-20)_
+- 2026-07-19 — Interview: "we're at breaking point". Wants: happier, fight less, affection. _(surfaced: 2026-08-21)_
 - 2026-07-19 — The fight, both sides: she is tired of my depression and of me not paying attention; I feel constantly criticised, unloved, and that she is never happy. _(surfaced: 2026-07-22)_
-- 2026-07-19 — Better between Jasper and Milo; hard since Milo was born. _(surfaced: 2026-07-23)_
-- 2026-07-19 — What she needs: to feel known and understood. _(surfaced: 2026-07-20)_
+- 2026-07-19 — Better between Jasper and Milo; hard since Milo was born. _(surfaced: 2026-08-19)_
+- 2026-07-19 — What she needs: to feel known and understood. _(surfaced: 2026-08-18)_
 
 ---
 

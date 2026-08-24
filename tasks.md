@@ -16,8 +16,8 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Add stones to freecycle #house
 - [ ] Order a new hearth for the fireplace #house
 - [ ] Order worktop and slatting #house
-- [ ] Measure the bench top #house 📅 2026-08-13
-- [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13
+- [ ] Measure the bench top #house 📅 2026-08-13 ⏳3 #stale
+- [ ] Wooden slats for the bookshelf. Decide if level or staggered. #house 📅 2026-08-13 ⏳3 #stale
 - [ ] Sand and fill bookshelf, change light switch. #house
 - [ ] Buy lamps #house
 - [ ] Buy better light bulbs for living room #house
@@ -26,7 +26,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Paint front door #house
 - [ ] Fix drainage from bathroom #house
 - [ ] Get waterbutts? #house
-- [ ] Prep for September business meeting. #work 📅 2026-08-17
+- [ ] Prep for September business meeting. #work 📅 2026-08-17 ⏳3 #stale
 - [ ] Do monthly LinkedIn posts #work
 - [x] Wash hands more #health ✅ 2026-08-09
 - [x] Pay more attention when peeing in the night #health ✅ 2026-08-09

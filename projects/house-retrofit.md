@@ -2,20 +2,20 @@
 type: project
 name: House Retrofit
 tags: [house]
-updated: 2026-07-19
+updated: 2026-08-24
 ---
 
 ## What to know
 Deep retrofit of Victorian terrace in Cambridge. Internal wall insulation (Gutex wood fibre + lime plaster), insulated suspended timber floor (hemp + breather membrane), underfloor heating (living rooms & hallway), Vaillant Arotherm Plus 7kW heat pump, Jaga fan-assist radiators for heating and bedroom cooling. Doing most work in-house.
 
-Status: [[Jasper]]'s room complete (needs repaint); living rooms mostly complete.
-Moving again in small pieces — IKEA units in the corridor and laundry, and two new
-light fittings, all in the week to 1 Aug. **Near-term goal: finish the living room
-and hallway.** The hallway needs skirting, planned for after the holiday (back
-~11 Aug). Longer-term: insulating [[Milo]]'s room — the next big one, needing a
-**week of leave or money, and the children out of the house because of the
-dust**, all at once. Neither a free weekend nor a quiet house unlocks it on its
-own. Then the new kitchen in the extension (waiting on funds). Standing specs live in [[house-facts]].
+Status: [[Jasper]]'s room complete (needs repaint); living rooms mostly complete;
+IKEA units and two light fittings in the corridor and laundry now done. **Near-term
+goal: finish the living room and hallway.** Skirting was the job earmarked for Ben's
+solo window at home from 13 Aug; nothing logged since to confirm it got done. Longer-term: insulating [[Milo]]'s room — the next
+big one, needing a **week of leave or money, and the children out of the house
+because of the dust**, all at once. Neither a free weekend nor a quiet house unlocks
+it on its own. Then the new kitchen in the extension (waiting on funds). Standing
+specs live in [[house-facts]].
 
 ## Log
 - 2026-08-01 — **[[Milo]]'s room needs three things at once**, which is why it
