@@ -5,7 +5,7 @@
 // masquerading as current from a stale cache is worse than a network error.
 // (3) receive push notifications — the vault's only delivery channel.
 
-const SHELL = "lv-shell-20260821153836";
+const SHELL = "lv-shell-20260825134047";
 const SHELL_FILES = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./badge-96.png",

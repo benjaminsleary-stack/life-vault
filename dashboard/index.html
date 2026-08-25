@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="lv-build" content="2026-08-21T15:38:36Z" />
+<meta name="lv-build" content="2026-08-25T13:40:47Z" />
 <meta name="theme-color" content="#1c1813" />
 <link rel="manifest" href="manifest.webmanifest" />
 <title>Life-Vault</title>
@@ -1418,13 +1418,37 @@
       }
     });
   }
+  // A brief line is prose; a task is one action with a completion. Posting the
+  // line verbatim produced things like "She said what she needs is to feel known
+  // and understood — a short text about something specific to her, not logistics,
+  // does more than a bigger gesture later." — no verb, nothing to tick, and so it
+  // sits in the list forever. That is exactly the "permanent noise that never
+  // leaves" CLAUDE.md warns about for shopping lists and scout findings.
+  //
+  // Strip the presentation, keep the first clause, and let Ben say what the
+  // action actually is before it is written. One extra tap; the alternative is a
+  // task list nobody trusts.
+  function taskTextFrom(raw){
+    let t=String(raw||"")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g,"$1")   // markdown link → its text
+      .replace(/_\([^)]*\)_/g,"")               // _(logged 2026-08-01)_ and friends
+      .replace(/[*_`]+/g,"")
+      .replace(/\s+/g," ").trim();
+    // Advice runs "<the point> — <the elaboration>". The point is the task.
+    const cut=t.search(/\s[—–]\s|\.\s/);
+    if(cut>15) t=t.slice(0,cut);
+    return t.replace(/[\s.,;:]+$/,"");
+  }
   // One handler for both the inline brief card and the file sheet.
   function briefActions(e){
     const btn=e.target.closest(".li-acts button"); if(!btn) return;
     const bar=btn.parentElement, text=bar.dataset.text, act=btn.dataset.a;
     if(act==="task"){
+      const suggested=taskTextFrom(text);
+      const final=(window.prompt("Add as a task — start with a verb:", suggested)||"").trim();
+      if(!final) return;                       // cancelled, or emptied
       btn.disabled=true;
-      req("/api/task",{method:"POST",body:JSON.stringify({text})})
+      req("/api/task",{method:"POST",body:JSON.stringify({text:final})})
         .then((r)=>{ if(!r.ok) throw new Error(); btn.textContent="✓"; toast("Added to tasks"); load(); })
         .catch(()=>{ btn.disabled=false; toast("Failed",true); });
       return;

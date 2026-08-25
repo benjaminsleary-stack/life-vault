@@ -195,6 +195,19 @@ test("the notification names the digest, and the app opens the one it names", ()
     "the brief panel must wait on the data, not on a timer it can lose");
 });
 
+test("a brief line is not posted verbatim as a task", () => {
+  // "She said what she needs is to feel known and understood — a short text about
+  // something specific to her, not logistics, does more than a bigger gesture
+  // later." sat in tasks.md with no verb and no completion, so it could never be
+  // honestly ticked. It got there through this button, one tap, unedited.
+  const app = readFileSync(new URL("../dashboard/index.html", import.meta.url), "utf8");
+  assert.match(app, /function taskTextFrom\(raw\)/, "the line must be cleaned before it becomes a task");
+  assert.match(app, /window\.prompt\("Add as a task — start with a verb:", suggested\)/,
+    "and confirmed, because no heuristic turns prose into an imperative");
+  assert.doesNotMatch(app, /"\/api\/task",\{method:"POST",body:JSON\.stringify\(\{text\}\)\}/,
+    "the verbatim post is what created untickable tasks");
+});
+
 test("the brief panel carries a reply box", () => {
   // Six specific questions were asked over six days and none were answered.
   // The reply box existed — on the file viewer — but reading the brief went
