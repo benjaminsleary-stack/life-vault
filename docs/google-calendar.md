@@ -33,20 +33,34 @@ and `.env` (which is gitignored).
 (call it anything) → **APIs & Services → Library** → search "Google Calendar
 API" → **Enable**.
 
-**2. Configure the consent screen.**
-**APIs & Services → OAuth consent screen**. Choose **External**. Fill in the app
+**2. Configure the consent screen.** Choose **External**, and fill in the app
 name and your own email where required.
+
+> Google has renamed this. In the current **Google Auth Platform** console there
+> is no "OAuth consent screen" page: the app name and support email live under
+> **Branding**, and the publishing status under **Audience**.
 
 > **The trap.** Leave the app in **Testing** and your refresh token expires
 > after **7 days**, every time — the routine will work all week and then die
-> quietly each Monday. On the consent screen, **Publish app** so its status
-> reads *In production*. You will see a warning about verification: it does not
-> apply here, because the only user is you and the app is not public. Do not
+> quietly each Monday. Go to **Audience → Publishing status → Publish app** so
+> it reads *In production*. You will see a warning about verification: it does
+> not apply here, because the only user is you and the app is not public. Do not
 > skip this step.
 
 **3. Create the OAuth client.**
-**APIs & Services → Credentials → Create credentials → OAuth client ID** →
-application type **Desktop app**. Copy the **client ID** and **client secret**.
+**Clients → Create client** → application type **Desktop app**. Copy the
+**client ID** and **client secret**.
+
+> **Desktop app, not Web application.** `scripts/google-auth.mjs` redirects to
+> exactly `http://localhost`, and a Desktop client accepts that loopback with no
+> redirect URIs to register — the "Authorized redirect URIs" section does not
+> even appear. Pick Web application and you get a redirect-mismatch error, and
+> the fix is a URI list you then have to keep in step with the script.
+>
+> If an unrelated OAuth client already exists in the account — an old project's,
+> say, with a `http://localhost:3000/api/auth/...` callback — make a new one
+> rather than adding `http://localhost` to it. Two apps sharing a client means
+> deleting either one breaks the other.
 
 **4. Get a refresh token.** From the vault root:
 
