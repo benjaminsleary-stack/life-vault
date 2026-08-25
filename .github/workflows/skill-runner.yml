@@ -38,6 +38,12 @@ jobs:
       WORKER_URL: ${{ secrets.WORKER_URL }}
       UNLOCK_TOKEN: ${{ secrets.UNLOCK_TOKEN }}
       ICS_URL: ${{ secrets.ICS_URL }}
+      # The email digest has printed "GMAIL_ADDRESS / GMAIL_APP_PASSWORD not set"
+      # in every brief since setup. The secrets were only half the story: no
+      # workflow passed them to the runner, so fetch-mail.py read variables that
+      # were never going to exist. A secret nothing forwards is not configuration.
+      GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
       CAL_WORK: ${{ secrets.CAL_WORK }}
       CAL_PERSONAL: ${{ secrets.CAL_PERSONAL }}
       CAL_FAMILY: ${{ secrets.CAL_FAMILY }}
@@ -60,6 +66,13 @@ jobs:
 
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code
+
+      # fetch-mail.py imports imap-tools lazily, so a missing dependency does not
+      # announce itself until the email digest runs — and then it reports "mail
+      # wasn't checked", which is exactly what a missing credential reports. Two
+      # different faults, one indistinguishable symptom. Install it up front.
+      - name: Install mail dependencies
+        run: python3 -m pip install --quiet -r scripts/requirements.txt
 
       - name: Process queued runs
         run: |
