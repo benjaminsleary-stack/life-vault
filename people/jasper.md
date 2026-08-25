@@ -2,12 +2,13 @@
 type: person
 name: Jasper
 tags: [family]
-updated: 2026-07-19
+updated: 2026-08-17
 ---
 
 ## What to know
-Son. **Turns 5 on 11 August 2026** — the vault previously recorded him as already
-5, which was wrong; corrected by Ben 1 Aug. Birthday 11 August. Very physical — always moving. Lives on his bike.
+Son. **Now 5** — turned 5 on 11 August 2026, celebrated on Oléron with a beach day
+and time at the grandparents' house, family watching the eclipse together the next
+day. Birthday 11 August. Very physical — always moving. Lives on his bike.
 Big imaginative-play streak: invents games and runs them. Currently into Paw Patrol
 and Dragon Rider Rescue.
 
