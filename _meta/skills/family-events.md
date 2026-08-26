@@ -26,9 +26,11 @@ differently:
 
 - **0** — created (or already present). Say what went in.
 - **3** — not configured; a credential is unset. This is **not** a failure to
-  shout about. Write the digest and the `.ics` as normal, and add one line to
-  the digest saying calendar-adding is not set up and pointing at
-  `docs/google-calendar.md`. Do not notify a failure, and do not create a task.
+  shout about, and on the current setup it is the EXPECTED outcome: the OAuth
+  credential was deliberately not set up (see `_meta/skills/calendar-push.md`
+  for why). Write the digest and the `.ics` as normal, and add one line to the
+  digest saying the events can be pushed to the calendar by asking Claude to
+  run `calendar-push`. Do not notify a failure, and do not create a task.
 - **1** — configured but broken. This **is** loud: report it in the digest and
   include the error. A silently-failing calendar write is indistinguishable from
   a month with nothing on.
