@@ -70,6 +70,18 @@ export GOOGLE_CLIENT_SECRET='…'
 node scripts/google-auth.mjs            # prints a URL
 ```
 
+PowerShell, which is where this vault is actually driven from:
+
+```powershell
+$env:GOOGLE_CLIENT_ID = Read-Host "Paste the Desktop client ID"
+$env:GOOGLE_CLIENT_SECRET = Read-Host "Paste the Desktop client secret"
+node scripts/google-auth.mjs
+```
+
+`Read-Host` rather than a literal, because a pasted `'<client id>'` placeholder
+reaches Google as that exact string and comes back `401 invalid_client` — an
+error that reads like a broken client and is really a copy-paste.
+
 Open the URL, sign in as the account that owns the calendar, approve. The
 browser will fail to load `http://localhost/?code=…` — that is expected, nothing
 is listening there. Copy the `code` value out of the address bar and run:

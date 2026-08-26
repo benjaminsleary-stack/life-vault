@@ -39,6 +39,14 @@ export STRAVA_CLIENT_SECRET='…'
 node scripts/strava-auth.mjs            # prints a URL
 ```
 
+Or in PowerShell:
+
+```powershell
+$env:STRAVA_CLIENT_ID = Read-Host "Paste the Strava client ID"
+$env:STRAVA_CLIENT_SECRET = Read-Host "Paste the Strava client secret"
+node scripts/strava-auth.mjs
+```
+
 Open it, approve, then:
 
 ```bash

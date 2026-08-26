@@ -53,9 +53,15 @@ ${url}
    — that is expected, nothing is listening. Copy the value of "code" out of
    the address bar (everything between "code=" and the next "&").
 
-3. Run this again with that code as the argument:
+3. Run this again with that code as the argument, in THIS SAME terminal — the
+   client id and secret are already set here:
 
-   GOOGLE_CLIENT_ID=… GOOGLE_CLIENT_SECRET=… node scripts/google-auth.mjs <code>
+   node scripts/google-auth.mjs <the code>
+
+   (This line used to print the bash form, GOOGLE_CLIENT_ID=… node …, which
+   PowerShell parses as a command name and rejects. The variables are already
+   in the environment by the time you read this, so re-stating them was never
+   needed on any platform.)
 `);
   process.exit(0);
 }
