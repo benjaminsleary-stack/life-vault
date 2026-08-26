@@ -50,17 +50,44 @@ echo "exit=$LASTEXITCODE"
 which. Note the two forms of the same path: `VAULT_DIR` takes the Windows form
 with forward slashes, the script argument takes the Git Bash form (`/c/Users/…`).
 
-**2. Only once that works, schedule it:**
+**2. Only once that works, schedule it.** Use the PowerShell cmdlets, not
+`schtasks`:
 
 ```powershell
-schtasks /Create /SC MINUTE /MO 10 /TN "life-vault-bridge" /TR "\"C:\Program Files\Git\bin\bash.exe\" -lc \"VAULT_DIR='C:/Users/BenLeary/life-os' bash '/c/Users/BenLeary/life-os/scripts/bridge.sh'\""
+$exe = "C:\Program Files\Git\bin\bash.exe"
+$arg = "-lc ""VAULT_DIR='C:/Users/BenLeary/life-os' bash '/c/Users/BenLeary/life-os/scripts/bridge.sh'"""
+$act = New-ScheduledTaskAction -Execute $exe -Argument $arg
+$trg = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+         -RepetitionInterval (New-TimeSpan -Minutes 10) `
+         -RepetitionDuration ([TimeSpan]::FromDays(3650))
+Register-ScheduledTask -TaskName "life-vault-bridge" -Action $act -Trigger $trg `
+  -Description "Mirror the Obsidian vault to GitHub every 10 minutes" -Force
 ```
+
+> **Why not `schtasks`.** Its `/TR` argument needs a command line nested inside
+> a quoted string, and every published example escapes that with `\"`, which is
+> a **cmd.exe** convention. PowerShell does not honour it, so the argument
+> splits on the space in `C:\Program Files` and the command dies with
+> `Invalid argument/option - 'C:\Program'`. `New-ScheduledTaskAction` takes the
+> executable and its arguments as separate parameters, so there is no nesting to
+> get wrong. If you do want `schtasks`, run it from **cmd.exe**, or prefix it
+> with PowerShell's stop-parsing token: `schtasks.exe --% /Create /SC MINUTE …`.
+
+The task runs as you, only while you are logged on — which is what you want: the
+bridge exists to sync a laptop that is in use. It needs no stored password.
+
+> A console window will flash briefly every ten minutes, because `bash.exe` is a
+> console program. If that irritates, edit the task in Task Scheduler and tick
+> **Run whether user is logged on or not** — it then runs without a visible
+> window, at the cost of storing your Windows password.
 
 **3. Confirm it is actually scheduled and running:**
 
 ```powershell
-schtasks /Query /TN "life-vault-bridge" /V /FO LIST | Select-String "Status|Last Run|Last Result|Next Run"
+Get-ScheduledTask -TaskName "life-vault-bridge" | Get-ScheduledTaskInfo
 ```
+
+Wait ten minutes, run it again, and check `LastRunTime` has moved.
 
 `Last Result: 0` is healthy. A non-zero result, or a `Last Run Time` that never
 advances, means it is registered but not working — which looks exactly like
