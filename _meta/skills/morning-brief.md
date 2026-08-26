@@ -24,13 +24,39 @@ bundle, and the bundle is authoritative. Read a file only if the bundle names
 something missing that you need.
 
 This matters more than it looks. Between 20 July and 5 August this skill ran at
-24–59 turns and up to $2.16 a morning, because it rediscovered the same five
-files one tool call at a time and then re-sent them as cached context on every
-following turn. The bundle is 1.8KB against 26KB of raw files, in one call
+24–59 turns a morning, because it rediscovered the same five files one tool call
+at a time and then re-sent them as cached context on every following turn. (The
+usage log records a dollar figure per run; on a flat subscription that is the
+notional API equivalent, not a bill. What long runs actually cost is rate-limit
+headroom — two runs died on a session limit on 4 August — and time.) The bundle is 1.8KB against 26KB of raw files, in one call
 instead of twelve. **Budget: 10 turns.** If you are past 15, you are exploring
 something the preflight already answered.
 
-## Step 2 — news
+## Step 2 — the mail
+
+```
+node scripts/fetch-mail.py
+```
+
+Then apply `_meta/skills/email-digest.md` to what comes back, and put its list
+under **## Inbox that needs you**.
+
+This step was accidentally deleted in the rewrite that added the preflight, and
+for a fortnight the brief printed that heading with "—" under it every morning —
+which reads as "your inbox is clear" when the truth was "nothing looked". The
+credentials went in on 25 August precisely so this would work; a run that day
+read 21 messages and found three things that genuinely needed Ben: a £100 Bupa
+excess payable to the doctor rather than the insurer, three access-code-protected
+forms waiting, and a nursery funding declaration.
+
+- Only what needs **him**. Receipts, shipping confirmations, statements-ready
+  notices and marketing are noise — say "nothing needs a reply" rather than
+  listing them.
+- If `fetch-mail.py` exits non-zero, that is a `⚠ mail not connected` at the
+  foot of the brief, not a paragraph. Never let an unchecked inbox render as an
+  empty one.
+
+## Step 3 — news
 
 Web-search the day's top UK/world headlines, favouring Ben's interests. Pick 3–4
 genuinely current items. Format each as:
@@ -73,7 +99,7 @@ path was to take it. The wording drifted run to run — "one source only", "no
 usable sources found", "search unreachable" — which is what improvising an excuse
 looks like. Reporting no news is only honest after the budget is spent.
 
-## Step 3 — the Charlotte line
+## Step 4 — the Charlotte line
 
 The bundle's `charlotte` block has already applied the rules: nothing private,
 nothing surfaced in the last 14 days. What is left is a shortlist to **choose
@@ -88,7 +114,7 @@ beats everything; commentary and generic advice are worse than silence).
 - If `captureStalled` is true, say so in the brief. A fortnight with no new
   fragment means the capture half has stopped, and that must not fail silently.
 
-## Step 4 — write it
+## Step 5 — write it
 
 `digests/<today>-morning.md`, using `heading` from the bundle:
 
@@ -121,13 +147,13 @@ Facts separated by ` · `, no sentences, no causes, no remedies. That line is th
 whole of what golden rule 5 requires here: visible, not explained. If everything
 is healthy, there is no line at all.
 
-## Step 5 — the nag counters
+## Step 6 — the nag counters
 
 For each task in `tasks.overdue`, do exactly what its `action` says, using the
 `raw` line as the exact-match target. That is one edit per task, no reading
 first. Tasks in `dueToday` get no counter.
 
-## Step 6 — ship
+## Step 7 — ship
 
 1. `git add -A && git commit -m "morning brief <today>" && git push`
 2. `bash scripts/notify.sh "Morning brief" digests/<today>-morning.md`
