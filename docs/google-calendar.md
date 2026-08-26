@@ -116,6 +116,15 @@ node scripts/calendar-add.mjs <<< '[{"summary":"test","date":"2026-12-25"}]'
 node scripts/calendar-add.mjs <<< '[{"summary":"test","date":"2026-12-25"}]'
 ```
 
+PowerShell has no `<<<` here-string operator, so pipe instead:
+
+```powershell
+$ev = '[{"summary":"test","date":"2026-12-25"}]'
+$ev | node scripts/calendar-add.mjs --dry-run   # shows what would be sent
+$ev | node scripts/calendar-add.mjs             # writes it; then delete it from the calendar
+$ev | node scripts/calendar-add.mjs             # again — expect skipped: ["test"]
+```
+
 That third command is the one worth running. A monthly routine re-runs and
 search results repeat, so every event carries a private `lifeVaultKey` property
 derived from its title and date, and the calendar is checked for that key before
