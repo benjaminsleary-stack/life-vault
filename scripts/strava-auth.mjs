@@ -52,9 +52,10 @@ ${url}
    That is expected; nothing is listening. Copy the value of "code" out of the
    address bar (between "code=" and the next "&").
 
-4. Run this again with that code:
+4. Run this again with that code, in THIS SAME terminal — the client id and
+   secret are already set here:
 
-   STRAVA_CLIENT_ID=… STRAVA_CLIENT_SECRET=… node scripts/strava-auth.mjs <code>
+   node scripts/strava-auth.mjs <the code>
 `);
   process.exit(0);
 }
