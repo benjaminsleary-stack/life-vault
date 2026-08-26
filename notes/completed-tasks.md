@@ -32,3 +32,4 @@ Ticked tasks, filed here 3 days after completion so tasks.md stays current. Noth
 - 2026-08-16 — Skirting board corridor.
 - 2026-08-16 — Sand the walls in the corridor.
 - 2026-08-16 — Buy better light bulbs for living room
+- 2026-08-21 — Plant pots do

@@ -51,6 +51,7 @@ sitting — a list that empties is a list that was working._
       How much annual leave have you got left, and when does it reset? Without
       that the vault can't tell you when the two could ever line up. #house #work
       _(asked: 2026-08-12)_
+      _(asked: 2026-08-26)_
 - [ ] The GitHub token the Worker uses has an expiry date, and when it passes
       every routine stops silently. What date is it? Then it becomes a dated
       task instead of a surprise. #admin

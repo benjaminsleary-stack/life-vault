@@ -25,5 +25,4 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Make a wind chime? #interests
 - [ ] Paint jaspers room #house
 - [ ] Jaspers picture frame string #house
-- [x] Plant pots do #family ✅ 2026-08-21
 - [ ] Send [[Charlotte]] a short text about something specific on her mind — not logistics #family
