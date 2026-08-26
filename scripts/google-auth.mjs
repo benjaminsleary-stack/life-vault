@@ -95,6 +95,7 @@ Store that as a GitHub Actions secret (and in .env for desktop runs), alongside
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_CALENDAR_ID.
 
 Check it end to end before relying on it:
-  node scripts/calendar-add.mjs --dry-run <<< '[{"summary":"test","date":"2026-12-25"}]'
+  bash:       node scripts/calendar-add.mjs --dry-run <<< '[{"summary":"test","date":"2026-12-25"}]'
+  PowerShell: '[{"summary":"test","date":"2026-12-25"}]' | node scripts/calendar-add.mjs --dry-run
 then drop --dry-run to write a real event, and delete it from the calendar.
 `);
