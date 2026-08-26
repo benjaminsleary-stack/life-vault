@@ -19,3 +19,11 @@ Ticked tasks, filed here 3 days after completion so tasks.md stays current. Noth
 - 2026-07-24 — Dune: Part Three — new full trailer dropped 8 July 2026; confirmed cinema release 18 December 2026, closing Villeneuve's trilogy (adapted from Dune Messiah), with Timothée Chalamet, Zendaya, Florence Pugh returning and Robert Pattinson joining the cast. FirstShowing.net · Deadline
 - 2026-07-24 — Waveshaper — "Alternate Reality" (released 1 May 2026). Swedish synthwave artist Tom Andersson's latest — retro-80s, sci-fi/soundtrack-leaning, 10 tracks. Solidly in your synthwave lane, not covered last week. Bandcamp
 - 2026-08-06 — Talk to Charlotte about apologies, bedtimes, babysitter, that I'm going to try and be more forward with my apologies but need her to be more understanding and receptive
+- 2026-08-09 — Order Jasper's bike
+- 2026-08-09 — Buy Jasper's 5th birthday presents **in France** — his birthday is 11 Aug and you're on Oléron until the 13th, so ordering to the house can't work. Either they travel with you tonight or they're bought out there.
+- 2026-08-09 — Jasper raincoat
+- 2026-08-09 — Buy raincoat
+- 2026-08-09 — Wash hands more
+- 2026-08-09 — Pay more attention when peeing in the night
+- 2026-08-09 — Coffee ground before 730
+- 2026-08-09 — Stop arguing in front of the boys Charlotte

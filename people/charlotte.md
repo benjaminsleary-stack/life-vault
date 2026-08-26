@@ -35,7 +35,7 @@ years ago — her father had a long-running affair and is now with that woman.
 
 ## Dates & occasions
 - (occasion:: 2026-11-19) Charlotte's birthday
-- (occasion:: 2026-08-31) Civil wedding anniversary _(surfaced: 2026-08-11)_
+- (occasion:: 2026-08-31) Civil wedding anniversary _(surfaced: 2026-08-25)_
 - (occasion:: 2026-09-17) Wedding anniversary
 
 ## Private
@@ -61,7 +61,7 @@ rule in CLAUDE.md._
 - 2026-07-13 — Relationship in therapy; working through strain. _(surfaced: 2026-07-31)_
 - 2026-07-19 — Contact: charlottemfkeime@gmail.com. Travel and appointments are usually booked jointly. _(from Gmail)_
 - 2026-07-19 — Interview: "we're at breaking point". Wants: happier, fight less, affection. _(surfaced: 2026-08-21)_
-- 2026-07-19 — The fight, both sides: she is tired of my depression and of me not paying attention; I feel constantly criticised, unloved, and that she is never happy. _(surfaced: 2026-07-22)_
+- 2026-07-19 — The fight, both sides: she is tired of my depression and of me not paying attention; I feel constantly criticised, unloved, and that she is never happy. _(surfaced: 2026-08-26)_
 - 2026-07-19 — Better between Jasper and Milo; hard since Milo was born. _(surfaced: 2026-08-19)_
 - 2026-07-19 — What she needs: to feel known and understood. _(surfaced: 2026-08-18)_
 
