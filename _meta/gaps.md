@@ -56,6 +56,7 @@ sitting — a list that empties is a list that was working._
       every routine stops silently. What date is it? Then it becomes a dated
       task instead of a surprise. #admin
       _(asked: 2026-08-13)_
+      _(asked: 2026-08-27)_
 - [ ] You run, then get injured, three times now. What does the running week
       actually look like — days, distance, pace, surface? #health
       _(asked: 2026-08-14)_
