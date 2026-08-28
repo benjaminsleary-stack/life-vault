@@ -65,7 +65,7 @@ rule in CLAUDE.md._
 - 2026-07-19 — The fight, both sides: she is tired of my depression and of me not paying attention; I feel constantly criticised, unloved, and that she is never happy. _(surfaced: 2026-07-22)_
 - 2026-07-19 — Better between Jasper and Milo; hard since Milo was born. _(surfaced: 2026-08-19)_
 - 2026-07-19 — What she needs: to feel known and understood. _(surfaced: 2026-08-18)_
-- 2026-07-19 — Correction: civil wedding anniversary is 31 August, not 21 August. The onboarding date was wrong; confirmed by Ben against the calendar. _(surfaced: 2026-08-14)_
+- 2026-07-19 — Correction: civil wedding anniversary is 31 August, not 21 August. The onboarding date was wrong; confirmed by Ben against the calendar. _(surfaced: 2026-08-28)_
 - 2026-07-19 — Cycle marker identified on the calendar; recorded under Private at Ben's request.
 
 ---
