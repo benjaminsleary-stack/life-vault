@@ -60,6 +60,7 @@ sitting — a list that empties is a list that was working._
 - [ ] You run, then get injured, three times now. What does the running week
       actually look like — days, distance, pace, surface? #health
       _(asked: 2026-08-14)_
+      _(asked: 2026-08-28)_
 
 ## Parked
 
