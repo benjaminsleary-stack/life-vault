@@ -1,0 +1,41 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//life-vault//family-events//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:family-events-2026-09-1@life-vault
+DTSTAMP:20260901T000000Z
+DTSTART;VALUE=DATE:20260905
+DTEND;VALUE=DATE:20260906
+SUMMARY:Cambridge Botanic Garden: Family Saturday – Leaf Art
+LOCATION:Cambridge University Botanic Garden\, 1 Brookside\, Cambridge CB2 1JE
+DESCRIPTION:10am-1pm. Free child tickets (age 3+)\, adults pay standard admission £8.60. https://app.tickettailor.com/events/cambridgeuniversitybotanicgarden/1981605
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-09-2@life-vault
+DTSTAMP:20260901T000000Z
+DTSTART;VALUE=DATE:20260913
+DTEND;VALUE=DATE:20260914
+SUMMARY:Wimpole Estate: Harv'Fest
+LOCATION:Wimpole Estate\, Arrington\, Royston SG8 0BW
+DESCRIPTION:National Trust\, ~25 min drive. 9:30am-4:30pm. Adult £18 / child £9 / family £45\, free for NT members. Harvest festival\, working farm\, shire horses. https://www.nationaltrust.org.uk/visit/cambridgeshire/wimpole-estate/events
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-09-3@life-vault
+DTSTAMP:20260901T000000Z
+DTSTART;VALUE=DATE:20260919
+DTEND;VALUE=DATE:20260920
+SUMMARY:Anglesey Abbey: Heritage Open Days
+LOCATION:Anglesey Abbey\, Lode\, Cambridge CB25 9EJ
+DESCRIPTION:National Trust\, ~15 min drive. Free entry\, pre-booking required. Hoe Fen adventure play\, dahlia garden. https://www.nationaltrust.org.uk/visit/cambridgeshire/anglesey-abbey-gardens-and-lode-mill/events
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-09-4@life-vault
+DTSTAMP:20260901T000000Z
+DTSTART;VALUE=DATE:20261003
+DTEND;VALUE=DATE:20261004
+SUMMARY:Cambridge Botanic Garden: Family Saturday – Fun with Fungi
+LOCATION:Cambridge University Botanic Garden\, 1 Brookside\, Cambridge CB2 1JE
+DESCRIPTION:10am-1pm. Free child tickets (age 3+)\, adults pay standard admission £8.60. Booking opens ~26 Sep. https://app.tickettailor.com/events/cambridgeuniversitybotanicgarden/1981625
+END:VEVENT
+END:VCALENDAR

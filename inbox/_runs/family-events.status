@@ -1,1 +1,1 @@
-{"skill":"family-events","ok":true,"when":"2026-08-07T08:29:49Z","outputs":["digests/2026-08-family-events.md"],"error":"","delivered":true,"deliveryError":"","model":"sonnet","tokens":{"in":7550,"out":15920,"cache":1710180},"cost_usd":1.6440312999999998}
+{"skill":"family-events","ok":true,"when":"2026-09-01T10:07:02Z","outputs":["digests/2026-09-family-events.md"],"error":"","delivered":true,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":3415,"out":23154,"cache":2965950},"cost_usd":2.7328314999999996}
