@@ -27,10 +27,6 @@ _Ordered by what the vault most needs. One line each; phrase it exactly as it
 should be asked. Refilled 2026-08-01 after the first nine were answered in one
 sitting — a list that empties is a list that was working._
 
-- [ ] You said you can't get to co-director until there are engineers who can
-      deliver. Name them. Who at JGC is closest, and what's missing for each? #work
-      _(asked: 2026-08-05)_
-      _(asked: 2026-08-20)_
 - [ ] The searchable-database side project is the biggest thing you actually push
       at work. What would "done" look like, and who else has asked for it? #work
       _(asked: 2026-08-07)_
@@ -68,6 +64,11 @@ review as "decide or delete", the same as a stale task._
       _(asked: 2026-08-04)_
       _(asked: 2026-08-18)_
       _(asked: 2026-09-01)_
+- [ ] You said you can't get to co-director until there are engineers who can
+      deliver. Name them. Who at JGC is closest, and what's missing for each? #work
+      _(asked: 2026-08-05)_
+      _(asked: 2026-08-20)_
+      _(asked: 2026-09-03)_
 
 ## Answered
 
