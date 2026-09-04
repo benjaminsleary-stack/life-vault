@@ -27,10 +27,6 @@ _Ordered by what the vault most needs. One line each; phrase it exactly as it
 should be asked. Refilled 2026-08-01 after the first nine were answered in one
 sitting — a list that empties is a list that was working._
 
-- [ ] The searchable-database side project is the biggest thing you actually push
-      at work. What would "done" look like, and who else has asked for it? #work
-      _(asked: 2026-08-07)_
-      _(asked: 2026-08-21)_
 - [ ] The couples therapist is being changed. Who to, when does it start, and was
       that your call or hers? #family
       _(asked: 2026-08-09)_
@@ -69,6 +65,11 @@ review as "decide or delete", the same as a stale task._
       _(asked: 2026-08-05)_
       _(asked: 2026-08-20)_
       _(asked: 2026-09-03)_
+- [ ] The searchable-database side project is the biggest thing you actually push
+      at work. What would "done" look like, and who else has asked for it? #work
+      _(asked: 2026-08-07)_
+      _(asked: 2026-08-21)_
+      _(asked: 2026-09-04)_
 
 ## Answered
 
