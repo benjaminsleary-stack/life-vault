@@ -9,6 +9,7 @@ Env: GMAIL_ADDRESS, GMAIL_APP_PASSWORD, optional MAIL_SINCE_HOURS (default 24).
 Deps: imap-tools  (installed by scripts/setup.sh).
 """
 import base64
+import hashlib
 import json
 import os
 import sys
@@ -38,7 +39,11 @@ def main() -> int:
         with MailBox("imap.gmail.com").login(addr, pw, initial_folder="INBOX") as mb:
             for msg in mb.fetch(AND(date_gte=since), reverse=True, mark_seen=False, bulk=True):
                 mid = (msg.headers.get("message-id", ("",))[0] or msg.uid or "").strip("<>")
-                slug = base64.urlsafe_b64encode((mid or msg.uid or "x").encode()).decode()[:24]
+                # Full hash, not a truncated base64 of the id: some senders (e.g. this
+                # school's IMAP gateway) issue message-ids sharing a long common prefix,
+                # which collided under a 24-char slice and silently overwrote same-batch
+                # bodies/attachments with each other's.
+                slug = hashlib.sha256((mid or msg.uid or "x").encode()).hexdigest()[:24]
                 body = (msg.text or msg.html or "").strip()
                 body_path = work / f"{slug}.body.txt"
                 body_path.write_text(body[:20000], encoding="utf-8")

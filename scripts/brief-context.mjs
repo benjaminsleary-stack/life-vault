@@ -191,9 +191,22 @@ function charlotte() {
     loops: openLoops(log, "Charlotte", "charlotte")
       .filter((l) => eligibleIds.has(l.logged + "|" + l.text))
       .map((l) => ({ date: l.date, daysAway: l.daysAway, text: l.text, logged: l.logged })),
-    occasions: occasionsIn(text)
-      .filter((o) => o.date >= T && days(T, o.date) <= 45)
-      .map((o) => ({ ...o, daysAway: days(T, o.date) })),
+    // occasionsIn() strips the `_(surfaced: …)_` stamp into nothing (it's
+    // bookkeeping, per vault.js) rather than returning it, so the 14-day
+    // dedup that loops/candidates get has to be redone here from the raw
+    // text — otherwise an occasion re-offers itself the morning right after
+    // it was surfaced, the one thing charlotte-surfacer.md rules out.
+    occasions: (() => {
+      const stampByDate = new Map();
+      for (const m of text.matchAll(/\(occasion::\s*(\d{4}-\d{2}-\d{2})\)\s*(.*)/g)) {
+        const st = m[2].match(/_\(surfaced:\s*(\d{4}-\d{2}-\d{2})\)_/);
+        if (st) stampByDate.set(m[1], st[1]);
+      }
+      return occasionsIn(text)
+        .filter((o) => o.date >= T && days(T, o.date) <= 45)
+        .filter((o) => { const s = stampByDate.get(o.date); return !s || days(s) >= 14; })
+        .map((o) => ({ ...o, daysAway: days(T, o.date) }));
+    })(),
     // Newest first, capped: a shortlist, not the whole file.
     candidates: [...eligible]
       .sort((a, b) => b.date.localeCompare(a.date))
