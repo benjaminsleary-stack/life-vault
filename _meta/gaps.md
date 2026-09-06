@@ -27,10 +27,6 @@ _Ordered by what the vault most needs. One line each; phrase it exactly as it
 should be asked. Refilled 2026-08-01 after the first nine were answered in one
 sitting — a list that empties is a list that was working._
 
-- [ ] The couples therapist is being changed. Who to, when does it start, and was
-      that your call or hers? #family
-      _(asked: 2026-08-09)_
-      _(asked: 2026-08-23)_
 - [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
       term — that came from an email on 19 Jul. Is it done? #admin
       _(asked: 2026-08-10)_
@@ -55,6 +51,11 @@ sitting — a list that empties is a list that was working._
 _Asked three times without an answer. Not deleted — surfaced in the weekly
 review as "decide or delete", the same as a stale task._
 
+- [ ] The couples therapist is being changed. Who to, when does it start, and was
+      that your call or hers? #family
+      _(asked: 2026-08-09)_
+      _(asked: 2026-08-23)_
+      _(asked: 2026-09-06)_
 - [ ] You don't actually know what you weigh — 87kg is three weeks stale and it's
       one of your twelve-month goals. What does the scale say? #health
       _(asked: 2026-08-04)_
