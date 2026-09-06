@@ -1,1 +1,1 @@
-{"skill":"evening-brief","ok":true,"when":"2026-09-05T19:46:42Z","outputs":["digests/2026-09-05-evening.md"],"error":"","delivered":true,"deliveryError":"","assertOk":true,"assertWhy":"","model":"sonnet","tokens":{"in":2726,"out":3156,"cache":591048},"cost_usd":0.3623566}
+{"skill":"evening-brief","ok":true,"when":"2026-09-06T19:47:53Z","outputs":["digests/2026-09-06-evening.md","_meta/gaps.md"],"error":"","delivered":true,"deliveryError":"","assertOk":true,"assertWhy":"","model":"sonnet","tokens":{"in":2865,"out":6246,"cache":876484},"cost_usd":0.5296390999999999}
