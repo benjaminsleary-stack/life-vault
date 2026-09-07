@@ -27,10 +27,6 @@ _Ordered by what the vault most needs. One line each; phrase it exactly as it
 should be asked. Refilled 2026-08-01 after the first nine were answered in one
 sitting — a list that empties is a list that was working._
 
-- [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
-      term — that came from an email on 19 Jul. Is it done? #admin
-      _(asked: 2026-08-10)_
-      _(asked: 2026-08-24)_
 - [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
       How much annual leave have you got left, and when does it reset? Without
       that the vault can't tell you when the two could ever line up. #house #work
@@ -71,6 +67,11 @@ review as "decide or delete", the same as a stale task._
       _(asked: 2026-08-07)_
       _(asked: 2026-08-21)_
       _(asked: 2026-09-04)_
+- [ ] [[Milo]]'s working-parent funding needed reconfirming before the autumn
+      term — that came from an email on 19 Jul. Is it done? #admin
+      _(asked: 2026-08-10)_
+      _(asked: 2026-08-24)_
+      _(asked: 2026-09-07)_
 
 ## Answered
 
