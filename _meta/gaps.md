@@ -27,11 +27,6 @@ _Ordered by what the vault most needs. One line each; phrase it exactly as it
 should be asked. Refilled 2026-08-01 after the first nine were answered in one
 sitting — a list that empties is a list that was working._
 
-- [ ] The GitHub token the Worker uses has an expiry date, and when it passes
-      every routine stops silently. What date is it? Then it becomes a dated
-      task instead of a surprise. #admin
-      _(asked: 2026-08-13)_
-      _(asked: 2026-08-27)_
 - [ ] You run, then get injured, three times now. What does the running week
       actually look like — days, distance, pace, surface? #health
       _(asked: 2026-08-14)_
@@ -42,6 +37,12 @@ sitting — a list that empties is a list that was working._
 _Asked three times without an answer. Not deleted — surfaced in the weekly
 review as "decide or delete", the same as a stale task._
 
+- [ ] The GitHub token the Worker uses has an expiry date, and when it passes
+      every routine stops silently. What date is it? Then it becomes a dated
+      task instead of a surprise. #admin
+      _(asked: 2026-08-13)_
+      _(asked: 2026-08-27)_
+      _(asked: 2026-09-10)_
 - [ ] [[Milo]]'s room needs a week of leave and the boys away, at the same time.
       How much annual leave have you got left, and when does it reset? Without
       that the vault can't tell you when the two could ever line up. #house #work
