@@ -27,16 +27,16 @@ _Ordered by what the vault most needs. One line each; phrase it exactly as it
 should be asked. Refilled 2026-08-01 after the first nine were answered in one
 sitting — a list that empties is a list that was working._
 
-- [ ] You run, then get injured, three times now. What does the running week
-      actually look like — days, distance, pace, surface? #health
-      _(asked: 2026-08-14)_
-      _(asked: 2026-08-28)_
-
 ## Parked
 
 _Asked three times without an answer. Not deleted — surfaced in the weekly
 review as "decide or delete", the same as a stale task._
 
+- [ ] You run, then get injured, three times now. What does the running week
+      actually look like — days, distance, pace, surface? #health
+      _(asked: 2026-08-14)_
+      _(asked: 2026-08-28)_
+      _(asked: 2026-09-11)_
 - [ ] The GitHub token the Worker uses has an expiry date, and when it passes
       every routine stops silently. What date is it? Then it becomes a dated
       task instead of a surprise. #admin
