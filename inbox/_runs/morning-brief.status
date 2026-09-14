@@ -1,1 +1,1 @@
-{"skill":"morning-brief","ok":true,"when":"2026-09-13T04:51:02Z","outputs":["digests/2026-09-13-morning.md"],"error":"","delivered":true,"deliveryError":"","assertOk":true,"assertWhy":"","model":"sonnet","tokens":{"in":3002,"out":13466,"cache":1258168},"cost_usd":1.1609201000000002}
+{"skill":"morning-brief","ok":true,"when":"2026-09-14T04:49:00Z","outputs":["digests/2026-09-14-morning.md"],"error":"","delivered":true,"deliveryError":"","assertOk":true,"assertWhy":"","model":"sonnet","tokens":{"in":2867,"out":8298,"cache":1045665},"cost_usd":0.9373209000000002}
