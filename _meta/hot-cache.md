@@ -5,6 +5,25 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-09-26 (harvest): 0 fragments written. Calendar (7 days, all 3 sources ok,
+  19 events) held only recurring admin (Team JGC, NCRT Weekly Catchup, Resource
+  & Deadlines Catch-up), a run of Girton College New Courts/Orchard
+  Wing/Archive AHU/Oxford decarb/Energy centre delivery-coordination meetings
+  excluded in prior weeks (no matching project note, and delivery work doesn't
+  meet the business-functional bar for [[jgc-director-path]] — includes the
+  Girton "Public Consultation Event", a stakeholder-engagement event but still
+  delivery-side, not management), duplicate work/family entries for the same
+  "Darwin — CFCI talk" and "Girton Public Consultations" (no person or project
+  named either side), an unlabelled "Private Appointment", JGC Monthly drinks
+  (recurring social, no client win), and two family all-day/timed entries
+  ("Zoo", "Les petits caméléons", "Weekend garniers") naming no known person —
+  the last is a place (Les Garniers, the grandparents' house in France) used as
+  a background marker, same treatment as "France" in past weeks. "Chariots of
+  Fire - Runners TBC" (20 Sep, work calendar) is a corporate relay race, not a
+  logged Strava run and no client/business-functional content — skipped.
+  Strava not configured (exit 3) — unchanged. No open gap answered by this
+  week's calendar (all eight questions remain in Parked, untouched). Genuinely
+  quiet week for harvesting, not a feed failure.
 - 2026-09-19 (harvest): 1 fragment written — [[jgc-director-path]] got a weekly
   line for "Business Operations Discussion" (14 Sep, same recurring meeting as
   10 Aug, business-functional evidence for the director criterion). Calendar
