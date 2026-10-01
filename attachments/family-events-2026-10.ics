@@ -1,0 +1,41 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//life-vault//family-events//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:family-events-2026-10-1@life-vault
+DTSTAMP:20261001T000000Z
+DTSTART;VALUE=DATE:20261004
+DTEND;VALUE=DATE:20261005
+SUMMARY:Wimpole Estate: Halloween in the House + Caterpillar trail
+LOCATION:Wimpole Estate\, Arrington\, Royston SG8 0BW
+DESCRIPTION:National Trust\, ~25 min drive. Halloween in the House 12-3:30pm; Very Hungry Caterpillar trail 9:30am-4pm (both run 1 Oct-1 Nov). Whole Estate ticket: adult £21 / child £10.50 / family £52.50\, free for NT members. https://www.nationaltrust.org.uk/visit/cambridgeshire/wimpole-estate/events/bb855608-d183-4dc9-9974-afad7768cafb
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-10-2@life-vault
+DTSTAMP:20261001T000000Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261012
+SUMMARY:Anglesey Abbey: Three Cheers for Pooh! trail & exhibition
+LOCATION:Anglesey Abbey\, Lode\, Cambridge CB25 9EJ
+DESCRIPTION:National Trust\, ~20 min drive. Garden story trail + Winnie-the-Pooh centenary exhibition\, runs 3 Oct-3 Jan (closed 2-15 Nov). Adult £19 / child £9.50 / family £47.50\, free for NT members. https://www.nationaltrust.org.uk/visit/cambridgeshire/anglesey-abbey-gardens-and-lode-mill/autumn-at-anglesey-abbey
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-10-3@life-vault
+DTSTAMP:20261001T000000Z
+DTSTART;VALUE=DATE:20261018
+DTEND;VALUE=DATE:20261019
+SUMMARY:Wicken Fen: Fairy Doors and Folklore Family Trail
+LOCATION:Wicken Fen\, Lode Lane\, Wicken\, Ely CB7 5XP
+DESCRIPTION:National Trust\, ~25 min drive. Self-guided trail round the Woodland Walk\, runs to 9 Nov. Adult £11 / child £5.50 / family £27.50 (plus £3.20 parking)\, free for NT members. https://www.nationaltrust.org.uk/visit/cambridgeshire/wicken-fen-national-nature-reserve
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-10-4@life-vault
+DTSTAMP:20261001T000000Z
+DTSTART;VALUE=DATE:20261025
+DTEND;VALUE=DATE:20261026
+SUMMARY:Audley End: Halloween Half-Term Great Pumpkin Party
+LOCATION:Audley End House and Gardens\, London Road\, Saffron Walden CB11 4JF
+DESCRIPTION:English Heritage\, ~40 min drive. Runs 24 Oct-1 Nov\, 10am-4pm. Themed trail\, storytelling\, spooky games\, fancy-dress competition. Standard admission (check price at booking)\, free for EH members. https://www.english-heritage.org.uk/visit/whats-on/audley-end-halloween-2026/
+END:VEVENT
+END:VCALENDAR

@@ -24,7 +24,7 @@ import { parseICS, expandEvents } from "./ical.js";
 // but must never reach the agenda or a brief, exactly like a ## Private note
 // (CLAUDE.md's private wall). This is the single definition of that rule; it
 // used to live in both worker/vault.js and scripts/fetch-calendar.mjs.
-export const PRIVATE_EVENT = /^that week$/i;
+export const PRIVATE_EVENT = /^that week\b/i;
 export const isPrivateEvent = (title) => PRIVATE_EVENT.test(String(title || "").trim());
 
 /**
