@@ -5,6 +5,24 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-10-03 (harvest): 0 fragments written. Calendar (7 days, all 3 sources ok,
+  17 events) held only recurring admin (Team JGC, NCRT Weekly Catchup, Resource
+  & Deadlines Catch-up), a run of Girton College New Courts (Monthly PTM, DTM)
+  and Pembroke Mill Lane Phase 2 MEP catch-up — delivery-coordination with no
+  matching project note, same exclusion as prior weeks — two travel legs
+  (Cambridge↔London Kings Cross, 30 Sep), a duplicate work/personal entry for
+  "NZCBS Launch Event" (London, 30 Sep) with no clear directors'-meeting/
+  client-win/presentation content, "Optional Pub" and "Alex not leaving
+  drinks" (social, no existing person note for Alex — not created, per the
+  no-new-people-from-calendar rule), an unlabelled "Private Appointment",
+  two ambiguous single-word work meetings ("kitchen", "jasper") that read as
+  colleague/project-code titles on the work calendar rather than matches for
+  [[house-retrofit]] or [[Jasper]] — not linked on name coincidence alone —
+  and "Les petits caméléons" (family, recurring childcare activity, no known
+  person named, same treatment as prior weeks). Strava not configured
+  (exit 3) — unchanged. No open gap answered (Open list is empty; all eight
+  questions sit in Parked, untouched by this week's calendar). Genuinely
+  quiet week for harvesting, not a feed failure.
 - 2026-09-26 (harvest): 0 fragments written. Calendar (7 days, all 3 sources ok,
   19 events) held only recurring admin (Team JGC, NCRT Weekly Catchup, Resource
   & Deadlines Catch-up), a run of Girton College New Courts/Orchard
