@@ -21,6 +21,7 @@ brief surfaces due/overdue (max 3 mornings per overdue item — see CLAUDE.md ru
 - [ ] Get waterbutts? #house
 - [ ] Prep for September business meeting. #work 📅 2026-08-17 ⏳3 #stale
 - [ ] Do monthly LinkedIn posts #work
+- [ ] Book Hans Zimmer tickets if going (The O2, 12–13 Oct) 📅 2026-10-12 #interests
 - [ ] Check why the vinyl player isn't working #interests
 - [ ] Make a wind chime? #interests
 - [ ] Paint jaspers room #house
