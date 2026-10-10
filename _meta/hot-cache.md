@@ -5,6 +5,22 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-10-10 (harvest): 1 fragment written — [[Milo]] got a dated log line for
+  his flu jab appointment (8 Oct). Calendar 7 days, all 3 sources ok, 13 events.
+  Everything else was noise: recurring admin (Team JGC, NCRT Weekly Catchup,
+  Resource planning meeting, Resource & Deadlines Catch-up, "NCRT - 😱"), the
+  same Pembroke Ph2 BMS Mods/Pressure Test delivery-coordination pattern
+  excluded in prior weeks (no matching project note), Energy Centre/Grange
+  Field College Design Review (same exclusion), an unlabelled "Private
+  Appointment", an all-day "Céline Dion" entry (concert, no person/project
+  match) and an all-day "Papa" entry (ambiguous, no matching person note —
+  treated as background, same as "France" in past weeks), and "Les petits
+  caméléons" (recurring family childcare activity, no known person named).
+  None of the work meetings met the directors'-meeting/client-win/
+  presentation bar for [[jgc-director-path]]. Strava not configured (exit 3)
+  — unchanged; no runs to log in the 14-day window. No open gap answered
+  (Open list is empty; all eight questions remain in Parked, untouched by
+  this week's calendar).
 - 2026-10-03 (harvest): 0 fragments written. Calendar (7 days, all 3 sources ok,
   17 events) held only recurring admin (Team JGC, NCRT Weekly Catchup, Resource
   & Deadlines Catch-up), a run of Girton College New Courts (Monthly PTM, DTM)

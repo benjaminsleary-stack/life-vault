@@ -1,1 +1,1 @@
-{"skill":"harvest","ok":true,"when":"2026-10-03T09:02:11Z","outputs":[],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2710,"out":5869,"cache":294391},"cost_usd":0.38667949999999995}
+{"skill":"harvest","ok":true,"when":"2026-10-10T09:02:29Z","outputs":["people/milo.md"],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2712,"out":4748,"cache":339663},"cost_usd":0.3629485}
