@@ -1,1 +1,1 @@
-{"skill":"interest-scout","ok":true,"when":"2026-10-09T08:03:07Z","outputs":["digests/2026-W41-interests.md","notes/film-tv-anime.md"],"error":"","delivered":true,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2992,"out":6724,"cache":879355},"cost_usd":0.8054156000000001}
+{"skill":"interest-scout","ok":true,"when":"2026-10-16T08:03:00Z","outputs":["digests/2026-W42-interests.md"],"error":"","delivered":true,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2861,"out":8429,"cache":853242},"cost_usd":0.8447629}
