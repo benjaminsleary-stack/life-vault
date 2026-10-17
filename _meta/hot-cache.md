@@ -5,6 +5,27 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-10-17 (harvest): 1 fragment written — [[jgc-director-path]] got a weekly
+  line for "Business Operations Discussion" (12 Oct, same recurring meeting as
+  14 Sep and 10 Aug, business-functional evidence for the director criterion).
+  Calendar 7 days, all 3 sources ok, 14 events. Everything else was noise or
+  excluded by established pattern: recurring admin (Team JGC, NCRT Weekly
+  Catchup, Resource & Deadlines Catch-up), Girton College delivery-coordination
+  meetings (Cost Review, Drapes Discussion — excluded in every prior week, no
+  matching project note), two NCRT deadline markers (Design Freeze, Energy
+  Centre Costing Pack — same delivery-coordination exclusion, no NCRT project
+  note exists), a "BLOCK - Stirling Prize logistics" placeholder (7h, dropped
+  per blocked-out-block rule), "Work drink" (social, no client win, same
+  treatment as past "JGC Monthly drinks"), "School photos" and "Rowan birthday"
+  (family, no known person note to match), and "Les petits caméléons" (recurring
+  childcare activity, no known person named — same exclusion as every prior
+  week). **Worth a human look, not auto-filed:** "Stirling Prize" itself (12 Oct,
+  17:00–23:00, family calendar) sits right after that 7-hour logistics block —
+  significant enough to need planning, but with no confirmation of a client win
+  or presentation, so not written to [[jgc-director-path]] on name coincidence
+  alone. Strava not configured (exit 3) — unchanged; say-once per skill, no runs
+  to log. No open gap answered (Open list is empty; all eight questions remain
+  in Parked, untouched by this week's calendar).
 - 2026-10-10 (harvest): 1 fragment written — [[Milo]] got a dated log line for
   his flu jab appointment (8 Oct). Calendar 7 days, all 3 sources ok, 13 events.
   Everything else was noise: recurring admin (Team JGC, NCRT Weekly Catchup,

@@ -25,6 +25,9 @@ interface. That is business-functional work, i.e. the stated criterion, rather t
 delivery.
 
 ## Log
+- 2026-10-12 — Business Operations Discussion, 60 min, Main Meeting Room 12B —
+  recurred again (same meeting as 14 Sep and 10 Aug), a business-functional
+  meeting bearing on the director criterion rather than delivery work. _(from calendar)_
 - 2026-09-14 — Business Operations Discussion, 60 min, Main Meeting Room 12B —
   recurred again (same meeting as 10 Aug), a business-functional meeting bearing
   on the director criterion rather than delivery work. _(from calendar)_
