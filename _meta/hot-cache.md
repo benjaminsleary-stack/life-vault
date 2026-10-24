@@ -5,6 +5,29 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-10-24 (harvest): 0 fragments written. Calendar 7 days, all 3 sources ok,
+  19 events. Everything was noise or excluded by established pattern: recurring
+  admin (Team JGC, NCRT Weekly Catchup, NZCBS/JGC Pathfinder Catch-Up, Resource &
+  Deadlines Catch-up, Resource part 2, Lunch), the usual run of Girton College New
+  Courts delivery-coordination meetings (Monthly PTM, Risk Workshop, Grange
+  Field/Energy Centre/Access & Parking Workshop, Girton Vent, Decarb/Capex,
+  Public Rooms Heating — excluded in every prior week, no matching project
+  note), "Work away day" (all-day context marker, same treatment as past
+  "France" spans), "CFCI _ Grafton" (no person/project match, same exclusion as
+  "Darwin — CFCI talk" on 26 Sep), "DAN_O" (no existing person note — not
+  created, per the no-new-people-from-calendar rule), "Massage" (personal
+  self-care, nothing to route it to), "Les petits caméléons" (recurring
+  childcare activity, no known person named, same exclusion as every prior
+  week), and "JGC Monthly drinks" (social, no client win, same treatment as
+  past occurrences). **Worth a human look, not auto-filed:** "Pixel Flea!"
+  (23 Oct, all-day, family calendar) — could be a flea-treatment reminder for
+  [[Pixel]] the cat, or could be an unrelated flea-market event; the name
+  alone isn't enough to write a fragment to Pixel's log without inventing what
+  it refers to (anti-tenuous-link rule). Strava not configured (exit 3) —
+  unchanged; say-once per skill, no runs to log in the 14-day window. No open
+  gap answered (Open list is empty; all eight questions remain in Parked,
+  untouched by this week's calendar). Genuinely quiet week for harvesting, not
+  a feed failure.
 - 2026-10-17 (harvest): 1 fragment written — [[jgc-director-path]] got a weekly
   line for "Business Operations Discussion" (12 Oct, same recurring meeting as
   14 Sep and 10 Aug, business-functional evidence for the director criterion).
