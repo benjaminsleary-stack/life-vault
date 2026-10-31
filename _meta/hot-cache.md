@@ -5,6 +5,24 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-10-31 (harvest): 0 fragments written. Calendar 7 days (25-31 Oct), all 3
+  sources ok, 9 events. Everything was noise or excluded by established pattern:
+  recurring admin (Team JGC, NCRT Weekly Catchup, Resource & Deadlines
+  Catch-up), Girton College New Courts delivery-coordination ("Do new courts
+  please, no one bother Kateryna" 8h block, Girton Vent Catch up, Girton call —
+  no matching project note, not business-functional), "JGC Monthly drinks"
+  (social, no client win, same exclusion as every prior occurrence), and "Les
+  petits caméléons" (recurring childcare activity, no known person named, same
+  exclusion as every prior week). **Worth a human look, not auto-filed:** "Flee
+  pixel" (29 Oct, all-day, family calendar) — second occurrence of the same
+  ambiguity as "Pixel Flea!" on 23 Oct; two sightings six days apart make a
+  recurring flea-treatment reminder for [[Pixel]] the cat more likely, but the
+  title still isn't evidence enough to write a fragment without inventing what
+  it refers to (anti-tenuous-link rule) — flagging again rather than guessing.
+  Strava not configured (exit 3) — unchanged; say-once per skill, no runs to
+  log. No open gap answered (Open list is empty; all eight questions remain in
+  Parked, untouched by this week's calendar). Genuinely quiet week for
+  harvesting, not a feed failure.
 - 2026-10-24 (harvest): 0 fragments written. Calendar 7 days, all 3 sources ok,
   19 events. Everything was noise or excluded by established pattern: recurring
   admin (Team JGC, NCRT Weekly Catchup, NZCBS/JGC Pathfinder Catch-Up, Resource &
