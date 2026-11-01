@@ -1,0 +1,41 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//life-vault//family-events//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:family-events-2026-11-1@life-vault
+DTSTAMP:20261101T000000Z
+DTSTART;VALUE=DATE:20261120
+DTEND;VALUE=DATE:20261121
+SUMMARY:Wimpole Estate: Christmas at Wimpole
+LOCATION:Wimpole Estate\, Arrington\, Royston SG8 0BW
+DESCRIPTION:National Trust\, ~25 min drive. Illuminated trail through the gardens\, opening night\, runs 20 Nov-3 Jan. Adult off-peak £18 / standard £26\, child off-peak £13 / peak £19.50\, £1 for under-3s\, free for NT members\, parking £8. https://www.nationaltrust.org.uk/visit/cambridgeshire/wimpole-estate/christmas-at-wimpole
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-11-2@life-vault
+DTSTAMP:20261101T000000Z
+DTSTART;VALUE=DATE:20261122
+DTEND;VALUE=DATE:20261123
+SUMMARY:Audley End: Enchanted Railway Christmas Special
+LOCATION:Audley End Enchanted Railway\, London Road\, Saffron Walden CB11 4JF
+DESCRIPTION:~40 min drive. Train ride through an illuminated woodland with Father Christmas\, runs 21 Nov-24 Dec\, 9am-5pm. Adult/child over 92cm £23.50-£40.50\, child under 92cm £11.75-£20.25. https://tickets.audley-end-railway.co.uk/event-tickets/77310?catID=72506
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-11-3@life-vault
+DTSTAMP:20261101T000000Z
+DTSTART;VALUE=DATE:20261128
+DTEND;VALUE=DATE:20261129
+SUMMARY:Cambridge Botanic Lights
+LOCATION:Cambridge University Botanic Garden\, 1 Brookside\, Cambridge CB2 1JE
+DESCRIPTION:In Cambridge\, no real drive. Light trail through the Garden\, 4:30-8:30pm\, runs 27 Nov-23 Dec. Adult off-peak £18.15 / standard £24.75\, child (4-15) £13.50-£17\, under-4s free. https://www.cambridgelivetickets.co.uk/events/cambridge-botanic-lights-2026
+END:VEVENT
+BEGIN:VEVENT
+UID:family-events-2026-11-4@life-vault
+DTSTAMP:20261101T000000Z
+DTSTART;VALUE=DATE:20261213
+DTEND;VALUE=DATE:20261214
+SUMMARY:Anglesey Abbey: Meet Father Christmas
+LOCATION:Anglesey Abbey\, Lode\, Cambridge CB25 9EJ
+DESCRIPTION:National Trust\, ~15 min drive. ~30 min storytelling session then meet Father Christmas\, slots 9:45am-3pm. £24.95 per child (includes one adult) plus normal admission. https://www.nationaltrust.org.uk/visit/cambridgeshire/anglesey-abbey-gardens-and-lode-mill/events/da0d12fe-8e23-4aba-aeaf-4be47731ceb5
+END:VEVENT
+END:VCALENDAR
