@@ -5,6 +5,17 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-11-07 (harvest): 0 fragments written. Calendar 7 days (1-7 Nov), all 3
+  sources ok, 6 events. Everything was noise or excluded by established
+  pattern: recurring admin (Team JGC, NCRT Weekly Catchup, Resource &
+  Deadlines Catch-up), an unlabelled "Private Appointment" (same treatment as
+  every prior occurrence), a generic "Meeting" with no attendee or content
+  info (same exclusion as "Private Appointment"), and "Les petits caméléons"
+  (today, family calendar — recurring childcare activity, no known person
+  named, same exclusion as every prior week). Strava not configured (exit 3)
+  — unchanged; say-once per skill, no runs to log. No open gap answered (Open
+  list is empty; all questions remain in Parked, untouched by this week's
+  calendar). Genuinely quiet week for harvesting, not a feed failure.
 - 2026-10-31 (harvest): 0 fragments written. Calendar 7 days (25-31 Oct), all 3
   sources ok, 9 events. Everything was noise or excluded by established pattern:
   recurring admin (Team JGC, NCRT Weekly Catchup, Resource & Deadlines

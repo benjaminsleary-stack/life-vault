@@ -1,1 +1,1 @@
-{"skill":"harvest","ok":true,"when":"2026-10-31T09:03:24Z","outputs":[],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2857,"out":9709,"cache":824877},"cost_usd":0.6479956999999998}
+{"skill":"harvest","ok":true,"when":"2026-11-07T09:01:56Z","outputs":[],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2583,"out":3493,"cache":301793},"cost_usd":0.3320456}
