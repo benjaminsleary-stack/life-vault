@@ -5,6 +5,23 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-11-14 (harvest): 1 fragment written — [[jgc-director-path]] got a weekly
+  line for "Business Operations Discussion" (9 Nov, same recurring meeting as
+  12 Oct, 14 Sep and 10 Aug, business-functional evidence for the director
+  criterion). Calendar 7 days (8-14 Nov), all 3 sources ok, 9 events. Everything
+  else was noise or excluded by established pattern: recurring admin (Team JGC,
+  NCRT Weekly Catchup, Resource & Deadlines Catch-up), "H&S procedures for site
+  visits / professional development and training" (delivery-side training, not
+  a directors'-meeting/client-win/presentation, same bar as past Girton/Pembroke
+  exclusions), an unlabelled "Private Appointment" (same treatment as every
+  prior occurrence), "Defend this evening so you can hang out with your
+  colleagues" (social, no client win, same exclusion as past "JGC Monthly
+  drinks"), "All aboard final event" (family, no known person note to match),
+  and "Les petits caméléons" (today, family calendar — recurring childcare
+  activity, no known person named, same exclusion as every prior week). Strava
+  not configured (exit 3) — unchanged; say-once per skill, no runs to log. No
+  open gap answered (Open list is empty; all eight questions remain in Parked,
+  untouched by this week's calendar).
 - 2026-11-07 (harvest): 0 fragments written. Calendar 7 days (1-7 Nov), all 3
   sources ok, 6 events. Everything was noise or excluded by established
   pattern: recurring admin (Team JGC, NCRT Weekly Catchup, Resource &

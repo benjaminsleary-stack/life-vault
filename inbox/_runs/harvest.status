@@ -1,1 +1,1 @@
-{"skill":"harvest","ok":true,"when":"2026-11-07T09:01:56Z","outputs":[],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2583,"out":3493,"cache":301793},"cost_usd":0.3320456}
+{"skill":"harvest","ok":true,"when":"2026-11-14T09:02:05Z","outputs":["projects/jgc-director-path.md"],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2851,"out":7015,"cache":628219},"cost_usd":0.5356534}
