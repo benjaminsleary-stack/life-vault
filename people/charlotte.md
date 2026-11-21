@@ -49,6 +49,9 @@ rule in CLAUDE.md._
   week is going; not something to raise unprompted.
 
 ## Log
+- 2026-11-19 — Her birthday. Calendar marked the whole day "Surprise day" on
+  both family and personal calendars, with "Thing" at 10:00 and "Lunch" at
+  13:45. _(from calendar)_
 - 2026-08-23 — Her job: project manager at Bidwells. Hoping to be promoted to senior PM soon, but her boss is dragging his feet on it. _(surfaced: 2026-11-20)_
 - 2026-08-11 — Spent the day at her grandparents' house (Les Garniers, Blenau) with the boys on Jasper's birthday. Played on the beach together; Jasper's walkie talkies play was particularly lovely. Going to watch the eclipse. _(surfaced: 2026-08-12)_
 - 2026-08-06 — Trying "phone bowl" ritual when we get home: hug for 2 mins, leg massage 5 mins per leg. Attempting to stop arguments by 11pm and improve how we argue in front of the boys. _(surfaced: 2026-11-05)_

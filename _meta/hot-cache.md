@@ -5,6 +5,34 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-11-21 (harvest): 1 fragment written — [[Charlotte]] got a dated log line
+  for her birthday (19 Nov): calendar marked the whole day "Surprise day" on
+  family and personal calendars, with "Thing" at 10:00 and "Lunch" at 13:45.
+  Already had an (occasion::) line; this adds what the day actually looked
+  like. Calendar 7 days (15-21 Nov), all 3 sources ok, 25 events. Everything
+  else was noise or excluded by established pattern: recurring admin (Team
+  JGC, NCRT Weekly Catchup, Resource & Deadlines Catch-up, "In late"/"Catchup"/
+  "Leave early" blocked-out placeholders), a heavy run of Girton College New
+  Courts I delivery work (Draft Tender Report Review & Contractor Shortlisting,
+  UKNZC, Monthly PTM, two RIBA Stage 3 Page-Turn sessions, two Main Contractor
+  Interviews + wrap-up — no matching project note, delivery not
+  business-functional, same exclusion as every prior week), an unlabelled
+  "Private Appointment" (same treatment as every prior occurrence), "Jaks
+  Birthday" (15 Nov, already recorded in [[birthdays]], nothing new), "Thing"
+  and "Away" taken alone (too vague without the birthday context), "Flue jab"
+  (20 Nov, family, no name given — same exclusion as every ambiguous
+  health-marker in past weeks), "Birthday party" (21 Nov, family, all-day, no
+  name given — plausibly Charlotte's but not written on inference alone, same
+  anti-tenuous-link treatment as past unnamed events), and "Les petits
+  caméléons" (21 Nov, recurring childcare activity, no known person named,
+  same exclusion as every prior week). **Worth a human look:** Girton College
+  New Courts I has now produced heavy, recurring calendar traffic for months
+  with no project note to route it to — tender report review, contractor
+  shortlisting and two contractor interviews this week alone — worth deciding
+  whether it warrants its own `projects/` note. Strava not configured (exit 3)
+  — unchanged; say-once per skill, no runs to log. No open gap answered (Open
+  list is empty; all questions remain in Parked, untouched by this week's
+  calendar).
 - 2026-11-14 (harvest): 1 fragment written — [[jgc-director-path]] got a weekly
   line for "Business Operations Discussion" (9 Nov, same recurring meeting as
   12 Oct, 14 Sep and 10 Aug, business-functional evidence for the director
