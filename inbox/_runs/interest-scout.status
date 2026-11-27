@@ -1,1 +1,1 @@
-{"skill":"interest-scout","ok":true,"when":"2026-11-20T08:02:32Z","outputs":["digests/2026-W47-interests.md"],"error":"","delivered":true,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2855,"out":6680,"cache":687829},"cost_usd":0.7681081}
+{"skill":"interest-scout","ok":true,"when":"2026-11-27T08:02:36Z","outputs":["digests/2026-W48-interests.md"],"error":"","delivered":true,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2859,"out":7046,"cache":781790},"cost_usd":0.788131}
