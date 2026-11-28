@@ -11,5 +11,6 @@ socially. Tagged `#family` as well as `#work` because in this vault that area
 covers friends, and this is a friendship rather than only a working relationship.
 
 ## Log
+- 2026-11-27 — Evening out with [[Katie]] and Matthew, 17:00. _(from calendar)_
 - 2026-08-01 — Named as one of the two people Ben would most likely have last seen
   socially, though he could not place when. _(interview)_

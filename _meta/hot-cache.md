@@ -5,6 +5,23 @@ A cheap stand-in for embeddings so a cold session has recent context without rea
 the whole vault._
 
 <!-- generated -->
+- 2026-11-28 (harvest): 3 fragments written — [[Jasper]] got a dated log line
+  for a hearing test (26 Nov, 08:30, family calendar). [[Katie]] and [[Joe]]
+  each got a dated log line for an evening out together with Matthew (27 Nov,
+  17:00, family calendar) — Matthew has no existing people note, so named in
+  text only, not linked (no-new-people-from-calendar rule). Calendar 7 days
+  (22-28 Nov), all 3 sources ok, 9 events. Everything else was noise or
+  excluded by established pattern: recurring admin (Team JGC, Resource
+  Catch-up), a Girton College New Courts I planning-application catch-up and
+  a Wesley Chapel Archive plant-acoustics session (both delivery-coordination,
+  no matching project note, same exclusion as every prior week), an
+  unlabelled "Private Appointment", "JGC Monthly drinks" (social, no client
+  win, same exclusion as every prior occurrence), and "Les petits caméléons"
+  (today, recurring childcare activity, no known person named, same exclusion
+  as every prior week). Strava not configured (exit 3) — unchanged; say-once
+  per skill, no runs to log in the 14-day window. No open gap answered (Open
+  list is empty; all eight questions remain in Parked, untouched by this
+  week's calendar).
 - 2026-11-21 (harvest): 1 fragment written — [[Charlotte]] got a dated log line
   for her birthday (19 Nov): calendar marked the whole day "Surprise day" on
   family and personal calendars, with "Thing" at 10:00 and "Lunch" at 13:45.

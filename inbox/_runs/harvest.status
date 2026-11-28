@@ -1,1 +1,1 @@
-{"skill":"harvest","ok":true,"when":"2026-11-21T09:03:37Z","outputs":["people/charlotte.md"],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2722,"out":11018,"cache":658824},"cost_usd":0.6298243999999998}
+{"skill":"harvest","ok":true,"when":"2026-11-28T09:02:03Z","outputs":["people/jasper.md","people/joe.md","people/katie.md"],"error":"","delivered":null,"deliveryError":"","assertOk":null,"assertWhy":"","model":"sonnet","tokens":{"in":2847,"out":6316,"cache":556059},"cost_usd":0.5191456}
